@@ -34,7 +34,7 @@ ARTHUR routes every task through one of three complexity tiers:
 
 ### Research Path
 
-For understanding, not building. Triggered by words like "research", "compare", or "evaluate".
+For understanding, not building. Triggered by words like "research", "compare", "evaluate", or "investigate".
 
 SCOOP investigates the topic and returns findings directly. No spec folder or plan required.
 
@@ -42,13 +42,13 @@ SCOOP investigates the topic and returns findings directly. No spec folder or pl
 
 The default for multi-file, multi-agent work.
 
-SAGE creates a plan → ARTHUR hires implementation agents via MERLIN as needed → ARTHUR executes phases, dispatching agents in parallel where possible → completion report.
+SAGE creates a plan → **user approves** → ARTHUR hires implementation agents via MERLIN as needed → ARTHUR executes phases, dispatching agents in parallel where possible → completion report.
 
 ### Full Path
 
 For new features, migrations, or rewrites. Triggered by "create a spec", "plan this", or similar.
 
-SAGE researches and writes a spec → **user approves** → SAGE writes a phased plan → **user approves** → ARTHUR hires implementation agents via MERLIN as needed → ARTHUR executes phases, dispatching agents in parallel where possible → completion report.
+SCOOP researches → SAGE writes a spec → **user approves** → SAGE writes a phased plan → **user approves** → ARTHUR hires implementation agents via MERLIN as needed → ARTHUR executes phases, dispatching agents in parallel where possible → completion report.
 
 The Full Path includes mandatory human approval gates. ARTHUR cannot proceed past spec or plan creation without explicit user confirmation.
 
@@ -59,7 +59,7 @@ When no existing team member fits a task, ARTHUR identifies the gap and engages 
 ## Key Features
 
 - **Strict role boundaries** — agents have defined responsibilities and constraints, preventing scope creep
-- **Human checkpoints** — mandatory approval gates in the Full Path before execution begins
+- **Human checkpoints** — mandatory approval gates in the Standard and Full Paths before execution begins
 - **Parallel dispatch** — independent tasks run simultaneously across multiple agents, with file conflict rules to prevent collisions
 - **Generative hiring** — new agents are created on demand when existing roles don't cover a task
 - **Session and repo memory** — agents build continuity across conversations through persistent memory files
