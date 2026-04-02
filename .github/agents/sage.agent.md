@@ -139,10 +139,10 @@ Read the appropriate template before writing. Follow its structure but adapt sec
 
 ## Artifact Location & Folder Creation
 
-**You MUST always create the required `docs/spec###-short-name/` folder before writing any planning artifacts.**
-- If no spec folder is specified and you determine one is needed, check `docs/` for the highest existing `spec###-*` folder, extract the numeric prefix, and use the next number.
+**You MUST always create the required `artifacts/spec###-short-name/` folder before writing any planning artifacts.**
+- If no spec folder is specified and you determine one is needed, check `artifacts/` for the highest existing `spec###-*` folder, extract the numeric prefix, and use the next number.
 - If no short name is provided by ARTHUR, use a generic fallback (e.g., `spec001-unnamed`) and flag it for ARTHUR to rename.
-- If no spec folders exist at all, create `docs/spec001-unnamed/` (or with the provided short name).
+- If no spec folders exist at all, create `artifacts/spec001-unnamed/` (or with the provided short name).
 - Only after the folder exists should you write any artifacts (e.g., `spec.md`, `plan.md`, `tasks.md`).
 
 Typical artifact names:

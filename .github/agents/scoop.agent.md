@@ -69,7 +69,7 @@ Actionable next steps based on the findings. Clear, specific, and prioritized.
 ## Artifact Location
 
 By default, return research findings directly in-conversation. Only write to a file when:
-- You're told which spec folder to use (e.g., `docs/spec001-user-auth/`)
+- You're told which spec folder to use (e.g., `artifacts/spec001-user-auth/`)
 - The research is part of a larger effort (Full Path) that will feed into planning
 - The user explicitly asks for a written report
 

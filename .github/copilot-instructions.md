@@ -35,7 +35,7 @@ When a user selects a specific agent (SCOOP, SAGE, MERLIN, etc.), follow that ag
 
 ## Artifacts
 
-Project artifacts (specs, plans, research, tasks) live in `docs/spec###-short-name/` folders, numbered sequentially with a descriptive kebab-case suffix (e.g., `spec004-user-auth`). Check `docs/` for existing `spec###-*` folders before creating new ones.
+Project artifacts (specs, plans, research, tasks) live in `artifacts/spec###-short-name/` folders, numbered sequentially with a descriptive kebab-case suffix (e.g., `spec004-user-auth`). Check `artifacts/` for existing `spec###-*` folders before creating new ones.
 
 ## Memory
 

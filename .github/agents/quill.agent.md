@@ -76,7 +76,7 @@ This workspace compares Excalibur.js (v0.32.0) and Phaser (v4.0.0-rc.6) — a Ty
 - Show full `import` statements (import paths differ between engines)
 - Use proper TypeScript with type annotations where they clarify intent
 - Note where APIs are likely to change in upcoming releases
-- Reference existing docs (`docs/comparison-spec.md`, `docs/side-by-side.md`) as style baselines
+- Reference existing docs (`artifacts/comparison-spec.md`, `artifacts/side-by-side.md`) as style baselines
 
 ## Responsibilities
 

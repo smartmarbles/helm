@@ -63,7 +63,7 @@ When no existing team member fits a task, ARTHUR identifies the gap and engages 
 - **Parallel dispatch** — independent tasks run simultaneously across multiple agents, with file conflict rules to prevent collisions
 - **Generative hiring** — new agents are created on demand when existing roles don't cover a task
 - **Session and repo memory** — agents build continuity across conversations through persistent memory files
-- **Structured artifacts** — every effort produces artifacts in numbered spec folders (`docs/spec###-short-name/`)
+- **Structured artifacts** — every effort produces artifacts in numbered spec folders (`artifacts/spec###-short-name/`)
 - **Research-first protocol** — delegation rules enforce research before planning, and planning before execution
 
 ## Project Structure
@@ -82,17 +82,15 @@ When no existing team member fits a task, ARTHUR identifies the gap and engages 
     plan-template.md
     spec-template.md
   copilot-instructions.md  # Entry point / bootstrap
-assets/
-  helm_logo1.png
-docs/                    # Spec folders created per-effort (spec001-*, spec002-*, etc.)
+artifacts/               # Spec folders created per-effort (spec001-*, spec002-*, etc.)
 ```
 
 ## Getting Started
 
 Helm is a VS Code Copilot agent orchestration system. To use it:
 
-1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active.
-2. **Clone this repo** — The `.github/copilot-instructions.md` file bootstraps the orchestration system automatically when Copilot reads the workspace.
+1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active. Crucially, **you must enable** `chat.subagents.allowInvocationsFromSubagents` in your VS Code settings, or the multi-agent routing will silently fail.
+2. **Add to workspace** — Copy the `.github` folder into your project workspace. The `.github/copilot-instructions.md` file bootstraps the orchestration system automatically when Copilot reads the workspace.
 3. **Start a conversation** — Address ARTHUR (the default) or select a specific agent. Describe your task and ARTHUR routes it through the appropriate complexity path.
 
 No build steps, no dependencies, no installation. The agent definitions are the product.

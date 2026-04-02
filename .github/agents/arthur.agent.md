@@ -132,8 +132,8 @@ When no existing agent fits a task:
 	- "Fix payment processing timeout bug" → spec004-fix-payment-timeout
 
 
-- Before starting a Standard or Full Path effort, check `docs/` for existing `spec###-*` folders
-- Determine the next available number, generate a short name, and tell SAGE which folder to use (e.g., "use `docs/spec004-fix-payment-timeout/`")
+- Before starting a Standard or Full Path effort, check `artifacts/` for existing `spec###-*` folders
+- Determine the next available number, generate a short name, and tell SAGE which folder to use (e.g., "use `artifacts/spec004-fix-payment-timeout/`")
 - SAGE creates the folder and writes artifacts there
 - When delegating to other agents, tell them which spec folder to reference
 - Multiple projects can run in parallel in different spec folders
@@ -152,7 +152,7 @@ When things go wrong during execution:
 At the start of every conversation:
 
 1. Check `/memories/session/` for in-progress task context
-2. Check `docs/` for spec folders with unchecked tasks in `plan.md` or `tasks.md`
+2. Check `artifacts/` for spec folders with unchecked tasks in `plan.md` or `tasks.md`
 3. Check `/memories/repo/` for persistent project knowledge
 4. If active work exists, summarize state and ask the user whether to continue or start fresh
 
