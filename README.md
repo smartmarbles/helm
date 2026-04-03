@@ -101,6 +101,10 @@ No build steps, no dependencies, no installation. The agent definitions are the 
 
 Helm works with both reasoning models (e.g., Claude Opus 4.6, GPT-5.3-Codex) and non-reasoning models (e.g., GPT-4.1). Since Copilot users often have limited premium requests, the orchestration system is designed to function across model tiers without breaking down. Non-reasoning models may require more explicit prompting to output similar quality results.
 
+## Portability
+
+Helm is built for VS Code Copilot's agent infrastructure, specifically its subagent dispatch system. The orchestration patterns — research before planning, planning before execution, human checkpoints, dynamic hiring — are transferable concepts, but the implementation depends on Copilot's `runSubagent` capability. Other tools (Claude Code, Codex CLI, Gemini) can use the instruction files and agent personas, but multi-agent routing will need to be adapted to each platform's capabilities.
+
 ## License
 
 MIT — Copyright (c) 2026 Smartmarbles.com
