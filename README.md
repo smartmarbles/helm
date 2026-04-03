@@ -78,8 +78,8 @@ When no existing team member fits a task, ARTHUR identifies the gap and engages 
     sage.agent.md
     scoop.agent.md
     quill.agent.md
-    team-roster.md
     temps/               # Archived temporary agents
+  team-roster.md           # Active and archived team members
   templates/             # Plan and spec templates
     plan-template.md
     spec-template.md

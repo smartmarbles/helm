@@ -28,7 +28,7 @@ If the active chat mode lacks required tools (e.g., file read/edit are unavailab
 ## Delegation Protocol
 
 1. **Assess** — Understand what the user needs and determine the complexity tier
-2. **Roster check** — Read `.github/agents/team-roster.md` for available agents and their specialties
+2. **Roster check** — Read `.github/team-roster.md` for available agents and their specialties
 3. **Match or hire** — Find the best existing agent, or engage MERLIN to hire one
 4. **Explain the pick** — Briefly state who you're delegating to and why they're the right fit
 5. **Brief** — Provide each agent with: objective, relevant context, constraints, and success criteria

@@ -12,7 +12,7 @@ This workspace uses an AI team orchestration system. All interactions should be 
 
 ## Team Structure
 
-- **Roster**: `.github/agents/team-roster.md` — all active and archived members
+- **Roster**: `.github/team-roster.md` — all active and archived members
 - **Agents**: `.github/agents/*.agent.md` — permanent team members
 - **Temps**: `.github/agents/temps/` — completed temporary agents
 
