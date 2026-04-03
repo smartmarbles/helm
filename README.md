@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/helm_logo3b.png" alt="Helm Logo" width="300" />
+  <img src="assets/helm_logo3b.png" alt="Helm Logo orchestration core" width="300" />
   <br/>
   <span style="font-size:1.25em;"><i>Build, compose and run intelligent workflows across agents</i></span>
 </p>
