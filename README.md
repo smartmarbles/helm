@@ -14,6 +14,8 @@ Each agent has a defined identity, expertise, constraints, and communication sty
 
 Helm is not a library or runtime. It's a set of conventions and agent definitions that run entirely within VS Code's Copilot agent infrastructure.
 
+> **Theme:** The default team uses an Arthurian theme — ARTHUR, MERLIN, SCOOP, SAGE, QUILL. These are just names. You can rename any agent to fit your team's personality by editing their `.agent.md` file and the roster.
+
 ## The Core Team
 
 | Agent | Role | Tagline |
@@ -25,8 +27,6 @@ Helm is not a library or runtime. It's a set of conventions and agent definition
 | **QUILL** | Technical Documentation Writer | *"Clear docs are the shortest distance between a developer and a working feature."* |
 
 **ARTHUR** never produces deliverables directly — he routes every task to the right agent and tracks progress. **MERLIN** creates new agents by researching role requirements and designing purpose-built personas. **SCOOP** deep-dives into any topic, with every report including a "What Most People Miss" section. **SAGE** builds phased implementation plans with dependency analysis and risk identification. **QUILL** writes developer-facing documentation, running "The Confused Developer Test" on every section.
-
-> **Theme:** The default team uses an Arthurian theme — ARTHUR, MERLIN, SCOOP, SAGE, QUILL. These are just names. You can rename any agent to fit your team's personality by editing their `.agent.md` file and the roster.
 
 > **Note:** The core team is deliberately infrastructure — orchestration, research, planning, hiring, and documentation. There are no implementation agents in the default roster. When a plan calls for a skillset not covered, ARTHUR engages MERLIN to hire the right specialist (e.g., a TypeScript engineer, a database migration expert, a social publisher) on the fly. This keeps the core team lean and ensures implementation agents are purpose-built for the actual work, not generic.
 
@@ -100,6 +100,12 @@ No build steps, no dependencies, no installation. The agent definitions are the 
 ## Model Compatibility
 
 Helm works with both reasoning models (e.g., Claude Opus 4.6, GPT-5.3-Codex) and non-reasoning models (e.g., GPT-4.1). Since Copilot users often have limited premium requests, the orchestration system is designed to function across model tiers without breaking down. Non-reasoning models may require more explicit prompting to output similar quality results.
+
+## Testing
+
+A comprehensive behavioral test plan is included at [`artifacts/spec001-helm-test-plan/test-plan.md`](artifacts/spec001-helm-test-plan/test-plan.md). Because Helm has no runtime, tests are conversational — you send a prompt, observe what the agents say and do, and verify the outcome. The plan covers all three execution paths, both approval gates, the dynamic hiring chain, parallel dispatch, constraint enforcement, memory behavior, error recovery, artifact naming, and the temporary agent lifecycle.
+
+If you want to quickly verify the engine is working without running the full suite, the test plan opens with a **Smoke Test** section — six targeted prompts that exercise every critical system: routing, delegation, approval gates, nested agent calls, and direct addressing. These are the first thing to run when testing against a new model.
 
 ## Portability
 
