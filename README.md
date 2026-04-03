@@ -1,6 +1,7 @@
 <p align="center">
-  <img src="assets/helm_logo3b.png" alt="Helm Logo" width="400" />
-  Build, compose and run intelligent workflows across agents
+  <img src="assets/helm_logo3b.png" alt="Helm Logo" width="300" />
+  <br/>
+  <span style="font-size:1.25em;"><i>Build, compose and run intelligent workflows across agents</i></span>
 </p>
 
 # Helm
