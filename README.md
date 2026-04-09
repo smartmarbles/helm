@@ -27,8 +27,9 @@ Helm is not a library or runtime. It's a set of conventions and agent definition
 | **SCOOP** | Senior Researcher | *"The truth is in the details others skip."* |
 | **SAGE** | Strategic Planner | *"A good plan makes implementation feel inevitable."* |
 | **QUILL** | Technical Documentation Writer | *"Clear docs are the shortest distance between a developer and a working feature."* |
+| **PROBE** | Test Runner | *"X/Y passed. Z failures."* |
 
-**ARTHUR** never produces deliverables directly — he routes every task to the right agent and tracks progress. **MERLIN** creates new agents by researching role requirements and designing purpose-built personas. **SCOOP** deep-dives into any topic, with every report including a "What Most People Miss" section. **SAGE** builds phased implementation plans with dependency analysis and risk identification. **QUILL** writes developer-facing documentation, running "The Confused Developer Test" on every section.
+**ARTHUR** never produces deliverables directly — he routes every task to the right agent and tracks progress. **MERLIN** creates new agents by researching role requirements and designing purpose-built personas. **SCOOP** deep-dives into any topic, with every report including a "What Most People Miss" section. **SAGE** builds phased implementation plans with dependency analysis and risk identification. **QUILL** writes developer-facing documentation, running "The Confused Developer Test" on every section. **PROBE** runs automated behavioral tests against the agent system, evaluating pass/fail criteria and producing clean reports.
 
 > **Note:** The core team is deliberately infrastructure — orchestration, research, planning, hiring, and documentation. There are no implementation agents in the default roster. When a plan calls for a skillset not covered, ARTHUR engages MERLIN to hire the right specialist (e.g., a TypeScript engineer, a database migration expert, a social publisher) on the fly. This keeps the core team lean and ensures implementation agents are purpose-built for the actual work, not generic.
 
@@ -73,20 +74,23 @@ When no existing team member fits a task, ARTHUR identifies the gap and engages 
 ## Project Structure
 
 ```
+AGENTS.md                  # Always-on shared context for all agents
 .github/
-  agents/                # Agent definition files
+  agents/                  # Agent definition files
     arthur.agent.md
     merlin.agent.md
     sage.agent.md
     scoop.agent.md
     quill.agent.md
-    temps/               # Archived temporary agents
+    probe.agent.md
+    temps/                 # Archived temporary agents
   team-roster.md           # Active and archived team members
-  templates/             # Plan and spec templates
+  templates/               # Plan and spec templates
     plan-template.md
     spec-template.md
-  copilot-instructions.md  # Entry point / bootstrap
-artifacts/               # Spec folders created per-effort (spec001-*, spec002-*, etc.)
+  copilot-instructions.md  # Bootstrap — loads ARTHUR's identity
+artifacts/                 # Spec folders created per-effort (spec001-*, spec002-*, etc.)
+  docs/                    # Standalone documentation (not tied to a spec)
 ```
 
 ## Getting Started
@@ -105,9 +109,11 @@ Helm works with both reasoning models (e.g., Claude Opus 4.6, GPT-5.3-Codex) and
 
 ## Testing
 
-A comprehensive behavioral test plan is included at [`artifacts/spec001-helm-test-plan/test-plan.md`](artifacts/spec001-helm-test-plan/test-plan.md). Because Helm has no runtime, tests are conversational — you send a prompt, observe what the agents say and do, and verify the outcome. The plan covers all three execution paths, both approval gates, the dynamic hiring chain, parallel dispatch, constraint enforcement, memory behavior, error recovery, artifact naming, and the temporary agent lifecycle.
+A comprehensive behavioral test plan is included at [`artifacts/spec001-helm-test-plan/test-plan.md`](artifacts/spec001-helm-test-plan/test-plan.md) with 61 test cases across 10 categories. Because Helm has no runtime, tests are conversational — you send a prompt, observe what the agents say and do, and verify the outcome. The plan covers all three execution paths, both approval gates, the dynamic hiring chain, parallel dispatch, constraint enforcement, memory behavior, error recovery, artifact naming, and the temporary agent lifecycle.
 
-If you want to quickly verify the engine is working without running the full suite, the test plan opens with a **Smoke Test** section — six targeted prompts that exercise every critical system: routing, delegation, approval gates, nested agent calls, and direct addressing. These are the first thing to run when testing against a new model.
+Of the 61 tests, 17 are marked 🤖 (automatable) and can be run by **PROBE**, the test runner agent. Use `@PROBE run all` to execute all automatable tests, or `@PROBE run TC-XXX` for a specific test. PROBE calls target agents as subagents, evaluates responses against pass criteria, checks file system side effects, and cleans up all artifacts. The remaining 44 tests are manual (👤) and require multi-turn interaction or environment changes.
+
+If you want to quickly verify the engine is working without running the full suite, the test plan opens with a **Smoke Test** section — seven targeted prompts that exercise every critical system: routing, delegation, approval gates, nested agent calls, direct addressing, and constraint enforcement.
 
 ## Portability
 

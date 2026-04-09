@@ -6,9 +6,9 @@
 
 ---
 
-## Smoke Test — Core Functionality (6 Tests)
+## Smoke Test — Core Functionality (7 Tests)
 
-If you don't want to run the full suite, these six tests cover every critical system. If all six pass, the orchestration engine is working correctly.
+If you don't want to run the full suite, these seven tests cover every critical system. If all seven pass, the orchestration engine is working correctly.
 
 | # | Test | What It Proves |
 |---|------|----------------|
@@ -18,6 +18,7 @@ If you don't want to run the full suite, these six tests cover every critical sy
 | 4 | [TC-007](#tc-007--full-path-plan-this-trigger) | Full Path fires both approval gates in sequence — spec gate, then plan gate |
 | 5 | [TC-017](#tc-017--dynamic-hiring-merlin-invokes-scoop) | Dynamic hiring chain works — MERLIN invokes SCOOP before designing the agent (this is the most commonly broken flow; see the `chat.subagents.allowInvocationsFromSubagents` note in the environment checklist) |
 | 6 | [TC-044](#tc-044--direct-addressing-scoop) | Direct agent addressing bypasses ARTHUR — `@SCOOP` is reachable without routing through the orchestrator |
+| 7 | [TC-060](#tc-060--scoop-cannot-write-files) | SCOOP respects its file-writing constraint — delivers findings in-conversation only, never creates files |
 
 Run these in order. TC-005 depends on TC-004 (it continues the same conversation).
 
@@ -41,6 +42,7 @@ Before running any tests, confirm:
 
 - [ ] `.github/copilot-instructions.md` is present and loads correctly (VS Code should pick it up automatically)
 - [ ] All five agent files exist: `arthur.agent.md`, `merlin.agent.md`, `sage.agent.md`, `scoop.agent.md`, `quill.agent.md`
+- [ ] `AGENTS.md` exists at the repo root (provides team structure context and the Session Resumption Protocol to all agents)
 - [ ] `team-roster.md` lists all five permanent agents
 - [ ] You are using VS Code Copilot with agent mode enabled
 - [ ] `chat.subagents.allowInvocationsFromSubagents` is enabled in VS Code settings (required for nested agent calls — e.g., MERLIN calling SCOOP)
@@ -57,11 +59,11 @@ Before running any tests, confirm:
 | [B — Human Checkpoints](#b--human-checkpoints) | TC-011 – TC-016 | Approval gates at spec and plan stages |
 | [C — Dynamic Agent Hiring](#c--dynamic-agent-hiring) | TC-017 – TC-021 | MERLIN + SCOOP hiring flow |
 | [D — Parallel Dispatch](#d--parallel-dispatch) | TC-022 – TC-025 | Simultaneous independent task execution |
-| [E — Constraint Enforcement](#e--constraint-enforcement) | TC-026 – TC-035 | Protocol violations and boundary checks |
-| [F — Memory Behavior](#f--memory-behavior) | TC-036 – TC-039 | Session and repo memory persistence |
-| [G — Error Recovery](#g--error-recovery) | TC-040 – TC-043 | Agent failure and degradation handling |
+| [E — Constraint Enforcement](#e--constraint-enforcement) | TC-026 – TC-035, TC-060 | Protocol violations and boundary checks |
+| [F — Memory Behavior](#f--memory-behavior) | TC-036 – TC-039, TC-061 | Session and repo memory persistence |
+| [G — Error Recovery](#g--error-recovery) | TC-040 – TC-043, TC-059 | Agent failure and degradation handling |
 | [H — Direct Agent Addressing](#h--direct-agent-addressing) | TC-044 – TC-047 | Bypassing ARTHUR to address agents directly |
-| [I — Artifact Creation](#i--artifact-creation) | TC-048 – TC-052 | Spec folder naming, location, and structure |
+| [I — Artifact Creation](#i--artifact-creation) | TC-048 – TC-058 | Spec folder naming, location, and structure |
 | [J — Temp Agent Lifecycle](#j--temp-agent-lifecycle) | TC-053 – TC-057 | Hire, use, and archive a temporary agent |
 
 ---
@@ -987,21 +989,24 @@ Create a spec for a Helm plugin system. Start the full path.
 
 ### TC-037 — Repo Memory: Project-Scoped Facts Persisted
 
-**Objective**: Verify that agents write discovered project conventions and facts to `/memories/repo/`.
+**Objective**: Verify that ARTHUR orchestrates persisting discovered project conventions to `/memories/repo/` — SCOOP researches, then ARTHUR delegates the file write to an appropriate agent.
 
 **Input / Prompt**:
 ```
-Research how Helm uses the artifacts directory and write a repo memory note summarizing what you learn.
+Research how Helm uses the artifacts directory and persist a repo memory note summarizing the findings.
 ```
 
 **Expected Behavior**:
 
-1. SCOOP (or another agent) investigates the artifact directory conventions.
-2. A repo memory note is written to `/memories/repo/`.
-3. The note captures the naming convention (`spec###-short-name/`), the types of artifacts stored, and which agents create them.
+1. ARTHUR delegates the research to SCOOP.
+2. SCOOP investigates the artifact directory conventions and returns findings in-conversation.
+3. ARTHUR delegates the memory write to an appropriate agent (e.g., QUILL or another agent with file-writing ability).
+4. A repo memory note is written to `/memories/repo/` capturing the naming convention (`spec###-short-name/`), the types of artifacts stored, and which agents create them.
 
 **Pass Criteria**:
 
+- [ ] SCOOP returns findings in-conversation (does not write files itself)
+- [ ] A different agent writes the repo memory note
 - [ ] A new file or updated entry exists in `/memories/repo/`
 - [ ] The content is factual and project-specific (not generic knowledge)
 
@@ -1009,23 +1014,28 @@ Research how Helm uses the artifacts directory and write a repo memory note summ
 
 ### TC-038 — Memory Scoping: Session vs. Repo
 
-**Objective**: Verify that agents correctly distinguish between session memory (temporary, conversation-scoped) and repo memory (persistent, project-scoped).
+**Objective**: Verify that ARTHUR correctly orchestrates writing to both session and repo memory — SCOOP delivers findings, then ARTHUR delegates the file writes to an agent that can persist them.
 
 **Input / Prompt**:
 ```
-Research the structure of Helm's agent files. Write what you learn to both the session memory and the repo memory. Explain the distinction between where you wrote each.
+Research the structure of Helm's agent files. Persist what you learn to both the session memory and the repo memory. Explain the distinction between where each was written.
 ```
 
 **Expected Behavior**:
 
-1. SCOOP writes a temporary in-progress note to `/memories/session/`.
-2. SCOOP writes durable project facts to `/memories/repo/`.
-3. SCOOP explains the distinction in its response.
+1. ARTHUR delegates research to SCOOP.
+2. SCOOP researches the structure of Helm's agent files and returns findings in-conversation.
+3. ARTHUR delegates the memory writes to an appropriate agent (e.g., QUILL or another agent with file-writing ability).
+4. The delegated agent writes a temporary in-progress note to `/memories/session/`.
+5. The delegated agent writes durable project facts to `/memories/repo/`.
+6. The response explains the distinction between the two memory scopes.
 
 **Pass Criteria**:
 
+- [ ] SCOOP delivers findings in-conversation only (does not write files)
+- [ ] A different agent writes the memory files
 - [ ] Two separate memory files are written (or updated) in the correct directories
-- [ ] SCOOP's explanation correctly characterizes the scope of each
+- [ ] The explanation correctly characterizes the scope of each
 
 ---
 
@@ -1467,69 +1477,192 @@ After TC-056:
 
 ---
 
+## Additional Test Cases
+
+These tests cover features introduced after the initial test plan.
+
+---
+
+### TC-058 — Standalone Documentation Path
+
+**Objective**: Verify that when QUILL is dispatched for documentation work outside of a Standard or Full Path workflow, output goes to `artifacts/docs/` — not a numbered spec folder.
+
+**Input / Prompt**:
+```
+Write a standalone getting-started guide for new developers who want to add agents to Helm.
+```
+
+**Expected Behavior**:
+
+1. ARTHUR identifies this as a documentation task outside of a spec workflow (no "plan this," "create a spec," or multi-step implementation triggers).
+2. ARTHUR dispatches QUILL with a brief directing output to `artifacts/docs/`.
+3. QUILL writes the guide to `artifacts/docs/`.
+4. No numbered spec folder is created.
+
+**Pass Criteria**:
+
+- [ ] QUILL writes to `artifacts/docs/` (not a `spec###-*/` folder)
+- [ ] No spec folder is created under `artifacts/`
+- [ ] ARTHUR's brief to QUILL explicitly mentions `artifacts/docs/` as the output location
+
+**Notes**: This tests QUILL's standalone output convention. When QUILL operates inside a spec workflow, it writes to the spec folder provided in the task brief. Outside of a spec workflow, the default is `artifacts/docs/`.
+
+---
+
+### TC-059 — Agent Interrupted / Checkpoint Resume
+
+**Objective**: Verify that when an agent is interrupted mid-task and a new session begins, ARTHUR checks `/memories/session/` for checkpoint state before re-dispatching work.
+
+**Input / Prompt**:
+
+**Session 1**:
+```
+Create a spec for a Helm agent analytics dashboard. Use the full path.
+```
+_(Allow the workflow to proceed through the spec gate approval. Do NOT approve the plan gate — end the session mid-workflow.)_
+
+**Session 2** (new conversation):
+```
+Check if there's any in-progress work from a previous session.
+```
+
+**Expected Behavior**:
+
+1. In Session 1, the agent writes checkpoint state to `/memories/session/` during the workflow.
+2. In Session 2, ARTHUR reads `/memories/session/` and finds the checkpoint.
+3. ARTHUR summarizes the in-progress state (spec approved, plan pending) and asks the user whether to continue or start fresh.
+4. If the user says continue, ARTHUR resumes from the checkpoint — does not restart spec research.
+
+**Pass Criteria**:
+
+- [ ] ARTHUR reads `/memories/session/` before dispatching new work in Session 2
+- [ ] ARTHUR reports the in-progress state accurately
+- [ ] Agent resumes from checkpoint rather than starting the full workflow over
+
+---
+
+### TC-060 — SCOOP Cannot Write Files
+
+**Objective**: Verify that SCOOP does not write files even when explicitly asked to — all file persistence must go through another agent.
+
+**Input / Prompt**:
+```
+@SCOOP Research how Helm handles agent tool restrictions and write your findings to artifacts/docs/research.md
+```
+
+**Expected Behavior**:
+
+1. SCOOP performs the research.
+2. SCOOP delivers findings in-conversation (structured report with Executive Summary, Key Findings, What Most People Miss, Recommendations).
+3. SCOOP does NOT create `artifacts/docs/research.md` or any other file.
+4. SCOOP explains that it cannot write files and suggests the user arrange for QUILL (or another agent with file-writing ability) to persist the output.
+
+**Pass Criteria**:
+
+- [ ] SCOOP delivers findings in-conversation only
+- [ ] No file is created anywhere in the workspace
+- [ ] SCOOP explicitly states it cannot write files
+- [ ] SCOOP suggests QUILL or another agent for file persistence
+
+**Notes**: This is a core constraint change — SCOOP no longer has the `edit` tool or any file-writing ability. This test should be included in the smoke test set because it validates a fundamental agent boundary.
+
+---
+
+### TC-061 — Proactive Checkpointing
+
+**Objective**: Verify that agents write checkpoint state to `/memories/session/` during multi-step work — not only at the end.
+
+**Input / Prompt**:
+```
+Create a spec for adding a Helm agent health-check system. Use the full path.
+```
+_(Approve the spec gate when prompted. Before approving the plan gate, check `/memories/session/` for checkpoint state.)_
+
+**Expected Behavior**:
+
+1. ARTHUR dispatches SAGE for the Full Path workflow.
+2. After the spec is written and the spec gate is approved, either ARTHUR or SAGE writes a checkpoint to `/memories/session/` reflecting the current progress.
+3. At the point between spec approval and plan approval, `/memories/session/` already contains checkpoint state.
+
+**Pass Criteria**:
+
+- [ ] `/memories/session/` contains checkpoint state before the plan gate is reached
+- [ ] Checkpoint reflects current progress (e.g., "spec complete, plan in progress" or equivalent)
+- [ ] Checkpoint is written proactively — not only after the entire workflow completes
+
+**Notes**: Check `/memories/session/` in the workspace between spec approval and plan approval. If checkpoint state is absent, proactive checkpointing is not working.
+
+---
+
 ## Summary Checklist
 
 Use this table as a quick pass/fail tracker across all test runs.
 
-| ID | Name | Status | Notes |
-|----|------|--------|-------|
-| TC-001 | Research Path: Single Topic | | |
-| TC-002 | Research Path: Parallel Topics | | |
-| TC-003 | Research Path: "Evaluate" Trigger | | |
-| TC-004 | Standard Path: Default Multi-Step | | |
-| TC-005 | Standard Path: User Approves Plan | | |
-| TC-006 | Standard Path: User Rejects Plan | | |
-| TC-007 | Full Path: "Plan This" Trigger | | |
-| TC-008 | Full Path: "Create a Spec" Trigger | | |
-| TC-009 | Explicit Override: "Use the Full Path" | | |
-| TC-010 | Explicit Override: "Standard Path" | | |
-| TC-011 | Plan Gate: ARTHUR Stops After Plan | | |
-| TC-012 | Plan Gate: Changes Requested | | |
-| TC-013 | Spec Gate: ARTHUR Stops After Spec | | |
-| TC-014 | Spec Gate: Sequential Gates (Both Present) | | |
-| TC-015 | Spec Gate: User Rejects Spec | | |
-| TC-016 | Auto-Proceed Negative Test | | |
-| TC-017 | Hiring Flow: Basic Trigger | | |
-| TC-018 | Hiring Flow: Research Foundation Required | | |
-| TC-019 | Hiring Flow: MERLIN Cannot Skip SCOOP | | |
-| TC-020 | Hiring Flow: Temp vs. Permanent Decision | | |
-| TC-021 | Hiring Flow: ARTHUR Cannot Create Agents | | |
-| TC-022 | Parallel Dispatch: Independent Research | | |
-| TC-023 | Parallel Dispatch: Independent Tasks | | |
-| TC-024 | Parallel Dispatch: File Conflict Rule | | |
-| TC-025 | Parallel Dispatch: Mixed Sequential/Parallel | | |
-| TC-026 | ARTHUR Must Not Produce Deliverables | | |
-| TC-027 | ARTHUR Must Not Do Domain Research | | |
-| TC-028 | ARTHUR Must Not Create Plans | | |
-| TC-029 | SCOOP Cannot Invoke Other Agents | | |
-| TC-030 | MERLIN Must Call SCOOP (Config Guard) | | |
-| TC-031 | SAGE Must Call SCOOP Before Planning | | |
-| TC-032 | QUILL Must Not Make Architectural Decisions | | |
-| TC-033 | ARTHUR Must Check Roster Before Delegating | | |
-| TC-034 | Approval Gate Cannot Be Pre-Bypassed | | |
-| TC-035 | SAGE Must Not Produce Code | | |
-| TC-036 | Session Memory: Context Preserved | | |
-| TC-037 | Repo Memory: Project Facts Persisted | | |
-| TC-038 | Memory Scoping: Session vs. Repo | | |
-| TC-039 | Memory Recall: Agents Use Existing Memory | | |
-| TC-040 | Error Recovery: Inconclusive Research | | |
-| TC-041 | Error Recovery: Vague Plan Request | | |
-| TC-042 | Error Recovery: Agent Tool Unavailable | | |
-| TC-043 | Error Recovery: Mid-Workflow Failure | | |
-| TC-044 | Direct SCOOP Address | | |
-| TC-045 | Direct SAGE Address | | |
-| TC-046 | Direct QUILL Address | | |
-| TC-047 | Direct MERLIN Address | | |
-| TC-048 | Artifact: Spec Folder Naming Convention | | |
-| TC-049 | Artifact: Sequential Numbering | | |
-| TC-050 | Artifact: SAGE Creates Folder, Not ARTHUR | | |
-| TC-051 | Artifact: Full Path Produces Both Files | | |
-| TC-052 | Artifact: Research Path No Folder | | |
-| TC-053 | Temp Agent: ARTHUR Requests Temporary Status | | |
-| TC-054 | Temp Agent: Created in Correct Location | | |
-| TC-055 | Temp Agent: Used in Execution | | |
-| TC-056 | Temp Agent: ARTHUR Initiates Archival | | |
-| TC-057 | Temp Agent: Roster Accuracy Post-Archive | | |
+**Mode**: 🤖 = automatable by test runner agent | 👤 = manual execution required
+
+| ID | Name | Mode | Status | Notes |
+|----|------|------|--------|-------|
+| TC-001 | Research Path: Single Topic | 🤖 | | |
+| TC-002 | Research Path: Parallel Topics | 👤 | | Requires verifying parallel timing |
+| TC-003 | Research Path: "Evaluate" Trigger | 🤖 | | |
+| TC-004 | Standard Path: Default Multi-Step | 👤 | | Multi-turn approval gate |
+| TC-005 | Standard Path: User Approves Plan | 👤 | | Continuation of TC-004 |
+| TC-006 | Standard Path: User Rejects Plan | 👤 | | Continuation of TC-004 |
+| TC-007 | Full Path: "Plan This" Trigger | 👤 | | Multi-turn, two approval gates |
+| TC-008 | Full Path: "Create a Spec" Trigger | 👤 | | Multi-turn, two approval gates |
+| TC-009 | Explicit Override: "Use the Full Path" | 👤 | | Multi-turn approval gates |
+| TC-010 | Explicit Override: "Standard Path" | 👤 | | Multi-turn approval gate |
+| TC-011 | Plan Gate: ARTHUR Stops After Plan | 👤 | | Requires observing stop behavior |
+| TC-012 | Plan Gate: Changes Requested | 👤 | | Multi-turn revision flow |
+| TC-013 | Spec Gate: ARTHUR Stops After Spec | 👤 | | Requires observing stop behavior |
+| TC-014 | Spec Gate: Sequential Gates (Both Present) | 👤 | | Multi-turn, both gates |
+| TC-015 | Spec Gate: User Rejects Spec | 👤 | | Multi-turn rejection flow |
+| TC-016 | Auto-Proceed Negative Test | 👤 | | Requires observing stop behavior |
+| TC-017 | Hiring Flow: Basic Trigger | 👤 | | Complex multi-agent chain |
+| TC-018 | Hiring Flow: Research Foundation Required | 👤 | | Requires file inspection after TC-017 |
+| TC-019 | Hiring Flow: MERLIN Cannot Skip SCOOP | 👤 | | Nuanced behavioral judgment |
+| TC-020 | Hiring Flow: Temp vs. Permanent Decision | 👤 | | Classification judgment |
+| TC-021 | Hiring Flow: ARTHUR Cannot Create Agents | 🤖 | | |
+| TC-022 | Parallel Dispatch: Independent Research | 👤 | | Requires timing observation |
+| TC-023 | Parallel Dispatch: Independent Tasks | 👤 | | Requires timing observation |
+| TC-024 | Parallel Dispatch: File Conflict Rule | 👤 | | Multi-turn with approval gate |
+| TC-025 | Parallel Dispatch: Mixed Sequential/Parallel | 👤 | | Multi-turn with approval gate |
+| TC-026 | ARTHUR Must Not Produce Deliverables | 🤖 | | |
+| TC-027 | ARTHUR Must Not Do Domain Research | 🤖 | | |
+| TC-028 | ARTHUR Must Not Create Plans | 🤖 | | |
+| TC-029 | SCOOP Cannot Invoke Other Agents | 🤖 | | |
+| TC-030 | MERLIN Must Call SCOOP (Config Guard) | 👤 | | Requires settings change |
+| TC-031 | SAGE Must Call SCOOP Before Planning | 👤 | | Complex multi-agent chain |
+| TC-032 | QUILL Must Not Make Architectural Decisions | 🤖 | | |
+| TC-033 | ARTHUR Must Check Roster Before Delegating | 👤 | | Requires file deletion setup |
+| TC-034 | Approval Gate Cannot Be Pre-Bypassed | 👤 | | Multi-turn gate observation |
+| TC-035 | SAGE Must Not Produce Code | 🤖 | | |
+| TC-036 | Session Memory: Context Preserved | 👤 | | Multi-turn memory observation |
+| TC-037 | Repo Memory: Project Facts Persisted | 👤 | | Multi-agent orchestration |
+| TC-038 | Memory Scoping: Session vs. Repo | 👤 | | Multi-agent orchestration |
+| TC-039 | Memory Recall: Agents Use Existing Memory | 👤 | | Requires prior memory setup |
+| TC-040 | Error Recovery: Inconclusive Research | 🤖 | | |
+| TC-041 | Error Recovery: Vague Plan Request | 🤖 | | |
+| TC-042 | Error Recovery: Agent Tool Unavailable | 👤 | | Requires mode switch |
+| TC-043 | Error Recovery: Mid-Workflow Failure | 👤 | | Requires failure simulation |
+| TC-044 | Direct SCOOP Address | 🤖 | | |
+| TC-045 | Direct SAGE Address | 🤖 | | |
+| TC-046 | Direct QUILL Address | 🤖 | | |
+| TC-047 | Direct MERLIN Address | 👤 | | Complex hiring chain |
+| TC-048 | Artifact: Spec Folder Naming Convention | 👤 | | Multi-turn full path |
+| TC-049 | Artifact: Sequential Numbering | 👤 | | Multi-turn full path |
+| TC-050 | Artifact: SAGE Creates Folder, Not ARTHUR | 👤 | | Multi-turn observation |
+| TC-051 | Artifact: Full Path Produces Both Files | 👤 | | Multi-turn, both gates |
+| TC-052 | Artifact: Research Path No Folder | 🤖 | | |
+| TC-053 | Temp Agent: ARTHUR Requests Temporary Status | 👤 | | Multi-step lifecycle |
+| TC-054 | Temp Agent: Created in Correct Location | 👤 | | Requires TC-053 |
+| TC-055 | Temp Agent: Used in Execution | 👤 | | Requires TC-053 |
+| TC-056 | Temp Agent: ARTHUR Initiates Archival | 👤 | | Requires TC-053 |
+| TC-057 | Temp Agent: Roster Accuracy Post-Archive | 👤 | | Requires TC-053 |
+| TC-058 | Standalone Documentation Path | 👤 | | Multi-turn with approval gate |
+| TC-059 | Agent Interrupted / Checkpoint Resume | 👤 | | Cross-session simulation |
+| TC-060 | SCOOP Cannot Write Files | 🤖 | | |
+| TC-061 | Proactive Checkpointing | 👤 | | Multi-turn memory inspection |
 
 ---
 
@@ -1572,3 +1705,9 @@ ARTHUR uses the Standard Path when Full was requested, or skips to execution whe
 A new spec folder is created with a number already in use, overwriting existing artifacts.
 
 **Detection**: Check `artifacts/` before and after each Full Path test. Two `spec001-*` folders (or any duplicate number) indicates the numbering check failed.
+
+### SCOOP writing files directly
+
+SCOOP creates files in the workspace instead of returning findings in-conversation. This violates SCOOP's updated constraint that it must never write files — all file persistence goes through QUILL.
+
+**Detection**: After any SCOOP invocation, check whether new files were created in the workspace. SCOOP should produce zero file system changes.
