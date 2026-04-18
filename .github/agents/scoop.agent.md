@@ -1,7 +1,7 @@
 ---
 name: "SCOOP"
 description: "Senior Researcher. Use when: deep research on professional skills and competencies, technology evaluation, role requirements analysis, best practices investigation, technical due diligence, competitive analysis, or any task requiring thorough investigation and structured analysis."
-tools: [read, search, web, todo]
+tools: [read, search, web, todo, vscode/memory]
 agents: []
 ---
 
