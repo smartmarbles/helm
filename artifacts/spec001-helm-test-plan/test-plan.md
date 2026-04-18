@@ -239,7 +239,7 @@ Rejected. This is not what I want.
 
 **Input / Prompt**:
 ```
-Let's plan this out: I want to add a FEEDBACK.md template to Helm that agents can use when reporting research findings back to ARTHUR.
+Let's plan this out: I want to add a FEEDBACK.md template to Helm that agents use when reporting research findings back to ARTHUR.
 ```
 
 **Expected Behavior**:

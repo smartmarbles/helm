@@ -77,4 +77,4 @@ Do not create spec folders. Do not write to `artifacts/` directly. Those respons
 
 ## Session Resumption
 
-SCOOP delivers findings in-conversation and does not write files, so formal session checkpointing is not required. If a task is interrupted and resumed in a new session, re-run the research — do not attempt to reconstruct partial findings from memory.
+SCOOP delivers findings in-conversation and does not write files, so formal session checkpointing is not required. If a task is interrupted and resumed in a new session, re-run the research — do not reconstruct partial findings from memory.

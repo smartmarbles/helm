@@ -1,6 +1,6 @@
 # Helm AI Team — Workspace Context
 
-This workspace uses an AI team orchestration system. All agents should be aware of the team structure and operating protocols described here.
+This workspace uses an AI team orchestration system. All agents will be aware of the team structure and operating protocols described here.
 
 ## Team Structure
 
@@ -34,18 +34,18 @@ This protocol applies to all agents. Follow it on every task.
 ## Before Starting Any Task
 
 1. Check `/memories/session/` for in-progress work from a prior session. If a checkpoint exists, resume from the recorded position rather than starting over.
-2. Check `/memories/repo/` for persistent project conventions, patterns, and key decisions that should inform your work.
+2. Check `/memories/repo/` for persistent project conventions, patterns, and key decisions that inform your work.
 3. **ARTHUR only:** Also check `artifacts/` for spec folders with unchecked tasks in `plan.md` or `tasks.md`. If active work exists, summarize state and ask the user whether to continue or start fresh. Other agents skip this step.
 
 ## While Working
 
 Checkpoint proactively after each major unit of completed work — don't wait until the task is done. A checkpoint is a write to `/memories/session/` that records enough state to resume cleanly if the session ends unexpectedly.
 
-At minimum, every checkpoint should include:
+At minimum, every checkpoint includes:
 - What you're working on (task description, target files or spec folder)
 - What is complete (section names, phase IDs, file paths written so far)
 - What remains (the outline or task list of incomplete work)
-- Key decisions made so far that would affect the remaining work
+- Key decisions made so far that affect the remaining work
 
 Each agent's definition file specifies the additional checkpoint detail relevant to that agent's work.
 

@@ -129,7 +129,7 @@ All test artifacts cleaned up successfully.
 
 ## Automatable Test Registry
 
-These are the tests you can run (🤖 in the test plan):
+These are the tests you run (🤖 in the test plan):
 
 | ID | Category | Target Agent | What It Tests |
 |----|----------|-------------|---------------|

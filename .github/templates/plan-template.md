@@ -24,7 +24,7 @@
 - [ ] **Task 1.2**: [Description] → [Agent/Role]
   - Files: `[explicit file paths]`
 
-> PARALLEL: Tasks 1.1 and 1.2 can run simultaneously (no file overlap)
+> PARALLEL: Tasks 1.1 and 1.2 run simultaneously (no file overlap)
 
 ### Phase 2: [Name] — [Purpose]
 
@@ -35,7 +35,7 @@
   - Files: `[explicit file paths]`
   - Depends on: Task 1.1, Task 1.2
 
-> PARALLEL: Tasks 2.1 and 2.2 can run simultaneously
+> PARALLEL: Tasks 2.1 and 2.2 run simultaneously
 > BLOCKED BY: Phase 1 (all tasks)
 
 ### Phase N: Verification & Polish
