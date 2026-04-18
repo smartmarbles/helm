@@ -21,6 +21,8 @@ Agents hired for one-time tasks. After completion, archived to `.github/agents/t
 
 | Agent | Role | Task | Hired | Archived | File |
 |-------|------|------|-------|----------|------|
-| *(none yet)* | | | | | |
+| SPLICE | Surgical Python Validator Coder | spec002 P9a-T3 — widen `validate_skill.py` per FR-091 through FR-095 | 2026-04-18 | *(active)* | `.github/agents/temps/splice.agent.md` |
+
+**SPLICE tagline:** *The diff is the deliverable.*
 
 

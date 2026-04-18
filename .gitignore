@@ -1,2 +1,6 @@
 synap.config.json
 synap.lock.json
+
+# Local fallback memory used when Copilot memory tool is unavailable (spec002)
+.agent-memory/
+
