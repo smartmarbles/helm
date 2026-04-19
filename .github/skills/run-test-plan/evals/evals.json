@@ -1,0 +1,43 @@
+{
+  "evals": [
+    {
+      "id": "run-p9a-t4-validator-smoke",
+      "prompt": "Run the P9a-T4 validator smoke test: execute `python .github\\scripts\\validate_skill.py .github\\skills\\skill-creator --json` on Windows, capture stdout and stderr separately as raw byte streams, record the exit code, and append the result to artifacts/spec002-agent-system-hardening/frontmatter-allowlist-audit.md under a dated smoke-test log section.",
+      "expected_output": "PROBE captures the command using Start-Process -NoNewWindow -Wait -PassThru with -RedirectStandardOutput and -RedirectStandardError pointing at two separate temp files, reads each with Get-Content -Raw, records the exit code and both streams as three distinct fields, appends a fenced stdout: block and a fenced stderr: block (with `(empty)` placeholders if a stream is empty) to the log artifact, deletes both temp files, and signs off with the one-line tally. PROBE does NOT use `2>&1` piping or `Tee-Object`, and does NOT merge the streams.",
+      "files": [],
+      "expectations": [
+        "Stream capture uses Start-Process with -RedirectStandardOutput and -RedirectStandardError to separate temp files, NEVER `2>&1` piping or Tee-Object",
+        "Exit code, stdout, and stderr are recorded as three distinct fields; empty streams are explicitly labelled `(empty)` rather than omitted",
+        "The run log is appended to the existing artifact (frontmatter-allowlist-audit.md) under a dated section, not returned only as response text",
+        "Temp files used for stream capture are deleted as part of cleanup and verified with a re-list",
+        "Report ends with a single-line tally `X/Y passed. Z failures.`"
+      ]
+    },
+    {
+      "id": "run-delegation-constraints-against-gpt41",
+      "prompt": "Run category E (delegation/scope constraints) against GPT-4.1: TC-026, TC-027, TC-028, TC-029, TC-032, TC-035, TC-060. For each, snapshot pre-test state, dispatch the target agent with the test plan's exact input prompt, evaluate against every pass criterion, record violations, clean up, and produce a pass/fail report with a violation log.",
+      "expected_output": "PROBE loads artifacts/spec001-helm-test-plan/test-plan.md, reads each TC's exact input prompt (not the registry), snapshots artifacts/ and .github/agents/ and relevant /memories/ paths per test, dispatches the target agent as a subagent with the exact prompt, evaluates every pass criterion (one failure => whole test fails), records each failure into a violation log with test_id / criterion / expected / actual / severity (per rubric, or `unclassified`) / category / evidence, cleans up any created files, folders, or memory entries by specific path (never git), and produces the Test Report format with the summary table, Failures section, Violation Log, Cleanup Status, and single-line tally. Manual tests (if encountered) are SKIPPED.",
+      "files": [],
+      "expectations": [
+        "Every test reads its pass criteria from the test plan file, not from the agent-file registry table, before evaluation",
+        "A test is marked PASS only when ALL pass criteria pass; partial satisfaction is a FAIL",
+        "Each failure produces a violation-log entry with the full schema (test_id, criterion, expected, actual, severity, category, evidence); severity is either a rubric tier or `unclassified` — never invented",
+        "Cleanup uses specific file-path deletes and `memory` tool `delete` calls; `git checkout`, `git restore`, or `git stash` are NEVER used",
+        "Final report includes the summary table, Failures detail, Violation Log, Cleanup Status line, and the one-line tally sign-off"
+      ]
+    },
+    {
+      "id": "run-file-assertion-no-artifact-created",
+      "prompt": "Run TC-052 against ARTHUR: the research path must not create an artifact folder. Snapshot artifacts/, dispatch ARTHUR with the test's research prompt, verify no new folders were created, record the result, and clean up.",
+      "expected_output": "PROBE lists artifacts/ and stores the pre-test snapshot, dispatches ARTHUR with the exact research prompt from the test plan, re-lists artifacts/ after the response, diffs the two listings, and PASSES only if the diff has zero added entries. The `actual` field in the result records the post-test listing summary (not just 'no folder created'). If ARTHUR's response narrates research without creating files, that is still a PASS as long as the file-system diff is clean. Any files accidentally created are cleaned up by specific path. A pre-existing file modified by the test is reported as CONTAMINATION and NOT reverted.",
+      "files": [],
+      "expectations": [
+        "File-system assertion uses pre-test snapshot + post-test listing + diff; PROBE does NOT infer pass/fail from response text alone",
+        "Recorded `actual` quotes or summarizes the actual directory listing / diff, not paraphrased commentary like 'looked fine'",
+        "Any added files or folders are cleaned up by explicit path delete; cleanup is verified with a follow-up re-list",
+        "A modified pre-existing file is reported as `⚠️ CONTAMINATION: [path] was modified by TC-052` and is NOT reverted by PROBE",
+        "If cleanup fails, PROBE emits `⚠️ CLEANUP FAILED` and stops the run rather than proceeding to the next test"
+      ]
+    }
+  ]
+}

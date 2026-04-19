@@ -1,0 +1,43 @@
+{
+  "evals": [
+    {
+      "id": "spec-new-feature",
+      "prompt": "Create a spec for a feature that lets users schedule recurring exports of their account data (daily/weekly/monthly) with email delivery.",
+      "expected_output": "SAGE dispatches SCOOP for research, captures intent in its own words, drafts a spec.md under artifacts/spec###-recurring-exports/ covering Overview, P1/P2 user scenarios with acceptance criteria, FR-### requirements table, SC-### success criteria, Edge Cases, and Open Questions. File is written via create_file. SAGE reports back with folder path, files written, 1-2 sentence summary, and Open Questions count. Does NOT begin a plan.",
+      "files": [],
+      "expectations": [
+        "SCOOP is dispatched for technical research before the spec is drafted",
+        "Spec is written to disk via create_file at artifacts/spec###-<short-name>/spec.md, not returned as response text",
+        "Spec contains all required sections: Overview, User Scenarios (P1 + P2 minimum), Requirements (FR-### table), Success Criteria (SC-###), Edge Cases, Open Questions",
+        "Open Questions section is explicit (lists questions or says \"None\") — never silently omitted",
+        "Handoff report includes folder path, file(s) written, brief summary, and Open Questions count; SAGE does not begin a plan"
+      ]
+    },
+    {
+      "id": "spec-ambiguous-request",
+      "prompt": "I want a way for my users to 'collaborate better'. Create a spec for it.",
+      "expected_output": "SAGE restates the request in its own words, identifies the ambiguity (what kind of collaboration? comments? shared editing? notifications?), and either asks the user for clarification before proceeding or drafts a spec with a prominent Open Questions section capturing the ambiguity. Does not fabricate a specific collaboration feature as if the user had specified it.",
+      "files": [],
+      "expectations": [
+        "SAGE captures intent by restating the request before drafting any structure",
+        "Ambiguity is surfaced explicitly — either as a clarifying question to the user or in the spec's Open Questions section",
+        "SAGE does NOT invent specific scope (e.g., \"real-time co-editing with presence indicators\") without user confirmation",
+        "If a draft spec is produced, the Open Questions section is substantial and flagged at the Spec Checkpoint handoff",
+        "SAGE reports Open Questions count to ARTHUR so the human checkpoint can resolve them before planning"
+      ]
+    },
+    {
+      "id": "spec-wrong-path",
+      "prompt": "Create a spec comparing Postgres vs MySQL for our workload.",
+      "expected_output": "SAGE recognizes this as a research request rather than a feature spec, declines to produce a spec.md, and recommends routing to SCOOP for a comparison. If a migration spec would be warranted after research, SAGE offers to produce one once the research returns.",
+      "files": [],
+      "expectations": [
+        "SAGE does NOT write a spec.md for a research/comparison question",
+        "SAGE identifies the request as research-shaped and recommends SCOOP instead",
+        "No artifacts/spec###-*/ folder is created for this request",
+        "SAGE clearly explains the distinction: specs are for building something, research returns findings in-conversation",
+        "SAGE offers a clear path forward (e.g., \"after SCOOP's comparison, I can spec a migration if you choose one\")"
+      ]
+    }
+  ]
+}

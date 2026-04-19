@@ -1,0 +1,43 @@
+{
+  "evals": [
+    {
+      "id": "design-rubric-for-memory-discipline",
+      "prompt": "Design a scoring rubric for testing memory-scope discipline (user/repo/session selection + fallback behaviour) against GPT-4.1 and Claude Sonnet 4.6. Deliver eight categories with weights summing to 100, a severity taxonomy, a violation-log schema, a scorecard template, and a three-layer model-verification section. Assume GPT-4.1's dominant failure mode is writing session-scope notes to /memories/ (user scope).",
+      "expected_output": "PROBE produces a rubric artifact with exactly eight categories whose weights sum to 100, with weight clustered on the observed GPT-4.1 failure mode (memory-scope selection weighted heaviest, with at least one adjacent category — e.g., fallback behaviour or session-vs-repo boundary discipline — as second-highest; together the top two absorb ~40–50% of total weight). Every category row carries a one-sentence rationale. The severity taxonomy defines critical/major/minor with concrete sub-score impacts (critical caps category at 50, major -10, minor -2) and a hard overall-score ceiling of 70 for any run with a critical violation. The violation-log schema lists id, test_case_id, category, rule_violated, expected, actual, severity, evidence — with severity tier including `unclassified`. The scorecard template carries a YAML metadata block (run_id, model, run_date, test_corpus, test_cases_run, rubric_version), plus Overall / Category Sub-scores / Test Results / Violation Log / Verification / Reproduction sections. The Verification section specifies the three-layer protocol (self-ID probe prompt verbatim, behavioural fingerprint rows for gpt-4.1 and claude-sonnet-4.6, user-UI confirm handoff prompt verbatim). Version is stamped 1.0.0 with a one-line changelog entry.",
+      "files": [],
+      "expectations": [
+        "Exactly eight categories are defined; their weights sum to 100 and the total row is explicit",
+        "Top two categories reflect the stated GPT-4.1 failure mode (memory-scope selection) and together absorb ~40–50% of weight; every category row carries a one-sentence rationale",
+        "Severity taxonomy defines critical/major/minor with the standard sub-score impacts (cap 50 / -10 / -2) and a hard overall ceiling of 70 on any run containing a critical violation",
+        "Violation-log schema lists all eight required fields (id, test_case_id, category, rule_violated, expected, actual, severity, evidence); severity enum includes `unclassified`",
+        "Scorecard template includes the run-tagging YAML block (run_id, model, run_date, test_corpus, test_cases_run, rubric_version) and the Verification section with all three layers populated (self-ID probe verbatim, fingerprint rows for both target models, user-UI confirm handoff verbatim); version stamped 1.0.0 with a dated changelog entry"
+      ]
+    },
+    {
+      "id": "add-severity-categorization-to-existing-rubric",
+      "prompt": "The existing rubric at artifacts/spec002-agent-system-hardening/probe-scoring-rubric.md already defines eight categories and weights. Review it and add a severity taxonomy section (critical/major/minor) with sub-score impacts, a hard overall-score ceiling for critical violations, and the rule for how runners handle violations that do not match any tier. Bump the rubric version and append a changelog entry.",
+      "expected_output": "PROBE adds a §Severity Classification section that defines critical (category capped at 50), major (-10 per occurrence, floor 0), and minor (-2 per occurrence, floor 0), plus the rule that any run with a critical violation is capped at 70/100 overall. The section states that severity is assigned by consequence (broken contract or corrupted output → critical), not by effort or output merit. It explicitly adds the `unclassified` escape hatch for runners when no rule covers the behaviour, with the rule author's responsibility to decide whether to extend the taxonomy. The version is bumped (e.g., 1.0.0 → 1.1.0) and a one-line changelog entry is appended under §Versioning documenting the addition. No category weights are altered (severity addition is orthogonal). PROBE does NOT invent a fourth tier or rename existing tiers.",
+      "files": ["artifacts/spec002-agent-system-hardening/probe-scoring-rubric.md"],
+      "expectations": [
+        "A Severity Classification section is added with exactly three tiers (critical/major/minor) and the standard sub-score impacts (cap 50 / -10 / -2 with floor 0)",
+        "A hard overall-score ceiling of 70 is imposed on any run containing one or more critical violations",
+        "The section explicitly states severity is assigned by consequence, not by effort or output quality, and provides the `unclassified` escape hatch for runners with a note that extending the taxonomy is the rubric author's decision (minor version bump)",
+        "Rubric version is bumped at the minor level and a dated one-line changelog entry is appended under the Versioning section describing the addition",
+        "Existing category weights are NOT altered; no fourth severity tier is invented; existing tier names are NOT renamed"
+      ]
+    },
+    {
+      "id": "define-fingerprint-for-new-model-tier",
+      "prompt": "We are adding Claude Haiku 4.5 (`claude-haiku-4.5`) to the supported models. Extend the existing rubric's model-execution-verification section: add the canonical model tag, add a behavioural fingerprint row (tier, latency fingerprint, style fingerprint), and bump the rubric version. Haiku is a fast non-reasoning tier; expect sub-second to ~1.5s latency and terse output with minimal preamble.",
+      "expected_output": "PROBE bumps the rubric's minor version (e.g., 1.1.0 → 1.2.0) and appends a one-line changelog entry: `1.2.0 — YYYY-MM-DD — added claude-haiku-4.5 canonical tag and fingerprint row`. The canonical model-tag list grows to include `claude-haiku-4.5`. The behavioural fingerprint table grows by one row: tier = `Fast non-reasoning`; latency fingerprint = sub-second to ~1.5s typical on short prompts, no reasoning pause; style fingerprint = terse, minimal preamble, concise structure. The row is added alongside — not replacing — existing rows. PROBE does NOT ship the tag without the fingerprint row (Rule: tag and fingerprint ship together). The three-layer protocol and severity taxonomy are not altered; only the model-tag list and fingerprint table grow.",
+      "files": ["artifacts/spec002-agent-system-hardening/probe-scoring-rubric.md"],
+      "expectations": [
+        "Rubric minor version is bumped and a dated one-line changelog entry is appended naming the new tag and fingerprint addition",
+        "`claude-haiku-4.5` is added to the canonical model-tag list alongside existing tags; no existing tags are removed or renamed",
+        "A new fingerprint row is added with all three fields populated (tier, latency fingerprint, style fingerprint); latency reflects sub-second-to-~1.5s behaviour and style reflects terse / minimal-preamble output",
+        "The model tag and the fingerprint row are added in the same version bump (the `tag-and-fingerprint-ship-together` rule); PROBE does NOT land the tag-only change",
+        "The three-layer verification protocol and the severity taxonomy are NOT altered; only the model-tag list and the fingerprint table grow"
+      ]
+    }
+  ]
+}

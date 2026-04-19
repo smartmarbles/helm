@@ -1,0 +1,47 @@
+{
+  "skill_name": "hire-agent",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We need someone who can write React components for our design system. Hire them.",
+      "expected_output": "MERLIN runs the Hire-vs-No-Hire check (no existing agent owns React component work). Invokes SCOOP with a research brief on top-tier React component engineers before drafting anything. Reads SCOOP's findings. Drafts a permanent agent file at `.github/agents/<name>.agent.md` with the full body schema including a `## Research Foundation` section summarizing SCOOP's output. Appends a row to the Permanent Team table in `.github/team-roster.md` with tagline and today's hired date. Does NOT write the agent file before SCOOP returns. Does NOT dispatch the new agent to do React work — hands control back to ARTHUR.",
+      "files": [],
+      "expectations": [
+        "MERLIN first checks the roster and confirms no existing agent covers React component work",
+        "MERLIN invokes SCOOP with a skills-research brief before authoring the agent file",
+        "The drafted agent file at `.github/agents/<name>.agent.md` contains a `## Research Foundation` section derived from SCOOP's actual output",
+        "Placement is permanent (Permanent Team table), not temporary, because React component work is a recurring capability",
+        "A roster row is appended to `.github/team-roster.md` in the same turn as the agent file — with tagline and today's hired date",
+        "MERLIN announces the hire but does NOT dispatch the new agent to start React work"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Hire a temp to run a one-shot Python migration script for converting legacy config files. This is a single-task hire.",
+      "expected_output": "MERLIN invokes SCOOP on Python migration-script engineers before drafting. Drafts a temporary agent file at `.github/agents/<name>.agent.md` (active location) with the full schema including `## Research Foundation`. Adds a row to the Temporary Agents table with Task, Hired=today, Archived=*(active)*, and File pointing to the active path. Records the tagline in the callout below the table. Does NOT add a re-archival trigger (this is single-dispatch, not retained). Does NOT move the file into `.github/agents/temps/` yet — archival is a separate workflow and out of scope.",
+      "files": [],
+      "expectations": [
+        "MERLIN invokes SCOOP before drafting any agent file",
+        "Placement is temporary — roster row lands in the Temporary Agents table, not Permanent Team",
+        "The agent file is written to `.github/agents/<name>.agent.md` (the active location), NOT directly into `.github/agents/temps/`",
+        "The Archived column reads `*(active)*` while the agent is in use",
+        "No re-archival trigger callout is added — this is single-dispatch, not a retained temp",
+        "MERLIN does NOT perform archival to `temps/` in this turn — that workflow belongs to the `archive-agent` skill"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "The team needs a CSS specialist to own styling across the project long-term.",
+      "expected_output": "MERLIN runs the roster check — PRISM already owns CSS on the Permanent Team. MERLIN declines the hire, names PRISM as the existing coverage, and recommends engaging PRISM directly. Does NOT invoke SCOOP, does NOT create a duplicate agent file, does NOT update the roster. If the user insists on a new hire anyway despite PRISM's existence, MERLIN asks for clarification on what specific gap the new hire would fill that PRISM does not.",
+      "files": [],
+      "expectations": [
+        "MERLIN consults `.github/team-roster.md` and identifies PRISM as the existing CSS owner",
+        "MERLIN declines the hire and explains that PRISM already covers the scope",
+        "No SCOOP invocation occurs — there is no hire to research",
+        "No new agent file is created at `.github/agents/`",
+        "No roster row is added",
+        "If the user pushes to hire anyway, MERLIN asks for the specific gap that PRISM does not cover rather than silently creating a redundant agent"
+      ]
+    }
+  ]
+}

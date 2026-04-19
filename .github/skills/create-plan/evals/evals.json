@@ -1,0 +1,43 @@
+{
+  "evals": [
+    {
+      "id": "plan-from-approved-spec",
+      "prompt": "The spec at artifacts/spec007-recurring-exports/spec.md has been approved at the Spec Checkpoint. Produce the implementation plan.",
+      "expected_output": "SAGE dispatches SCOOP for codebase/pattern research, then drafts a phased plan.md under artifacts/spec007-recurring-exports/. Each phase has explicit PARALLEL and BLOCKED BY annotations; each task names the files it owns with no file overlap inside a phase. Shared/foundational work (types, schemas) appears in Phase 1. A Watch Out section is present. Open Questions section is explicit. If >10 tasks, a tasks.md is also produced. Files are written via create_file. SAGE reports back with folder path, files written, 1-2 sentence phase summary, Open Questions count, and a Watch Out pointer. Does NOT begin phased execution.",
+      "files": [],
+      "expectations": [
+        "SCOOP is dispatched for technical/codebase research before phases are drafted",
+        "Plan is written to disk via create_file at artifacts/spec###-<short-name>/plan.md, not returned as response text",
+        "Every phase carries both a PARALLEL annotation (or explicit sequential reasoning) and a BLOCKED BY annotation; tasks with specific prerequisites use per-task Depends on lines",
+        "Every task names explicit file paths, and no two parallel tasks within a phase share a file; shared/foundational work is isolated to Phase 1",
+        "Handoff report includes folder path, files written, phase summary, Open Questions count, and a Watch Out pointer; SAGE does NOT start dispatching agents or executing phases"
+      ]
+    },
+    {
+      "id": "plan-standard-path-no-spec",
+      "prompt": "Standard path: rename the existing `UserService.fetchById` method to `UserService.findById` across the backend and update all call sites and tests.",
+      "expected_output": "SAGE recognizes this as a standard-path request that does not require a spec. Produces a right-sized plan (likely one or two phases, no tasks.md split) under a new spec folder. Every task names explicit file paths. Watch Out notes risks like missed call sites, shadowed names, or string-based references. Plan is written via create_file; SAGE reports back and stops.",
+      "files": [],
+      "expectations": [
+        "SAGE does NOT produce a spec for this standard-path request — goes directly to plan authoring",
+        "Plan is right-sized (no five-phase ceremony for a symbol rename) and does NOT produce a tasks.md when the task count is well under ~10",
+        "Every task explicitly names the file paths it touches (e.g., src/services/UserService.ts, plus concrete call-site and test files)",
+        "Watch Out section surfaces at least one non-obvious risk (e.g., string-based references, reflection, serialized names, shadowed identifiers)",
+        "Plan is written via create_file to artifacts/spec###-<short-name>/plan.md; SAGE reports back with folder/files/summary and does NOT begin executing the rename"
+      ]
+    },
+    {
+      "id": "plan-hidden-file-conflict",
+      "prompt": "Draft a plan for adding a new `validateCart()` helper to `apps/api/checkout.ts` while also refactoring `apps/api/checkout.ts` to use the new `PricingEngine` module.",
+      "expected_output": "SAGE detects that both tasks touch apps/api/checkout.ts and places them in sequential phases, not a single parallel phase. The refactor task carries a Depends on annotation referencing the helper-add task. No PARALLEL annotation ever groups two tasks that share a file. Watch Out calls out the file-conflict risk explicitly. Plan is written via create_file and SAGE reports back at the Plan Checkpoint.",
+      "files": [],
+      "expectations": [
+        "The two tasks are sequenced across phases (or explicitly marked sequential within a phase) — NEVER annotated as PARALLEL",
+        "The later task uses a per-task `Depends on:` annotation referencing the earlier task",
+        "No parallel annotation in any phase groups two tasks that share a file path",
+        "Watch Out section explicitly notes the checkout.ts co-ownership risk and the ordering required to avoid merge conflicts",
+        "Plan is written via create_file; SAGE stops at the Plan Checkpoint and does not begin executing the refactor"
+      ]
+    }
+  ]
+}

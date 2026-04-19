@@ -1,0 +1,45 @@
+{
+  "skill_name": "orchestrate-delegation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Research how Next.js middleware compares to Express middleware, and separately look into how Deno's permission model works.",
+      "expected_output": "ARTHUR classifies the request as the research path. Identifies two independent research topics. Dispatches two SCOOP agents in a single batched response — one brief per topic. Does NOT combine both topics into a single SCOOP brief. Does NOT dispatch sequentially.",
+      "files": [],
+      "expectations": [
+        "ARTHUR explicitly identifies the request as the research path",
+        "ARTHUR counts two independent topics and dispatches SCOOP twice",
+        "Both SCOOP dispatches appear in a single batched response (parallel)",
+        "No combined 'research both of these' brief is issued",
+        "No file deliverable is produced directly by ARTHUR"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create a spec for a new user-settings page, then implement it.",
+      "expected_output": "ARTHUR classifies as full path (spec requested). Assigns next spec###-user-settings folder name. Dispatches SAGE to write the spec there. When SAGE returns, ARTHUR reads the spec file to verify it exists on disk, summarizes the key points to the user, and STOPS at the Spec Checkpoint awaiting explicit approval before proceeding to plan generation.",
+      "files": [],
+      "expectations": [
+        "ARTHUR classifies the request as the full path",
+        "ARTHUR assigns a spec folder name following the spec###-kebab-case convention",
+        "ARTHUR dispatches SAGE (not another agent) to write the spec",
+        "After SAGE returns, ARTHUR verifies the spec file exists on disk before summarizing",
+        "ARTHUR pauses at the Spec Checkpoint and explicitly asks the user for approval",
+        "ARTHUR does NOT proceed to plan generation without user approval"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Fix the broken link in README.md.",
+      "expected_output": "ARTHUR recognizes this as a simple task but still delegates — core principle: ARTHUR never produces deliverables. Dispatches QUILL with a brief (objective, context, success criteria). Does NOT edit the file directly. Does NOT ask the user for permission to delegate — delegation is the default action.",
+      "files": [],
+      "expectations": [
+        "ARTHUR dispatches QUILL to make the fix",
+        "ARTHUR does not edit README.md directly or produce the fix in prose",
+        "ARTHUR does not ask the user 'should I delegate this?' — dispatches without that confirmation",
+        "The brief to QUILL includes objective, context, and success criteria",
+        "Because this is a standalone doc task (no spec folder), no artifacts/spec### folder is created"
+      ]
+    }
+  ]
+}

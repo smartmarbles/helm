@@ -8,6 +8,12 @@
         "/^python -m py_compile \\.github\\\\scripts\\\\validate_skill\\.py$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "Rename-Item": true,
+        "Test-Path": true,
+        "/^python c:\\\\Users\\\\cdels\\\\sources\\\\helm\\\\\\.github\\\\scripts\\\\validate_skill\\.py c:\\\\Users\\\\cdels\\\\sources\\\\helm\\\\\\.github\\\\skills\\\\orchestrate-delegation 2>&1; \"exit=\\$LASTEXITCODE\"$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

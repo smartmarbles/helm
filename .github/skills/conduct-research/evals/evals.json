@@ -1,0 +1,45 @@
+{
+  "skill_name": "conduct-research",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Research current best practices for structured logging in distributed systems.",
+      "expected_output": "SCOOP scopes the question and picks dimensions (what to log, format conventions, context propagation, sampling, PII handling, operational cost) before gathering. Prefers primary and reputable secondary sources (OpenTelemetry docs, major engineering blog post-mortems) over aggregated listicles. Corroborates non-trivial claims across independent sources and flags confidence where it matters. Delivers the report in-conversation using the four-section structure: Executive Summary, Key Findings, `## What Most People Miss` (exact heading), Recommendations — plus Sources. Does NOT write the findings to any file.",
+      "files": [],
+      "expectations": [
+        "SCOOP scopes the question and names the dimensions before gathering",
+        "Sources prioritize primary / official docs and reputable secondary analysis",
+        "At least one non-trivial finding is corroborated across independent sources, or explicitly flagged as single-source",
+        "Confidence levels are called out on claims where ambiguity would mislead the reader",
+        "The report includes the four required sections in order, with the exact heading `## What Most People Miss`",
+        "No file is written — findings are delivered in-conversation only"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Evaluate pnpm, npm, and Yarn for a large monorepo use case. We want a written comparison doc at the end.",
+      "expected_output": "SCOOP scopes as a decision request requiring breadth across three options plus depth on the top contenders. Pulls from primary sources (each tool's docs, RFCs, release notes) and practitioner accounts from monorepo operators. Reports comparative findings organized by decision-impact dimensions (install performance, workspace support, lockfile semantics, ecosystem compatibility, failure modes). Includes mandatory `## What Most People Miss` section (e.g., lockfile churn cost in large repos, or hoisting-behaviour differences that bite at monorepo scale). At the end, explicitly tells the requester that the written comparison doc is a QUILL deliverable and that ARTHUR should route the handoff. Does NOT author the comparison doc itself.",
+      "files": [],
+      "expectations": [
+        "SCOOP covers all three options with depth on the top contenders rather than equal-weight skim",
+        "Findings are organized by decision-impact dimensions and ordered by relevance",
+        "The `## What Most People Miss` section surfaces a non-obvious monorepo-scale insight",
+        "SCOOP explicitly declines to write the comparison doc and hands the written-file work off to QUILL via ARTHUR",
+        "No markdown file is created by SCOOP in artifacts/ or anywhere else"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "MERLIN is hiring a senior platform engineer. What do real top-tier platform engineers know, do, and value?",
+      "expected_output": "SCOOP runs the six-dimension role-research protocol: real-world role, core competencies, mindset, quality markers, anti-patterns, and what most people miss. Sources include job postings from companies known for strong platform practice (primary), practitioner blog posts and post-mortems (first-hand), and established industry writing. Report is in-conversation, four sections with the six dimensions organized under Key Findings, mandatory `## What Most People Miss` section surfacing non-obvious expertise (e.g., platform engineering's real skill as internal-product discipline, not infrastructure breadth), and Recommendations tailored to MERLIN's agent design. Confidence flags on contested claims.",
+      "files": [],
+      "expectations": [
+        "All six role-research dimensions are covered — real-world role, competencies, mindset, quality markers, anti-patterns, what most people miss",
+        "Primary sources (job postings from top employers, practitioner accounts) are preferred over generic listicles",
+        "The `## What Most People Miss` section surfaces a non-obvious, role-defining insight rather than restating the obvious competencies",
+        "Recommendations are actionable and specifically tailored to MERLIN's agent-design use case",
+        "No agent file, spec, or persisted research document is written by SCOOP"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "skill_name": "archive-agent",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Archive SPLICE — they finished the final Python development task for spec002.",
+      "expected_output": "MERLIN runs Archival Trigger Detection and confirms SPLICE's scope has landed and the open re-archival trigger has fired. Opens `.github/team-roster.md`, locates SPLICE's row in the Temporary Agents table, flips the Archived column from `*(active)*` to today's date in `YYYY-MM-DD` format. Removes the re-archival trigger blockquote beneath the table (the condition has been met). Leaves the `File` column unchanged (no filesystem move). Leaves the SPLICE tagline callout intact. Reports the archival and trigger removal.",
+      "files": [],
+      "expectations": [
+        "MERLIN verifies SPLICE's task scope has actually landed before archiving (Archival Trigger Detection)",
+        "The Archived column for SPLICE flips from `*(active)*` to today's date in `YYYY-MM-DD` format",
+        "The re-archival trigger blockquote beneath the Temporary Agents table is removed because the condition has now fired",
+        "The `File` column is NOT changed — the agent file is not moved on archive (File Location Convention)",
+        "The SPLICE tagline callout remains intact — taglines are permanent identity, not lifecycle state",
+        "MERLIN does NOT touch SPLICE's session-memory files; agents clean their own checkpoints"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Unarchive SPLICE — we need them again for more Python work in Phase 9b.",
+      "expected_output": "MERLIN classifies using the Retain-vs-Archive Decision Table: previously archived, user bringing them back for related work → unarchive. Flips the Archived column from the `YYYY-MM-DD` date back to `*(active)*`. Updates the `Task` column to append the new expanded scope. Adds a re-archival trigger blockquote beneath the Temporary Agents table naming the concrete condition that will re-trigger archival. Leaves the tagline callout and `File` column alone. Does NOT promote SPLICE to the Permanent Team table — retention is a scope-change response, not a promotion.",
+      "files": [],
+      "expectations": [
+        "The Archived column flips from the `YYYY-MM-DD` date back to `*(active)*`",
+        "The `Task` column is updated to reflect the expanded scope (new phase or task appended)",
+        "A re-archival trigger blockquote is added beneath the Temporary Agents table naming a concrete, observable condition",
+        "SPLICE's row stays in the Temporary Agents table — NOT moved to the Permanent Team table",
+        "The tagline callout is untouched; the `File` column is untouched",
+        "The re-archival trigger is concrete and observable (e.g., names a phase or deliverable), not vague (\"when no longer needed\")"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Temp agent FORGE just completed its single dispatch. Close them out.",
+      "expected_output": "MERLIN runs Archival Trigger Detection: FORGE was hired as a single-dispatch temp, the dispatch has returned, scope is bounded and complete. Per the Retain-vs-Archive Decision Table, single-dispatch temps archive on return. MERLIN flips FORGE's Archived column from `*(active)*` to today's `YYYY-MM-DD`. Because FORGE was single-dispatch, there is no open re-archival trigger blockquote to remove. The `File` column and tagline callout are left unchanged. No filesystem move, no session-memory edits.",
+      "files": [],
+      "expectations": [
+        "MERLIN identifies FORGE as a single-dispatch temp and applies the default archive-on-return path",
+        "The Archived column for FORGE flips from `*(active)*` to today's date in `YYYY-MM-DD` format",
+        "No re-archival trigger blockquote is removed (there was none — single-dispatch temps don't have one)",
+        "The `File` column is unchanged — archival does not move files",
+        "The FORGE tagline callout remains intact",
+        "MERLIN does NOT delete or edit FORGE's session-memory files as part of archival"
+      ]
+    }
+  ]
+}

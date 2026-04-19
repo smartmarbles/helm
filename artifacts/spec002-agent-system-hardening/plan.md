@@ -21,6 +21,7 @@ Harden the multi-agent orchestration system for reliable operation on GPT-4.1 wi
 - **Checkpoint expectation**: each dispatched agent writes `/memories/session/<agent>-spec002-<slug>.md` after each major task completion, per FR-022.
 - **Phase gate**: ARTHUR does not advance to the next phase until all tasks in the current phase have acceptance criteria met, unless a `> PARALLEL ACROSS PHASES` marker explicitly permits overlap.
 - **Human checkpoints** (marked 🛑): ARTHUR pauses for user approval before proceeding past the gate.
+- **Plan bookkeeping**: ARTHUR updates each task's checkbox to `[x]` and appends `*(complete YYYY-MM-DD)*` to the task line **immediately upon task completion** — before dispatching the next task. Dispatched agents must also confirm completion in their report so ARTHUR has a reliable trigger. This protects against plan drift across session boundaries (e.g., forced chat restarts after hiring a new agent).
 
 ## Critical Path
 
@@ -48,12 +49,12 @@ ARTHUR presents this plan to the user. On approval, proceeds to Phase 1.
 
 Satisfies FR-001 through FR-007, SC-001.
 
-- [ ] **P1-T1**: Finalize category weights for PROBE scoring → **PROBE** (with SAGE review)
+- [x] **P1-T1**: Finalize category weights for PROBE scoring → **PROBE** (with SAGE review) *(complete 2026-04-18)*
   - Inputs: spec Open Question #3 (proposed weights), FR-002, FR-003
   - Deliverables: `artifacts/spec002-agent-system-hardening/probe-scoring-rubric.md` with finalized weights + reasoning
   - Acceptance: eight categories total 100; each weight has a one-sentence rationale; SAGE signs off
   - Checkpoint: after rubric draft complete
-- [ ] **P1-T2**: Define violation log schema and test-run tagging format → **PROBE**
+- [x] **P1-T2**: Define violation log schema and test-run tagging format → **PROBE** *(complete 2026-04-18)*
   - Inputs: FR-004, FR-005
   - Deliverables: schema section appended to `probe-scoring-rubric.md`
   - Acceptance: schema captures {rule violated, expected, actual, severity ∈ {critical, major, minor}}; model-tag field present on every run
@@ -62,17 +63,17 @@ Satisfies FR-001 through FR-007, SC-001.
   - Deliverables: `artifacts/spec002-agent-system-hardening/probe-baseline-gpt41.md` (scorecard + violation log)
   - Acceptance: overall score recorded; all eight category sub-scores present; violation log populated; run is reproducible (test-case list referenced)
   - Checkpoint: after scorecard written
-- [ ] **P1-T3b**: Execute **GPT-5 mini** baseline PROBE run against current agent system → **PROBE**
+- [x] **P1-T3b**: Execute **GPT-5 mini** baseline PROBE run against current agent system → **PROBE** *(complete 2026-04-18)*
   - Inputs: same rubric and test corpus as P1-T3
   - Deliverables: `artifacts/spec002-agent-system-hardening/probe-baseline-gpt5mini.md` (scorecard + violation log)
   - Acceptance: identical format to P1-T3 deliverable; same test-case coverage; `model: gpt-5-mini` tag on every run
   - Checkpoint: after scorecard written
-- [ ] **P1-T4**: Execute **Sonnet 4.6** baseline PROBE run (reasoning-model tier) → **PROBE**
+- [x] **P1-T4**: Execute **Sonnet 4.6** baseline PROBE run (reasoning-model tier) → **PROBE** *(complete 2026-04-18)*
   - Inputs: same rubric and test corpus as P1-T3 / P1-T3b
   - Deliverables: `artifacts/spec002-agent-system-hardening/probe-baseline-sonnet46.md`
   - Acceptance: identical format to P1-T3 deliverable; same test-case coverage; `model: sonnet-4.6` tag on every run; behavioral fingerprint check recorded (reasoning latency signature present)
   - Used both as reasoning-tier baseline and as regression tripwire in Phase 11
-- [ ] **P1-T5**: Add model-execution-verification protocol to PROBE methodology → **PROBE**
+- [x] **P1-T5**: Add model-execution-verification protocol to PROBE methodology → **PROBE** *(complete 2026-04-18)*
   - Inputs: FR-004b
   - Deliverables: methodology section appended to `probe-scoring-rubric.md` describing the three verification layers (self-ID probe, behavioral fingerprint, user UI confirm before each batch)
   - Acceptance: fingerprint criteria are concrete per model (e.g., "Sonnet 4.6 reasoning latency >5s," "GPT-4.1 preamble style X"); user-confirm step is documented as a hand-off prompt PROBE sends before dispatching each model batch
@@ -90,25 +91,30 @@ After Phase 1, ARTHUR presents the baseline scorecards to the user. User confirm
 Satisfies FR-010 through FR-022, FR-017 (AGENTS.md memory-scope section), SC-006, SC-007.
 **Note**: FR-020 frontmatter syntax (`vscode/memory`) is empirically resolved; this phase applies it and builds the fallback + persistence infrastructure.
 
-- [ ] **P2-T1**: Author `AGENTS.md` Memory Scope Convention section → **QUILL**
+- [x] **P2-T1**: Author `AGENTS.md` Memory Scope Convention section → **QUILL** *(complete 2026-04-18)*
   - Inputs: FR-017, FR-021, spec Edge Cases (cross-workspace leakage), Key Decision #3
   - Deliverables: new section in [AGENTS.md](AGENTS.md) documenting user/repo/session scopes, cross-workspace leakage warning, default to `/memories/repo/` for durable project knowledge
+  - Staged prose: `artifacts/spec002-agent-system-hardening/p2-t1-memory-scope-section.md`
   - Acceptance: section names all three scopes with a one-line "write here when…" rule each; cross-workspace warning present; `helm.config.json` / namespace-subfolder non-decisions explicitly stated
-- [ ] **P2-T2**: Author Universal Persistence Rule block for Session Resumption Protocol → **QUILL**
+- [x] **P2-T2**: Author Universal Persistence Rule block for Session Resumption Protocol → **QUILL** *(complete 2026-04-18; Block A merged into AGENTS.md; Block B staged for Phase 4)*
   - Inputs: FR-022, FR-018, FR-019
   - Deliverables: updated Session Resumption section in [AGENTS.md](AGENTS.md); prose block to be pasted into each permanent agent file in Phase 4
+  - Staged prose: `artifacts/spec002-agent-system-hardening/p2-t2-universal-persistence.md`
   - Acceptance: text encodes the two target paths (memory-enabled → `/memories/session/<agent>-<slug>.md`; memory-less → `.agent-memory/session/<agent>-<slug>.md`); "every agent, regardless of memory-tool availability" phrasing verbatim; checkpoint cadence ("after each major unit of completed work, not only at phase boundaries") called out
-- [ ] **P2-T3**: Specify fallback directory structure + gitignore + sentinel → **MERLIN**
+- [x] **P2-T3**: Specify fallback directory structure + gitignore + sentinel → **MERLIN** *(complete 2026-04-18)*
   - Inputs: FR-015, FR-016, FR-021
   - Deliverables: updated `.gitignore` (ignore `.agent-memory/`); prose spec for `.agent-memory/{session,repo}/` layout appended to AGENTS.md; `[no-memory]` prepend rule + `.agent-memory/.notified-this-session` sentinel rule documented
+  - Staged prose: `artifacts/spec002-agent-system-hardening/p2-t3-fallback-structure.md`
   - Acceptance: `.gitignore` line present; sentinel-suppression rule states "once per session"; mid-session flicker edge case documented (degrade, do not re-probe)
-- [ ] **P2-T4**: Specify startup memory-probe sequence → **MERLIN**
+- [x] **P2-T4**: Specify startup memory-probe sequence → **MERLIN** *(complete 2026-04-18; staged for Phase 4)*
   - Inputs: FR-014, FR-022
   - Deliverables: probe prose (`memory view /memories/session/`) added to every permanent agent's Session Resumption section — text authored here, applied during Phase 4
+  - Staged prose: `artifacts/spec002-agent-system-hardening/p2-t4-memory-probe.md`
   - Acceptance: probe is a single tool call; branches to memory mode vs fallback mode with one-sentence rule each
-- [ ] **P2-T5**: Document orchestrator-mediated checkpointing for memory-less agents → **QUILL**
+- [x] **P2-T5**: Document orchestrator-mediated checkpointing for memory-less agents → **QUILL** *(complete 2026-04-18; Block A merged into AGENTS.md; Block B staged for Phase 4)*
   - Inputs: FR-019
   - Deliverables: paragraph in ARTHUR's pending rewrite spec (consumed in Phase 4 ARTHUR trim); paragraph in AGENTS.md
+  - Staged prose: `artifacts/spec002-agent-system-hardening/p2-t5-orchestrator-relay.md`
   - Acceptance: explicit rule — ARTHUR reads `.agent-memory/session/` for memory-less subagent output and relays context on re-dispatch
 
 > PARALLEL: T1, T2, T3, T4, T5 — all touch either AGENTS.md sections (serialize commits to that file) or produce prose-blocks staged for Phase 4. Dispatch concurrently; AGENTS.md edits are merged sequentially by ARTHUR.
@@ -154,20 +160,28 @@ Spec groups this as Phase 9; pulling FR-090, FR-091, FR-092, FR-093, FR-094, FR-
 
 Satisfies FR-030 through FR-036, SC-004. Extraction order per FR-036: **ARTHUR first as template**, then remaining agents in **descending order of agent-file line count** (measured empirically at start of phase).
 
-- [ ] **P3-T0**: Measure agent-file line counts, publish extraction order → **SCOOP**
+- [x] **P3-T0**: Measure agent-file line counts, publish extraction order → **SCOOP** (research) + **QUILL** (write) *(complete 2026-04-18)*
   - Inputs: `.github/agents/*.agent.md` current state
   - Deliverables: short table in `artifacts/spec002-agent-system-hardening/extraction-order.md` (filename, line count, extraction slot)
   - Acceptance: ARTHUR listed in slot 1; remaining five ranked by descending line count
-- [ ] **P3-T1**: Extract ARTHUR process detail → `.github/skills/arthur-orchestration/` → **MERLIN**
+- [x] **P3-T1**: Extract ARTHUR process detail → `.github/skills/orchestrate-delegation/` → **MERLIN** *(complete 2026-04-18; renamed from arthur-orchestration; validator PASS 0 errors 0 warnings)*
   - Inputs: current `arthur.agent.md`, FR-030–035, `skill-creator` reference
   - Deliverables: `SKILL.md` (≥2 DO/DON'T worked examples, "NOT for:" clause, Copilot-native frontmatter); `evals/evals.json` (2–3 prompts); any supporting `references/` content; validator run log
   - Acceptance: passes `validate_skill.py` with zero errors; ≥2 DO/DON'T examples; "NOT for:" clause present; minimum-viable eval pass logged (each prompt run once, scripted assertions — if any — verified)
   - Checkpoint: after SKILL.md complete; after eval pass
-- [ ] **P3-T2..T6**: Extract remaining five agent skills in declared order → **MERLIN**
+- [x] **P3-T2..T6**: Extract remaining agent skills in declared order → **MERLIN** *(complete 2026-04-18; validator PASS 0 errors on all 8 skills)*
   - Inputs: P3-T0 order, per-agent current prompt, P3-T1 structure as template
-  - Deliverables: `.github/skills/<agent>-<topic>/` for each of MERLIN, SAGE, SCOOP, QUILL, PROBE (one per agent, topic reflects extracted content)
-  - Acceptance (per skill): zero validator errors; DO/DON'T + "NOT for:" + 2–3 evals + minimum-viable eval pass
-  - Note on MERLIN extracting its own skill: acceptable; no self-reference paradox because extraction is mechanical (cut prose from agent file, shape into SKILL.md)
+  - Deliverables: `.github/skills/<action-noun>/` — action-noun naming, not agent-prefixed
+  - [x] **P3-T2a**: `create-spec` (SAGE spec-authoring) *(complete 2026-04-18)*
+  - [x] **P3-T2b**: `create-plan` (SAGE plan-authoring) *(complete 2026-04-18)*
+  - [x] **P3-T3a**: `run-test-plan` (PROBE execution) *(complete 2026-04-18)*
+  - [x] **P3-T3b**: `design-test-rubric` (PROBE rubric-design) *(complete 2026-04-18)*
+  - [x] **P3-T4**: `write-technical-docs` (QUILL) *(complete 2026-04-18)*
+  - [x] **P3-T5a**: `hire-agent` (MERLIN hiring) *(complete 2026-04-18)*
+  - [x] **P3-T5b**: `archive-agent` (MERLIN archival/offboarding) *(complete 2026-04-18)*
+  - [x] **P3-T6**: `conduct-research` (SCOOP) *(complete 2026-04-18)*
+  - Acceptance (per skill): zero validator errors; DO/DON'T + "NOT for:" + 3 evals + eval-pass walkthrough in `artifacts/spec002-agent-system-hardening/p3-t*-eval-pass.md`
+  - Note on MERLIN extracting its own skill: handled via mechanical cut-and-shape (hire-agent + archive-agent as separate action-noun skills)
 
 > PARALLEL: P3-T2 through P3-T6 can run in parallel (one dispatch per agent) once P3-T1 is complete and serves as the template.
 > BLOCKED BY: Phase 9a (validator must be ready and pass self-test).
@@ -375,7 +389,7 @@ Satisfies FR-007, SC-002, reliability NFR.
 ## Watch Out
 
 1. **No implementer agent on the roster.** FR-091–094 (validator code changes) and FR-096 (`--update-roster` flag) are Python edits. **Resolved 2026-04-18:** MERLIN hires a temp coder agent at Phase 9a-T3 kick-off.
-2. **Self-referential skill extraction in Phase 3.** MERLIN extracts its own skill. Mechanical cut-and-shape, not introspection — but the agent may get tangled if prompted to "reflect on your own process." Mitigate by dispatching MERLIN with a literal-mode task brief: "Cut the following prose blocks from `merlin.agent.md` and shape into a SKILL.md using `arthur-orchestration/SKILL.md` as a template. Do not re-derive; copy."
+2. **Self-referential skill extraction in Phase 3.** MERLIN extracts its own skill. Mechanical cut-and-shape, not introspection — but the agent may get tangled if prompted to "reflect on your own process." Mitigate by dispatching MERLIN with a literal-mode task brief: "Cut the following prose blocks from `merlin.agent.md` and shape into a SKILL.md using `orchestrate-delegation/SKILL.md` as a template. Do not re-derive; copy."
 3. **AGENTS.md is a write-contention hotspot** in Phase 2, 6, 7, 8 (all edit that file). ARTHUR must serialize AGENTS.md commits, not parallelize, even when the dispatched tasks run in parallel.
 4. **`vscode/memory` already on all six agents.** User applied to ARTHUR, SAGE, SCOOP, PROBE, MERLIN, QUILL before Phase 1. Phase 4 agent-file rewrites must preserve the frontmatter entry on all six.
 5. **Validator self-test risk.** Phase 9a-T4 runs updated validator against existing `skill-creator` skill. If the widened allowlist misses a field or the progressive-disclosure heuristic false-positives, validator fails its own reference skill. Budget a fix-loop iteration.
