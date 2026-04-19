@@ -4,3 +4,7 @@ synap.lock.json
 # Local fallback memory used when Copilot memory tool is unavailable (spec002)
 .agent-memory/
 
+# Python bytecode cache
+__pycache__/
+*.pyc
+

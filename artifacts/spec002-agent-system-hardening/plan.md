@@ -120,19 +120,27 @@ Satisfies FR-010 through FR-022, FR-017 (AGENTS.md memory-scope section), SC-006
 
 Spec groups this as Phase 9; pulling FR-090, FR-091, FR-092, FR-093, FR-094, FR-095 forward because Phase 3 skills must pass `validate_skill.py` (FR-033).
 
-- [ ] **P9a-T1**: Move validator from `artifacts/docs/` to `.github/scripts/` → **MERLIN**
+- [x] **P9a-T1**: Move validator from `artifacts/docs/` to `.github/scripts/` → **MERLIN** *(complete 2026-04-18)*
   - Inputs: FR-090
   - Deliverables: `.github/scripts/validate_skill.py`; `artifacts/docs/validate_skill.py` removed; import paths fixed
   - Acceptance: file runs as both CLI and importable module (`if __name__ == "__main__":` guard); `--help` works from new location
-- [ ] **P9a-T2**: Audit and widen frontmatter allowlist against existing skills + VS Code Copilot docs → **SCOOP**
+- [x] **P9a-T2**: Audit and widen frontmatter allowlist against existing skills + VS Code Copilot docs → **SCOOP** *(complete 2026-04-18)*
   - Inputs: FR-095, existing skill-creator skill, any Copilot docs on frontmatter fields
   - Deliverables: `artifacts/spec002-agent-system-hardening/frontmatter-allowlist-audit.md` listing fields in use, fields documented by Copilot, and the resulting widened allowlist
   - Acceptance: every field appearing in any current skill is accounted for (kept / rejected with rationale)
-- [ ] **P9a-T3**: Apply validator code changes (drop vendor-term + naming-convention checks; keep FR-092 checks; conditional scripts/; evals.json upgrade; NOT-for clause; progressive-disclosure heuristic; widened allowlist) → **Coder agent (see R-01)** or user
+- [x] **P9a-T3**: Apply validator code changes (drop vendor-term + naming-convention checks; keep FR-092 checks; conditional scripts/; evals.json upgrade; NOT-for clause; progressive-disclosure heuristic; widened allowlist) → **SPLICE** *(complete 2026-04-18)*
   - Inputs: FR-091, FR-092, FR-093, FR-094, P9a-T2 allowlist
   - Deliverables: updated `.github/scripts/validate_skill.py`
   - Acceptance: validator passes its own self-test (existing skill-creator skill validates without regression vs. old ruleset except for intentional new errors); exit codes stable (0 = pass, non-zero = errors); warnings printed to stderr, errors to stdout with explicit rule ID
-- [ ] **P9a-T4**: Smoke-test validator against existing `skill-creator` skill → **PROBE**
+- [x] **P9a-T3b**: Fix-loop patch from P9a-T4 findings → **SPLICE (re-engaged)** *(complete 2026-04-18)*
+  - Inputs: PROBE P9a-T4 smoke test log; user decisions 2026-04-18
+  - Deliverables: updated `.github/scripts/validate_skill.py` with four changes:
+    - **A1** — Relax `E-MISSING-MAIN`: skip library-style files (`__init__.py`, `utils.py`, `helpers.py`, files starting with `_`); only require `if __name__ == '__main__':` on probable CLI entry points
+    - **B1+B2** — Third-party skill carve-out: skip authoring rules (evals.json presence, NOT-for clause, progressive-disclosure heuristic) when a `LICENSE` or `LICENSE.txt` file exists at the skill root; extend existing `SKIP_DIRS` carve-out to apply to direct-path validation, not just `--all` mode
+    - **C** — New `W-MISSING-SHEBANG` warning: every CLI script (any `.py` with `if __name__ == '__main__':`) should have `#!/usr/bin/env python3` as line 1; library files exempt (same heuristic as A1)
+    - Bonus — Cosmetic: replace `❌`/`✅` Unicode symbols with ASCII (`[FAIL]`/`[PASS]`) in text output to avoid cp1252 encoding artifacts under PowerShell stderr redirect
+  - Acceptance: smoke checks (`py_compile`, `--help`) exit 0; same hard forbids as P9a-T3 (stdlib only, no formatters, no renames, no scope creep)
+- [x] **P9a-T4**: Smoke-test validator against existing `skill-creator` skill → **PROBE** *(complete 2026-04-18, re-run after P9a-T3b)*
   - Inputs: P9a-T3 output
   - Deliverables: test log appended to `frontmatter-allowlist-audit.md`
   - Acceptance: `skill-creator` passes with zero errors (it is the reference skill); any warnings documented

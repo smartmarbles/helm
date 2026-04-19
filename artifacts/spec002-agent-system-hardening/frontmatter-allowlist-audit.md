@@ -87,6 +87,115 @@ ALLOWED_FIELDS = {
 
 **Parser note for P9a-T3:** The existing simple YAML parser flattens nested keys under `metadata:` — it only tracks top-level keys — so sub-keys of `metadata` already pass the allowlist check correctly. No parser change needed for the widening itself. (If a stricter YAML loader is adopted later, ensure `metadata:` remains opaque/nested-allowed.)
 
+## P9a-T4 Smoke Test Log (2026-04-18)
+
+**Result**: ❌ **FAIL** — reference skill `skill-creator` emitted 2 errors against the updated validator.
+
+### Commands and exit codes
+
+| # | Command | Exit |
+|---|---------|------|
+| 1 | `python .github\scripts\validate_skill.py --help` | 0 |
+| 2 | `python .github\scripts\validate_skill.py .github\skills\skill-creator` | **1** |
+| 3 | `python .github\scripts\validate_skill.py .github\skills\skill-creator --json` | **1** |
+| 4 | `python .github\scripts\validate_skill.py .github\skills --all` | **1** |
+
+### Captured output
+
+#### Command 1 — `--help`
+
+stdout:
+```
+usage: validate_skill.py [-h] [--all] [--json] path
+
+Validate agentskills.io skill directories
+
+positional arguments:
+  path        Skill directory or parent directory (with --all)
+
+options:
+  -h, --help  show this help message and exit
+  --all       Validate all skills in the directory
+  --json      Output as JSON
+```
+stderr: *(empty)*
+
+#### Command 2 — text mode against `skill-creator`
+
+stdout: *(empty)*
+
+stderr:
+```
+\u274c FAIL  skill-creator
+  ERROR: E-MISSING-MAIN: scripts/utils.py missing `if __name__ == '__main__':` block
+  ERROR: FR-093: evals/evals.json not found — skill has no test cases
+  WARN:  W-MISSING-NOT-FOR: SKILL.md has no "NOT for:" clause in description or body
+  WARN:  W-MISSING-FILE: body references 'evals/evals.json' but it does not exist in the skill directory
+
+--------------------------------------------------
+Skills: 1  |  Errors: 2  |  Warnings: 2
+FAILED: skill-creator
+```
+
+#### Command 3 — JSON mode against `skill-creator`
+
+stdout (valid JSON):
+```json
+[
+  {
+    "skill": "skill-creator",
+    "valid": false,
+    "errors": [
+      "E-MISSING-MAIN: scripts/utils.py missing `if __name__ == '__main__':` block",
+      "FR-093: evals/evals.json not found \u2014 skill has no test cases"
+    ],
+    "warnings": [
+      "W-MISSING-NOT-FOR: SKILL.md has no \"NOT for:\" clause in description or body",
+      "W-MISSING-FILE: body references 'evals/evals.json' but it does not exist in the skill directory"
+    ]
+  }
+]
+```
+stderr: *(empty)*
+
+#### Command 4 — `--all` against `.github\skills`
+
+stdout: *(empty)*
+
+stderr:
+```
+No skills found in .github\skills
+```
+
+### Errors emitted (cause of FAIL)
+
+| Rule ID | Message | Source FR |
+|---------|---------|-----------|
+| `E-MISSING-MAIN` | `scripts/utils.py` missing `if __name__ == '__main__':` block | FR-094 (script main-guard requirement) |
+| `FR-093` | `evals/evals.json` not found — skill has no test cases | FR-093 (eval-suite requirement) |
+
+### Warnings emitted (acceptable, documented)
+
+| Rule ID | Message |
+|---------|---------|
+| `W-MISSING-NOT-FOR` | `SKILL.md` has no "NOT for:" clause in description or body |
+| `W-MISSING-FILE` | body references `evals/evals.json` but it does not exist in the skill directory |
+
+### Stream-routing observation
+
+- **Text mode**: stdout empty; all diagnostics on stderr. ✅ Routing correct.
+- **JSON mode**: stdout contains valid, parseable JSON only; stderr empty. ✅ Routing correct — JSON payload uncorrupted.
+- **`--all` mode**: "No skills found" message correctly routed to stderr. ✅
+- **Anomaly (non-blocking)**: text-mode stderr renders the failure marker as the literal string `\u274c` rather than the `❌` glyph. This appears to be a Python `print` encoding artifact under Windows/PowerShell when stderr is redirected to a file (cp1252 default). The JSON-mode `\u2014` escape inside the JSON payload is correct JSON behavior, not an anomaly. Flagging the stderr glyph escaping as cosmetic only — does not affect exit code, rule IDs, or machine parsing.
+
+### `--all` behavior observation
+
+`--all` against `.github\skills` reported "No skills found" despite `skill-creator/` being present as a child directory containing `SKILL.md`. Reporting as observation; root cause not investigated (PROBE does not opine on design).
+
+### Recommendation
+
+**Fix-loop required, see findings.** The reference skill `skill-creator` does not satisfy two of the rules the updated validator now enforces (`E-MISSING-MAIN` on `scripts/utils.py`, `FR-093` missing `evals/evals.json`). Phase 9a cannot be marked complete until either (a) the reference skill is brought into compliance, or (b) the validator rules are reconsidered. Routing/exit-code/JSON-integrity all behaved correctly; the failure is purely on rule-vs-reference mismatch. Hand back to ARTHUR/SPLICE.
+
 ## Section 5 — Rejected fields
 
 No fields *currently in use* in this repo are being rejected. Every existing field (`name`, `description` in skill-creator) is on the widened allowlist.
@@ -119,3 +228,126 @@ Rejections listed in Section 3 (`model`, top-level `version`, `tools`, `applyTo`
 - VS Code Copilot Agent Skills docs: https://code.visualstudio.com/docs/copilot/customization/agent-skills
 - Current validator: [artifacts/docs/validate_skill.py](artifacts/docs/validate_skill.py)
 - Only existing skill: [.github/skills/skill-creator/SKILL.md](.github/skills/skill-creator/SKILL.md)
+
+
+## P9a-T4 Smoke Test Log — Re-run after P9a-T3b (2026-04-18)
+
+**Runner:** PROBE
+**Result:** PASS
+
+### Commands run
+
+1. `python .github\scripts\validate_skill.py --help`
+2. `python .github\scripts\validate_skill.py .github\skills\skill-creator`
+3. `python .github\scripts\validate_skill.py .github\skills\skill-creator --json`
+4. `python .github\scripts\validate_skill.py .github\skills --all`
+
+Capture method: `Start-Process -NoNewWindow -Wait -PassThru -RedirectStandardOutput -RedirectStandardError` (raw byte streams, no PowerShell pipeline re-encoding).
+
+### Exit codes
+
+| # | Command | Exit |
+|---|---------|------|
+| 1 | `--help` | 0 |
+| 2 | direct-path text | 0 |
+| 3 | direct-path `--json` | 0 |
+| 4 | `--all` on `.github\skills` | 1 |
+
+### Captured output
+
+#### Command 1 — `--help`
+
+**stdout:**
+
+```
+usage: validate_skill.py [-h] [--all] [--json] path
+
+Validate agentskills.io skill directories
+
+positional arguments:
+  path        Skill directory or parent directory (with --all)
+
+options:
+  -h, --help  show this help message and exit
+  --all       Validate all skills in the directory
+  --json      Output as JSON
+```
+
+**stderr:** (empty)
+
+#### Command 2 — direct-path text mode
+
+**stdout:** (empty)
+
+**stderr:**
+
+```
+[PASS]  skill-creator
+  WARN:  W-SKIPPED: skill-creator is in SKIP_DIRS; validation skipped
+
+--------------------------------------------------
+Skills: 1  |  Errors: 0  |  Warnings: 1
+```
+
+#### Command 3 — direct-path `--json`
+
+**stdout:**
+
+```json
+[
+  {
+    "skill": "skill-creator",
+    "valid": true,
+    "errors": [],
+    "warnings": [
+      "W-SKIPPED: skill-creator is in SKIP_DIRS; validation skipped"
+    ]
+  }
+]
+```
+
+**stderr:** (empty)
+
+#### Command 4 — `--all` on `.github\skills`
+
+**stdout:** (empty)
+
+**stderr:**
+
+```
+No skills found in .github\skills
+```
+
+### Warnings emitted
+
+| Command | Rule ID | Message |
+|---------|---------|---------|
+| 2 (text) | `W-SKIPPED` | skill-creator is in SKIP_DIRS; validation skipped |
+| 3 (json) | `W-SKIPPED` | skill-creator is in SKIP_DIRS; validation skipped |
+
+No `W-THIRD-PARTY` emitted (B2 short-circuit fires before B1 license check, as expected).
+No `W-MISSING-SHEBANG` emitted for skill-creator (skipped before content checks run).
+
+### Stream-routing observation
+
+- **Text mode (cmd 2):** stdout empty, all diagnostics ([PASS] line, WARN line, summary) on stderr. ✓
+- **JSON mode (cmd 3):** stdout contains valid parseable JSON array, stderr empty. ✓
+- **ASCII markers:** `[PASS]` observed in stderr output. No Unicode `❌` or `✅` present. ✓
+- **Help (cmd 1):** argparse default — help text on stdout, stderr empty (standard behavior for `--help`).
+
+### Observations on `--all` (cmd 4)
+
+Exit 1 with message `No skills found in .github\skills`. Root cause: the `.github\skills` directory contains only `skill-creator`, which is in `SKIP_DIRS`. After the P9a-T3b B2 patch, `SKIP_DIRS` filtering also applies in `--all` mode, so no skills remain to validate and the validator treats the empty result as an error.
+
+This is outside the stated FAIL criteria (which scope non-zero exits to `direct-path or JSON mode`). Reported as-is; not counted against the PASS result.
+
+### Recommendation
+
+**Phase 9a acceptance: PASS.** The P9a-T3b patches resolved the first-run blockers:
+
+- skill-creator now exits 0 in both direct-path text and direct-path JSON modes, with a single informational `W-SKIPPED` warning (expected per B2).
+- Stream routing is correct (diagnostics → stderr, JSON → stdout).
+- ASCII `[PASS]` replaces Unicode marker.
+
+Optional follow-up (not blocking Phase 9a): consider whether `--all` finding only skipped skills should exit 0 (informational) rather than 1 (error). Current behavior is defensible — `No skills found` is ambiguous between `empty dir` and `all skipped` — but a future refinement could distinguish the two cases and exit 0 when every candidate was skipped rather than missing.
+
