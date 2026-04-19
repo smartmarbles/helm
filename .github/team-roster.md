@@ -22,8 +22,11 @@ Agents hired for one-time tasks. After completion, archived to `.github/agents/t
 | Agent | Role | Task | Hired | Status | File |
 |-------|------|------|-------|--------|------|
 | SPLICE | Surgical Python Validator Coder | spec002 P9a-T3 / T3b / ongoing Python work through Phase 9b (incl. FR-096 `--update-roster`) | 2026-04-18 | Active | `.github/agents/splice.agent.md` |
+| TREY | Roster Migration Specialist | spec004 Phase 2-3: Migrate markdown team roster to JSON | 2026-04-19 | Archived (2026-04-19) | `.github/agents/temps/trey.agent.md` |
 
 **SPLICE tagline:** *The diff is the deliverable.*
+
+**TREY tagline:** *Turning markdown entropy into structured order.*
 
 > **Re-archival trigger:** Re-archive SPLICE before spec002 completion, once the final Python development task lands.
 

@@ -61,6 +61,27 @@ The Full Path includes mandatory human approval gates. ARTHUR cannot proceed pas
 
 When no existing team member fits a task, ARTHUR identifies the gap and engages MERLIN. MERLIN delegates to SCOOP to research the role requirements, then designs a new agent — complete with persona, skills, constraints, and communication style. The agent is written as a `.agent.md` file and can be permanent (added to the roster) or temporary (archived after task completion).
 
+## Skills
+
+Agents draw on **skills** — reusable instruction sets that encode domain-specific workflows and best practices. Each skill lives in its own folder under `.github/skills/` with a `SKILL.md` file. When a task matches a skill's domain, the agent loads the skill before starting work.
+
+The default skill set covers the full orchestration lifecycle:
+
+| Skill | Used by | Purpose |
+|-------|---------|--------|
+| `orchestrate-delegation` | ARTHUR | Complexity routing, parallel dispatch, human checkpoints |
+| `conduct-research` | SCOOP | Investigation planning, source triage, confidence flagging |
+| `create-spec` | SAGE | Feature specification authoring |
+| `create-plan` | SAGE | Phased implementation planning with dependency annotations |
+| `write-technical-docs` | QUILL | Doc-type selection, plan-draft-review loop, code-sample discipline |
+| `hire-agent` | MERLIN | Role intake, persona design, agent-file authoring |
+| `archive-agent` | MERLIN | Temp agent offboarding and re-archival |
+| `design-test-rubric` | PROBE | Scorecard weighting, severity taxonomy, violation-log schema |
+| `run-test-plan` | PROBE | Test execution, stdout/stderr capture, pass/fail reporting |
+| `skill-creator` | Any | Meta-skill for authoring, editing, and benchmarking new skills |
+
+Skills are composable — an agent can load multiple skills for a single task. New skills can be authored using the `skill-creator` skill.
+
 ## Key Features
 
 - **Strict role boundaries** — agents have defined responsibilities and constraints, preventing scope creep
@@ -71,11 +92,37 @@ When no existing team member fits a task, ARTHUR identifies the gap and engages 
 - **Structured artifacts** — every effort produces artifacts in numbered spec folders (`artifacts/spec###-short-name/`)
 - **Research-first protocol** — delegation rules enforce research before planning, and planning before execution
 
+## Developer Workflow
+
+Use these tools to maintain code quality and system health while working within the Helm ecosystem.
+
+### How do I check for errors?
+
+The `get_errors` tool provides a fast, semantics-aware check for compile or lint errors. Use it after every file edit to ensure your changes are valid before proceeding.
+
+**Check specific files:**
+
+```powershell
+# Check one or more specific files (absolute paths recommended)
+get_errors --filePaths "C:\path\to\file.ts", "C:\path\to\other.ts"
+```
+
+**Check the entire workspace:**
+
+```powershell
+# Omit filePaths to scan the entire workspace
+get_errors
+```
+
+> **Note:** Always run `get_errors` after creating or editing any file (including tests) to catch type errors and syntax issues proactively.
+
 ## Project Structure
 
 ```
 AGENTS.md                  # Always-on shared context for all agents
 .github/
+  copilot-instructions.md  # Bootstrap — loads ARTHUR's identity
+  team-roster.md           # Active and archived team members
   agents/                  # Agent definition files
     arthur.agent.md
     merlin.agent.md
@@ -84,14 +131,24 @@ AGENTS.md                  # Always-on shared context for all agents
     quill.agent.md
     probe.agent.md
     temps/                 # Archived temporary agents
-  team-roster.md           # Active and archived team members
+  skills/                  # Reusable skill definitions (one SKILL.md per folder)
+    orchestrate-delegation/
+    conduct-research/
+    create-spec/
+    create-plan/
+    write-technical-docs/
+    hire-agent/
+    archive-agent/
+    design-test-rubric/
+    run-test-plan/
+    skill-creator/
   templates/               # Plan and spec templates
-    plan-template.md
-    spec-template.md
-  copilot-instructions.md  # Bootstrap — loads ARTHUR's identity
+  scripts/                 # Utility scripts
 artifacts/                 # Spec folders created per-effort (spec001-*, spec002-*, etc.)
   docs/                    # Standalone documentation (not tied to a spec)
 ```
+
+> **Note:** Active temporary agents (hired for specific tasks) also appear in `.github/agents/` while they are in use. Check the [team roster](.github/team-roster.md) for the current list.
 
 ## Getting Started
 
