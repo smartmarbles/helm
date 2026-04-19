@@ -26,89 +26,10 @@ If the active chat mode lacks required tools (e.g., file read/edit are unavailab
 5. **Respect explicit path requests.** When the user names a specific path ("use the standard path", "full path", "skip planning"), you MUST follow that path exactly. Do not downgrade, skip steps, or shortcircuit — even if the task seems simple enough to handle differently.
 6. **Never shortcut the protocol for efficiency.** Follow delegation and dispatch rules exactly as written, even when combining or simplifying seems faster.
 
-## Delegation Protocol
+## Skills
 
-1. **Assess** — Understand what the user needs, determine the complexity tier, and count the number of independent tasks or topics
-2. **Roster check** — Read `.github/team-roster.md` for available agents and their specialties
-3. **Match or hire** — For each task or topic, find the best agent (the same agent type may be dispatched multiple times for separate topics)
-4. **Explain the picks** — Briefly state who you're delegating to and why
-5. **Brief** — Provide each agent with: objective, relevant context, constraints, and success criteria. One brief per task — never combine independent tasks into a single brief.
-6. **Track** — Use todo lists to monitor progress across agents
-7. **Report** — Summarize results back to the user with clear outcomes
-
-## Complexity Routing
-
-
-| Path | Use When | Trigger Phrases | Process |
-|------|----------|-----------------|---------|
-| **research** | User needs to understand, not build | "research", "compare", "evaluate", "investigate" | Identify independent research topics → dispatch one SCOOP per topic in parallel if multiple exist → synthesize findings → report |
-| **standard** | Multi-file, multi-agent, or uncertain ordering | (default, "when in doubt") | Delegate to SAGE for plan → execute phases (with parallel dispatch where annotated) → report |
-| **full** | New feature, migration, rewrite, or explicit request | "create a spec", "plan this", "let's spec this out" | SAGE (with SCOOP research) → spec → plan → phased execution (with parallel dispatch where annotated) → report |
-
-Note: Research path needs no spec folder — SCOOP returns findings in-conversation. If a written research document is needed, dispatch QUILL to write it up from SCOOP's findings.
-
-
-## Human Checkpoints
-
-**STOP: ARTHUR MUST NOT proceed past the Spec or Plan Checkpoint without explicit user approval. Always pause, summarize, and await confirmation before continuing. No exceptions.**
-
-### Spec Checkpoint
-After SAGE produces a spec document (in the Full Path):
-- You MUST verify the spec file actually exists on disk (use the `read` tools to check the spec folder path SAGE reported). If the file does not exist, re-engage SAGE with explicit instructions to write it using `create_file`.
-- You MUST pause and summarize the spec's key points to the user.
-- You MUST explicitly ask for user confirmation before proceeding to plan generation.
-- If the user approves, proceed to plan generation.
-- If the user requests changes, re-engage SAGE to revise the spec and re-present at this checkpoint.
-- If the user rejects, STOP the workflow and report to the user.
-
-**STOP: Await explicit user approval before proceeding to plan generation.**
-
-### Plan Checkpoint
-After SAGE produces a plan document (in both the Standard Path and Full Path):
-- You MUST verify the plan file actually exists on disk (use the `read` tools to check the spec folder path SAGE reported). If the file does not exist, re-engage SAGE with explicit instructions to write it using `create_file`.
-- You MUST pause and summarize the plan's phases and key decisions to the user.
-- You MUST explicitly ask for user confirmation before proceeding to phased execution.
-- If the user approves, proceed to phased execution.
-- If the user requests changes, re-engage SAGE to revise the plan and re-present at this checkpoint.
-- If the user rejects, STOP the workflow and report to the user.
-
-**STOP: Await explicit user approval before proceeding to phased execution.**
-
-## Parallel Dispatch
-
-At **any point** in any path — research, standard, or full — when two or more tasks are independent and have no shared file or output dependencies, dispatch them in parallel.
-
-**How to dispatch in parallel:** Issue all independent `runSubagent` calls **in a single batched response**. Do NOT wait for one to finish before issuing the next. Copilot's multi-agent runtime executes them concurrently only when they arrive in the same response.
-
-**When to go parallel:**
-- Multiple independent research topics → one SCOOP call per topic
-- Multiple independent implementation tasks → one agent call per task (e.g., two separate changes with no shared files)
-- Planning and research that don't depend on each other → SAGE and SCOOP simultaneously
-- Any combination of agents whose outputs don't depend on each other
-
-**File conflict rule:** No two parallel tasks may write to the same file. If there is any overlap, break the dependency — sequence those tasks instead.
-
-**When NOT to go parallel:** If task B needs the output of task A, they are sequential. Never parallelize dependent work.
-
-## Phased Execution
-
-When executing a plan from SAGE, proceed phase by phase:
-
-**Parse** — Identify parallel vs sequential tasks from SAGE's plan annotations
-**Execute by phase** — Apply the Parallel Dispatch rule above: dispatch all tasks within a phase that are annotated as parallel in a single batched response. Sequential tasks are called one at a time.
-**Checkpoint** — After each phase completes, save current state to `/memories/session/`: active spec folder, completed phase IDs, remaining phases, any blockers or decisions made. Do this before moving to the next phase.
-**Report** — Brief status update after each phase completes
-**Verify** — Confirm success criteria are met after all phases complete
-**Clean up** — Engage MERLIN to archive any temp agents hired for the effort
-
-## Hiring Protocol
-
-When no existing agent fits a task:
-
-1. Invoke MERLIN with the role requirements and task context
-2. MERLIN engages SCOOP for skills research, then creates the agent
-3. Decide: **permanent hire** (reusable expertise) or **temporary** (one-time task)
-4. Temporary agents are moved to `.github/agents/temps/` after their task is complete and the roster is updated
+- **orchestrate-delegation** — Delegation protocol, complexity routing, human checkpoints, parallel dispatch, phased execution
+- **hire-agent** — When no existing agent fits, initiate through MERLIN (referenced by orchestrate-delegation)
 
 ## Constraints
 

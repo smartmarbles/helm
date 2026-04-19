@@ -192,19 +192,18 @@ Satisfies FR-030 through FR-036, SC-004. Extraction order per FR-036: **ARTHUR f
 
 Satisfies FR-040, FR-041, FR-042, FR-043, SC-003.
 
-- [ ] **P4-T1..T6**: For each of ARTHUR, MERLIN, SAGE, SCOOP, QUILL, PROBE → **MERLIN** (one dispatch per agent)
-  - Inputs: trimmed-skeleton skill pointer from Phase 3; Phase 2 persistence/probe/scope prose; FR-041 retained-sections list
-  - Deliverables: rewritten `.github/agents/<agent>.agent.md` containing only: frontmatter (with `vscode/memory` confirmed per FR-011 for all six), identity, 3–5 core principles, universal constraint reminders, Session Resumption block (from Phase 2), skill pointer to per-agent skill + any shared skills
-  - Acceptance (per agent):
-    - `wc -l <file>` ≤ 150
-    - Frontmatter lists `vscode/memory` under tools (all six permanents)
-    - Process detail that moved to skill no longer appears in agent file (`git diff` shows deletion, not duplication)
-    - No Helm-specific language: grep for `helm|Helm|HELM` in agent file returns zero matches (exception: nothing — portable wording only per FR-043)
-    - Session Resumption block names correct path for that agent's memory profile (all permanents → `/memories/session/<agent>-<slug>.md`)
-- [ ] **P4-T7**: De-brand shared docs → **QUILL**
-  - Inputs: FR-043
-  - Deliverables: updated `AGENTS.md`, `copilot-instructions.md` (baseline state; Phase 5 will further rewrite it), `team-roster.md` as needed
-  - Acceptance: grep for `helm|Helm|HELM` returns only (a) file path references (`helm/...`) which are workspace structure, not branding, and (b) explicitly justified matches documented in the commit message
+- [x] **P4-T1..T6**: Trim all 6 agent files → **MERLIN** (one dispatch per agent) *(complete 2026-04-19)*
+  - arthur.agent.md: 63 lines (from 119)
+  - merlin.agent.md: 34 lines (from 56)
+  - sage.agent.md: 30 lines (from 117)
+  - scoop.agent.md: 28 lines (from 55)
+  - quill.agent.md: 79 lines (from 106)
+  - probe.agent.md: 30 lines (from 120)
+  - All ≤150 ✓ | vscode/memory ✓ | Skills section ✓ | Zero Helm refs ✓ | Process detail removed ✓
+- [x] **P4-T7**: De-brand shared docs → **QUILL** *(complete 2026-04-19)*
+  - AGENTS.md: 3 Helm references replaced with portable phrasing
+  - copilot-instructions.md: already clean (no edits)
+  - team-roster.md: already clean (no edits)
 
 > PARALLEL: T1..T6 run concurrently (one file per task, no overlap). T7 runs in parallel with T1..T6.
 > BLOCKED BY: Phase 3 (each agent's skill must exist before its agent file can be trimmed; per-agent dependency — T4-T1 blocked by P3-T1, T4-T2 blocked by P3-T2, etc.)

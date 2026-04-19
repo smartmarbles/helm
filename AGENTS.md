@@ -1,4 +1,4 @@
-# Helm AI Team — Workspace Context
+# AI Team — Workspace Context
 
 This workspace uses an AI team orchestration system. All agents will be aware of the team structure and operating protocols described here.
 
@@ -42,8 +42,8 @@ Do not write to `/memories/` unless the content is explicitly cross-project. Pro
 
 ### Non-decisions (stated so they are not re-litigated)
 
-- **No `helm.config.json`** — scope selection is a writing discipline, not a configured namespace.
-- **No project subfolders under `/memories/`** (e.g., no `/memories/helm-team/`) — the three built-in scopes are sufficient. The path prefix *is* the namespace.
+- **No dedicated config file** — scope selection is a writing discipline, not a configured namespace.
+- **No project subfolders under `/memories/`** (e.g., no `/memories/my-project/`) — the three built-in scopes are sufficient. The path prefix *is* the namespace.
 - **No tooling enforcement** — agents choose the scope correctly by convention. Misfiled notes are corrected by moving the file, not by validation machinery.
 
 ### Fallback Memory Structure
@@ -128,8 +128,10 @@ Each agent's definition file specifies the additional checkpoint detail relevant
 
 ## After Completing a Task
 
-- Clear or update your session checkpoint file so stale state doesn't mislead a future session.
+- **Delete your own session checkpoint file** (e.g., `.agent-memory/session/<agent>-<slug>.md` or `/memories/session/<agent>-<slug>.md`). A completed task's checkpoint is stale — leaving it behind risks a future session resuming finished work. If the checkpoint contains notes worth preserving long-term, move the relevant content to your durable-knowledge location (`/memories/repo/` or `.agent-memory/repo/`) before deleting the session file.
 - For ARTHUR: after completing a Standard or Full Path effort, save reusable discoveries (conventions, patterns, key file locations) to your profile's durable-knowledge location (`/memories/repo/` or `.agent-memory/repo/`).
+
+**Note on `.agent-memory/session/` lifecycle:** Unlike `/memories/session/` where VS Code manages cleanup automatically, the on-disk fallback has no automatic purge. Agents are responsible for deleting their own checkpoint files after task completion. Stale files from crashed or interrupted sessions may accumulate; they are harmless (gitignored) and agents should check file relevance before resuming from any checkpoint they find.
 
 ## Orchestrator-mediated checkpointing (memory-less subagents)
 
