@@ -19,9 +19,9 @@
 
 Agents hired for one-time tasks. After completion, archived to `.github/agents/temps/`.
 
-| Agent | Role | Task | Hired | Archived | File |
-|-------|------|------|-------|----------|------|
-| SPLICE | Surgical Python Validator Coder | spec002 P9a-T3 / T3b / ongoing Python work through Phase 9b (incl. FR-096 `--update-roster`) | 2026-04-18 | *(active)* | `.github/agents/temps/splice.agent.md` |
+| Agent | Role | Task | Hired | Status | File |
+|-------|------|------|-------|--------|------|
+| SPLICE | Surgical Python Validator Coder | spec002 P9a-T3 / T3b / ongoing Python work through Phase 9b (incl. FR-096 `--update-roster`) | 2026-04-18 | Active | `.github/agents/splice.agent.md` |
 
 **SPLICE tagline:** *The diff is the deliverable.*
 

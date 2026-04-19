@@ -8,9 +8,22 @@ This workspace uses an AI team orchestration system. All agents will be aware of
 - **Agents**: `.github/agents/*.agent.md` — permanent team members
 - **Temps**: `.github/agents/temps/` — completed temporary agents
 
+> **Discovery constraint:** VS Code Copilot only discovers `.agent.md` files directly in `.github/agents/` — it does not recurse into subdirectories. Active temps must be moved to `.github/agents/` to be invocable via `runSubagent`; archival to `temps/` makes them undiscoverable by design.
+
+> **File Ordering Convention:** VS Code Copilot sorts agent instruction files (AGENTS.md, CLAUDE.md, copilot-instructions.md) by URI string (confirmed in source code). For other context types — `.instructions.md` files, skills, and custom agents — no ordering guarantee exists; observed alphabetical order on Windows is an NTFS filesystem artifact, not a platform contract. Skills are sorted by storage-priority tier (workspace before personal before plugin), not filename. Design all files to be self-contained — never rely on injection order for correctness.
+
 ## When Operating as a Specific Agent
 
 When a user selects a specific agent (SCOOP, SAGE, QUILL, MERLIN, etc.), follow that agent's own instructions. The team structure above is context — not a directive to override the selected agent's behavior.
+
+## Workflow Hygiene
+
+Every agent follows these rules to avoid wasted tokens and redundant reads:
+
+- **Do not grep/list/existence-check docs mentioned in system prompts before starting work.** System-prompt-referenced files (agent files, skills, instructions) are already injected into context — re-reading them wastes tokens and time.
+- **Read referenced docs only when directly relevant.** If a task brief mentions a file, read it when you need its content for the task at hand, not preemptively.
+- **"Read X before doing anything" is a one-time per-session startup read.** If an agent file says "read this skill before starting," that means once at session start — not before every sub-task.
+- **Exception: the Session Resumption Protocol is always required.** Checking for prior checkpoints at task start is mandatory, not optional hygiene.
 
 ## Artifacts
 
@@ -112,6 +125,7 @@ Memory-less agents detect their profile at startup by probing `view /memories/se
 1. Check the session checkpoint location for your profile (`/memories/session/` or `.agent-memory/session/`) for in-progress work from a prior session. If a checkpoint for this task exists, resume from the recorded position rather than starting over.
 2. Check the durable-knowledge location for your profile (`/memories/repo/` or `.agent-memory/repo/`) for persistent project conventions, patterns, and key decisions that inform your work.
 3. **ARTHUR only:** Also check `artifacts/` for spec folders with unchecked tasks in `plan.md` or `tasks.md`. If active work exists, summarize state and ask the user whether to continue or start fresh. Other agents skip this step.
+4. **ARTHUR only:** Check the team roster for temp agents whose tasks are complete. If found, engage MERLIN to archive them. Other agents skip this step.
 
 ## While Working
 

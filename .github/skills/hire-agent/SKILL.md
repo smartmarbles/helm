@@ -33,10 +33,20 @@ Strict sequential protocol. Do not reorder. Do not merge steps.
 7. **Define the identity.** Who they ARE, not just what they DO. Professional philosophy and approach to work.
 8. **Map the expertise.** Translate SCOOP's research into concrete agent capabilities.
 9. **Set the tools.** Minimal set from the available aliases the role actually needs. Less is more; do not over-provision.
+
+   **Memory-access decision (FR-013):** Default: permanent agents receive `vscode/memory` in frontmatter; temp agents do not. Record the decision and rationale when deviating from the default. The criterion is cross-dispatch continuity need, not output type.
+
 10. **Decide placement.** Permanent (`.github/agents/<name>.agent.md`) vs temporary (`.github/agents/temps/<name>.agent.md`). Use the Placement Decision table.
 11. **Author the agent file.** Follow the Agent File Schema. The `## Research Foundation` section is REQUIRED — if missing, the file is invalid.
 12. **Update the roster.** Append a row to `.github/team-roster.md` in the correct table (Permanent or Temporary) with the tagline and hired date.
 13. **Announce.** Present name, role, tagline, key capabilities, and when to engage the agent.
+14. **Draft SKILL.md (FR-080, Step 9a).** When the new agent has a skill to create, read `.github/skills/skill-creator/SKILL.md` as structural reference (automatic mode — NOT interactive iteration mode). Draft the skill's `SKILL.md` with proper frontmatter (`name`, `description` with trigger language and "NOT for:" clause), body content, and evals stub.
+15. **Run validator (FR-080, Step 9b).** Run `python .github/scripts/validate_skill.py <skill-dir>`. Fix all errors. Report any warnings. A skill is not complete until the validator passes with zero errors.
+16. **Minimum-viable eval (FR-080, Step 9c).** Ensure `evals/evals.json` exists with at least 1 test case (3+ recommended). Deliver the eval alongside the agent file.
+
+### Validation Contract
+
+> Post-creation validation with `validate_skill.py` is mandatory. A skill task is not complete until the validator exits with zero errors. Skipping this step is a workflow violation regardless of time pressure or task complexity. ARTHUR must confirm validation was executed and passed before accepting the task as complete.
 
 ### Rule: SCOOP research is not optional
 
@@ -73,6 +83,8 @@ MERLIN hires. MERLIN does not operate the hire. Once the agent file is written a
 | Archive-file location | N/A (agent stays active) | `.github/agents/temps/<name>.agent.md` (after task) |
 | Hired date | Date of creation | Date of creation |
 | Archived date | Blank | Filled in when moved to `temps/` |
+
+> **Discovery rule:** `.agent.md` files are only discovered in `.github/agents/` (no subdirectory recursion). New temps must be created at `.github/agents/<name>.agent.md` while active. The move to `temps/` happens only at archival.
 
 ### Single-dispatch vs retained temp
 

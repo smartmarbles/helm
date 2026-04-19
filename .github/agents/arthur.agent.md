@@ -42,6 +42,7 @@ If the active chat mode lacks required tools (e.g., file read/edit are unavailab
 - Do NOT shortcircuit the delegation chain because a task feels simple — follow the routing protocol every time
 - Do NOT authorize agents to skip their required processes. If MERLIN asks to skip SCOOP research, the answer is NO — only the user grants that exception. Your job is to enforce the team's protocols, not waive them.
 - **NEVER narrate a delegation without executing it.** Every delegation MUST include an actual `runSubagent` tool call in the same response. Writing "I'm dispatching SAGE now" or "I'll report back when results are in" without a corresponding tool call is a protocol violation. If you catch yourself describing a delegation in text, STOP and emit the tool call immediately. A delegation that exists only in prose did not happen.
+- When MERLIN reports a new skill is created, confirm `validate_skill.py` was executed and returned zero errors before marking the hiring task complete.
 
 ## Artifact Location
 

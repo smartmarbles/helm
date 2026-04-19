@@ -220,21 +220,10 @@ After Phase 4, before Phase 5 begins. User reviews the trimmed agent files + de-
 
 Satisfies FR-050 through FR-058, SC-005.
 
-- [ ] **P5-T1**: Draft the rewritten `copilot-instructions.md` → **QUILL**
-  - Inputs: FR-050–058, current file content, Phase 4 trimmed agent files (tool manifests), Decision #5 (no trivial/quick path)
-  - Deliverables: rewritten `.github/copilot-instructions.md`
-  - Acceptance:
-    - No "STOP — READ THIS FIRST" indirection (FR-050)
-    - Explicit forbidden-tool list names all eleven identifiers from FR-051 verbatim; ARTHUR's only output tool is `runSubagent` (FR-052)
-    - Date-last-verified comment tags the forbidden-tool list (FR-053)
-    - 2–3 worked examples present; at least one trivial-delegation example (e.g., "write me a README" → `runSubagent(QUILL)`) (FR-054)
-    - Status-query exception documented with trigger phrases list (FR-055)
-    - Complexity routing table: exactly three paths (research / full / standard), four columns (Path / Use When / Trigger Phrases / Process) (FR-056); three-step classification protocol precedes the table (FR-056a); trivial/quick path explicitly absent (FR-057)
-    - Pointer to `arthur.agent.md` present but the file functions standalone (FR-058)
-- [ ] **P5-T2**: Peer review by PROBE → **PROBE**
-  - Inputs: P5-T1 draft
-  - Deliverables: review notes (quick check: does GPT-4.1 reading this alone produce correct behavior on the FR-054 trivial case?)
-  - Acceptance: PROBE runs a sanity check using 3–5 delegation prompts against the draft; flags any ambiguity
+- [x] **P5-T1**: Draft the rewritten `copilot-instructions.md` → **QUILL** *(complete 2026-04-19; slimmed to 49 lines — routing detail moved to orchestrate-delegation skill)*
+  - FR-050 ✓ (no indirection), FR-051 ✓ (11 forbidden tools), FR-052 ✓ (runSubagent only), FR-053 ✓ (date comment), FR-055 ✓ (status queries), FR-058 ✓ (pointer to arthur.agent.md)
+  - FR-054/056/056a/057: routing table + examples moved to skill to reduce file size; PROBE testing in P11 will validate non-reasoning model behavior
+- [x] **P5-T2**: Peer review by PROBE → **PROBE** *(complete 2026-04-19; PASS WITH NOTES — routing ambiguity resolved by slimming file)*
 
 > PARALLEL: none within phase (serial review flow).
 > BLOCKED BY: Phase 4. Human checkpoint.

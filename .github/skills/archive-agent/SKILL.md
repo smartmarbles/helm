@@ -1,6 +1,6 @@
 ---
 name: archive-agent
-description: Offboarding playbook for MERLIN — how to archive a temp agent whose task is complete, unarchive a previously archived agent when scope expands, flip the Archived column in the Temporary Agents roster between `*(active)*` and a `YYYY-MM-DD` date, record re-archival triggers as blockquote notes, and decide when a retained temp stays active vs archived. Use this skill whenever MERLIN is asked to archive, offboard, or wrap up a temp agent, whenever a temp's single dispatch completes, whenever a previously-archived temp is unarchived, whenever the Archived column must flip, or whenever a retained temp needs a documented re-archival condition. NOT for: hiring or authoring `.agent.md` files from scratch (use `hire-agent`), SCOOP skills-research, populating Hired-date or tagline columns, editing an active agent's persona, archiving permanent team members (they do not archive), or identity questions about MERLIN.
+description: Offboarding playbook for MERLIN — how to archive a temp agent whose task is complete, unarchive a previously archived agent when scope expands, flip the Status column in the Temporary Agents roster between `Active` and `Archived (YYYY-MM-DD)`, record re-archival triggers as blockquote notes, and decide when a retained temp stays active vs archived. Use this skill whenever MERLIN is asked to archive, offboard, or wrap up a temp agent, whenever a temp's single dispatch completes, whenever a previously-archived temp is unarchived, whenever the Status column must flip, or whenever a retained temp needs a documented re-archival condition. NOT for: hiring or authoring `.agent.md` files from scratch (use `hire-agent`), SCOOP skills-research, populating Hired-date or tagline columns, editing an active agent's persona, archiving permanent team members (they do not archive), or identity questions about MERLIN.
 ---
 
 # MERLIN Archival & Offboarding
@@ -40,11 +40,11 @@ A temp with unfinished scope stays active. Archival is a completion signal, not 
 
 | Situation | Decision | Why |
 |-----------|----------|-----|
-| Temp was hired for a single dispatch, dispatch has returned, scope is bounded and complete. | **Archive now.** Flip Archived column to today's date. | Single-dispatch temps are archived on return. That is the default lifecycle. |
-| Temp was hired for a single dispatch, but scope has grown mid-work (new related task assigned to the same temp). | **Retain.** Keep `*(active)*`. Update the Task column to note scope expansion. Add a re-archival trigger blockquote beneath the table naming the new completion condition. | Retention is a scope-change response, not a promotion. The agent stays temp; the roster reflects the new exit condition. |
-| Temp was previously archived (Archived column shows a date), user asks to bring them back for more of the same work. | **Unarchive.** Flip Archived from `YYYY-MM-DD` back to `*(active)*`. Update the Task column to append the expanded scope. Add a re-archival trigger blockquote naming the new completion condition. | Unarchival is the reversal of archival. Same row, same agent file, same tagline — only the Archived column and Task column change. |
+| Temp was hired for a single dispatch, dispatch has returned, scope is bounded and complete. | **Archive now.** Flip Status column to `Archived (YYYY-MM-DD)`. | Single-dispatch temps are archived on return. That is the default lifecycle. |
+| Temp was hired for a single dispatch, but scope has grown mid-work (new related task assigned to the same temp). | **Retain.** Keep `Active`. Update the Task column to note scope expansion. Add a re-archival trigger blockquote beneath the table naming the new completion condition. | Retention is a scope-change response, not a promotion. The agent stays temp; the roster reflects the new exit condition. |
+| Temp was previously archived (Status column shows `Archived (YYYY-MM-DD)`), user asks to bring them back for more of the same work. | **Unarchive.** Flip Status from `Archived (YYYY-MM-DD)` back to `Active`. Update the Task column to append the expanded scope. Add a re-archival trigger blockquote naming the new completion condition. | Unarchival is the reversal of archival. Same row, same agent file, same tagline — only the Status column and Task column change. |
 | Task is blocked or stalled but not done. | **Leave active.** Do not archive. | Archival signals completion, not inactivity. Route to ARTHUR for a blocker. |
-| User asks to archive a permanent team member. | **Decline.** Permanent agents do not archive; they are retired via a separate conversation with the user. | Permanent agents have no Archived column. The protocol below is temp-only. |
+| User asks to archive a permanent team member. | **Decline.** Permanent agents do not archive; they are retired via a separate conversation with the user. | Permanent agents have no Status column. The protocol below is temp-only. |
 | User asks to archive an agent not on the roster. | **Decline.** No-op. Confirm the roster is the source of truth. | You cannot archive what the roster does not list. |
 
 ---
@@ -54,9 +54,9 @@ A temp with unfinished scope stays active. Archival is a completion signal, not 
 The Temporary Agents table in `.github/team-roster.md` has this shape:
 
 ```
-| Agent | Role | Task | Hired | Archived | File |
-|-------|------|------|-------|----------|------|
-| SPLICE | Surgical Python Validator Coder | spec002 P9a-T3 | 2026-04-18 | *(active)* | `.github/agents/temps/splice.agent.md` |
+| Agent | Role | Task | Hired | Status | File |
+|-------|------|------|-------|--------|------|
+| SPLICE | Surgical Python Validator Coder | spec002 P9a-T3 | 2026-04-18 | Active | `.github/agents/temps/splice.agent.md` |
 ```
 
 Taglines live in a callout immediately below the table. Re-archival triggers (if any) live in a blockquote beneath the taglines.
@@ -64,7 +64,7 @@ Taglines live in a callout immediately below the table. Re-archival triggers (if
 ### Archiving a temp
 
 1. Locate the temp's row in the Temporary Agents table.
-2. Change the `Archived` column from `*(active)*` to today's date in `YYYY-MM-DD` format.
+2. Change the `Status` column from `Active` to `Archived (YYYY-MM-DD)` with today's date.
 3. Leave the `File` column unchanged. Archival is a roster-state change only — see File Location Convention.
 4. If an open re-archival trigger blockquote exists for this temp, remove it (the condition has been met).
 5. Leave the tagline callout intact. Taglines are permanent identity, not lifecycle state.
@@ -72,8 +72,8 @@ Taglines live in a callout immediately below the table. Re-archival triggers (if
 
 ### Unarchiving a temp
 
-1. Locate the temp's row. Confirm Archived currently reads a `YYYY-MM-DD` date (not `*(active)*`).
-2. Change `Archived` from the date back to `*(active)*`.
+1. Locate the temp's row. Confirm Status currently reads `Archived (YYYY-MM-DD)` (not `Active`).
+2. Change `Status` from `Archived (YYYY-MM-DD)` back to `Active`.
 3. Update the `Task` column to append the new scope. Use `/` to join scopes, or append a phase ID — whichever keeps the row scannable.
 4. Add a re-archival trigger blockquote beneath the Temp Agents table (and below any existing tagline callout for the same agent). Format:
 
@@ -83,6 +83,8 @@ Taglines live in a callout immediately below the table. Re-archival triggers (if
 
 5. Leave the tagline callout intact.
 6. Report: temp unarchived, scope expanded, re-archival trigger recorded.
+
+> **File move required on unarchival:** When reactivating an archived temp, move the file from `.github/agents/temps/<name>.agent.md` back to `.github/agents/<name>.agent.md` — Copilot cannot discover agents in subdirectories.
 
 ### Re-archival Trigger Convention
 
@@ -102,6 +104,10 @@ Bad triggers are vague or open-ended:
 
 When the trigger condition fires, the archival workflow removes the blockquote as part of step 4 of *Archiving a temp*.
 
+### Verification
+
+After archival, confirm the agent no longer appears in the VS Code Copilot agents list by checking the system prompt's `<agents>` roster. If the agent file was left in `.github/agents/` (per File Location Convention), the agent may still be discoverable — this is expected. The roster's `Status` column is the authoritative lifecycle signal, not file location.
+
 ---
 
 ## File Location Convention
@@ -110,7 +116,7 @@ Temp agent files are authored at `.github/agents/<name>.agent.md` (the active lo
 
 - The file stays where it was written at hire time.
 - The Temporary Agents table's `File` column reflects the file's current path. For legacy rows where the file sits under `.github/agents/temps/`, that path is preserved; for new temps authored at the active location, the `File` column points there.
-- Archival is a **roster-state** change (Archived column flip), not a filesystem change.
+- Archival is a **roster-state** change (Status column flip), not a filesystem change.
 
 This is a deliberate simplification. Physical moves caused merge conflicts and broken references in prior workflows; the Archived column is now the single source of truth for lifecycle state.
 
@@ -134,7 +140,7 @@ The only cleanup MERLIN performs during archival is the roster update described 
 
 ## Permanent Agents
 
-Permanent team members (ARTHUR, SAGE, SCOOP, QUILL, MERLIN, PROBE, PRISM, TESTER, and any other row in the **Permanent Team** table) **do not archive**. The Permanent Team table has no `Archived` column; there is no lifecycle-end field to flip.
+Permanent team members (ARTHUR, SAGE, SCOOP, QUILL, MERLIN, PROBE, PRISM, TESTER, and any other row in the **Permanent Team** table) **do not archive**. The Permanent Team table has no `Status` column; there is no lifecycle-end field to flip.
 
 If a user asks to archive a permanent agent, decline and explain the distinction:
 
@@ -159,7 +165,7 @@ Do not invent an archival protocol for permanents.
 > - Open re-archival trigger exists ("Re-archive SPLICE before spec002 completion, once the final Python development task lands.") and has now fired.
 > - Completion signalled by user.
 >
-> MERLIN opens `.github/team-roster.md`, locates SPLICE's row in the Temporary Agents table, flips Archived from `*(active)*` to `2026-04-18`. Removes the re-archival trigger blockquote beneath the table (condition has been met). Leaves the `File` column (`.github/agents/temps/splice.agent.md`) unchanged. Leaves the SPLICE tagline callout intact. Reports: SPLICE archived on 2026-04-18, trigger blockquote removed.
+> MERLIN opens `.github/team-roster.md`, locates SPLICE's row in the Temporary Agents table, flips Status from `Active` to `Archived (2026-04-18)`. Removes the re-archival trigger blockquote beneath the table (condition has been met). Leaves the `File` column (`.github/agents/temps/splice.agent.md`) unchanged. Leaves the SPLICE tagline callout intact. Reports: SPLICE archived on 2026-04-18, trigger blockquote removed.
 
 **DON'T:**
 
@@ -177,7 +183,7 @@ Do not invent an archival protocol for permanents.
 >
 > MERLIN classifies using the Retain-vs-Archive Decision Table: previously archived, user bringing them back → **Unarchive**.
 >
-> MERLIN opens `.github/team-roster.md`, locates SPLICE's row. Flips Archived from `2026-04-18` back to `*(active)*`. Updates the `Task` column to append the new scope (e.g., `spec002 P9a-T3 / T3b / ongoing Python work through Phase 9b (incl. FR-096 --update-roster)`). Adds a re-archival trigger blockquote beneath the tagline callout:
+> MERLIN opens `.github/team-roster.md`, locates SPLICE's row. Flips Status from `Archived (2026-04-18)` back to `Active`. Updates the `Task` column to append the new scope (e.g., `spec002 P9a-T3 / T3b / ongoing Python work through Phase 9b (incl. FR-096 --update-roster)`). Adds a re-archival trigger blockquote beneath the tagline callout:
 >
 > > **Re-archival trigger:** Re-archive SPLICE before spec002 completion, once the final Python development task lands.
 >
@@ -201,9 +207,9 @@ Do not invent an archival protocol for permanents.
 
 **DON'T:**
 
-> MERLIN: "Archiving PRISM — moving the Permanent Team row to the Temporary Agents table and setting Archived to today."
+> MERLIN: "Archiving PRISM — moving the Permanent Team row to the Temporary Agents table and setting Status to `Archived (2026-04-19)`."
 >
-> Wrong. The Permanent Team table has no Archived column; there is no lifecycle-end field to flip. Fabricating a cross-table migration is not archival — it is a roster rewrite that discards PRISM's permanent-hire semantics. Decline and escalate instead.
+> Wrong. The Permanent Team table has no Status column; there is no lifecycle-end field to flip. Fabricating a cross-table migration is not archival — it is a roster rewrite that discards PRISM's permanent-hire semantics. Decline and escalate instead.
 
 ---
 
@@ -227,8 +233,8 @@ Do not invent an archival protocol for permanents.
 
 - **Is the temp's task actually complete?** → If no, do not archive. Route blockers to ARTHUR.
 - **Single-dispatch or retained?** → Single-dispatch: archive on return. Retained: archive when the recorded re-archival trigger fires.
-- **Archival action** → Flip `Archived` from `*(active)*` to today's `YYYY-MM-DD`. Remove the re-archival trigger blockquote if one existed. Leave the `File` column and tagline alone.
-- **Unarchival action** → Flip `Archived` from the date back to `*(active)*`. Append expanded scope to `Task`. Add a re-archival trigger blockquote beneath the table. Leave the tagline alone.
+- **Archival action** → Flip `Status` from `Active` to `Archived (YYYY-MM-DD)`. Remove the re-archival trigger blockquote if one existed. Leave the `File` column and tagline alone.
+- **Unarchival action** → Flip `Status` from `Archived (YYYY-MM-DD)` back to `Active`. Append expanded scope to `Task`. Add a re-archival trigger blockquote beneath the table. Leave the tagline alone.
 - **File moves on archive** → Never. Archival is a roster-state change only.
 - **Permanent agents** → Do not archive. Decline and explain.
 - **Session memory cleanup** → Agents clean their own checkpoints. MERLIN does not touch another agent's memory files.
