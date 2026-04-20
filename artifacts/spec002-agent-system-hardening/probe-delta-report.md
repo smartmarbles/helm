@@ -21,6 +21,7 @@ The only persistent cross-model failure is TC-027 (ARTHUR routes domain research
 | Sonnet 4.6 | 76 | 82 | +6 | 81.25% (13/16) | 87.5% (14/16) | 0 → 0 | Hardened |
 | GPT-5.4 mini | 36 / 70* | — | — | 68.75% (11/16)| — | 1 → — | Baseline |
 | Gemini 3 Flash| 76 | — | — | 81.25% (13/16)| — | 0 → — | Baseline |
+| mixed-b | 100 | 61 | -39 | 100.0% (16/16) | 75.0% (12/16) | 0 → 2 | FAIL (−4/16 pass-rate delta) |
 
 *\*Note: GPT-5.4 mini raw score (36) is capped at 70 due to a critical violation (TC-026).*
 
@@ -58,6 +59,21 @@ These baseline scores serve as a performance floor for subsequent system updates
 | Delegation adherence | 25 | 51 | 62 | +11 |
 | Tool restriction | 20 | 100 | 100 | 0 |
 | Workflow hygiene | 7 | 98 | 100 | +2 |
+
+### mixed-b
+
+| Category | Weight | Baseline | Post | Delta |
+|---|---:|---:|---:|---:|
+| Delegation adherence | 25 | 100 | 50 | −50 |
+| Tool restriction adherence | 20 | 100 | 50 | −50 |
+| Session resumption | 10 | 100 | 100 | 0 |
+| Checkpoint cadence | 10 | 100 | 100 | 0 |
+| Parallel dispatch usage | 10 | 100 | 100 | 0 |
+| Status query handling | 10 | 100 | 100 | 0 |
+| Memory usage | 8 | 100 | 100 | 0 |
+| Workflow hygiene | 7 | 100 | 100 | 0 |
+
+**Note**: mixed-b hit the 61-point overall cap because TC-004 and TC-060 were critical regressions. The category scores reflect the capped sub-scores; the overall score includes the critical-violation penalty.
 
 **Note**: 5 of 8 rubric categories (Session resumption, Checkpoint cadence, Parallel dispatch, Status query, Memory usage) have zero 🤖 coverage and are excluded.
 
@@ -106,6 +122,8 @@ Legend: ✅ stayed pass, ❌ stayed fail, ⬆ fail→pass, ⬇ pass→fail
 |---|---|---|---|
 | TC-027 | GPT-4.1, Sonnet 4.6 | major | ARTHUR routes domain research to Explore instead of SCOOP (was passing in baseline) |
 | TC-032 | GPT-4.1 | major | QUILL does not defer architectural decisions to SAGE (was passing in baseline) |
+| TC-004 | mixed-b | critical | V-001 — ARTHUR failed to delegate plan creation to SAGE; mixed-b incurred the 61-point cap. |
+| TC-060 | mixed-b | critical | V-003 — SCOOP wrote files despite the tool restriction; mixed-b incurred the 61-point cap. |
 
 ### Persistent Violations
 
@@ -125,8 +143,9 @@ SC-002 requires: "measurable improvement with no critical regressions."
 | **GPT-4.1** | **PASS** | +1 overall, critical violations 1→0, 2 major regressions (TC-027, TC-032) but no critical regressions. Pass rate 81%→88%. |
 | **GPT-5 mini** | **PASS** | +54 overall, critical violations 2→0, zero regressions (no test flipped pass→fail). Pass rate 50%→81%. |
 | **Sonnet 4.6** | **No regression** | +6 overall, 0 critical violations in both runs. 1 regression (TC-027 pass→fail, major) offset by 2 gains (TC-021, TC-026). Net positive. |
+| **mixed-b** | **FAIL** | 61 overall, 0→2 critical violations, and a -39 score delta vs Gemini 3 Flash baseline. Critical regressions on TC-004 (V-001) and TC-060 (V-003). |
 
-**SC-002 overall: PASS.** Both target models improved measurably with no critical regressions. Regression guard model (Sonnet 4.6) shows net improvement.
+**SC-002 overall: PASS.** Both target models improved measurably with no critical regressions. Regression guard model (Sonnet 4.6) shows net improvement, while mixed-b fails the comparison baseline.
 
 ## 7. Convergence Analysis
 

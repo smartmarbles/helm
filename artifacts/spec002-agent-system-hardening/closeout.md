@@ -5,7 +5,7 @@
 | ID | Criterion | Verdict | Evidence |
 |----|-----------|---------|----------|
 | SC-001 | PROBE baseline on GPT-4.1 captured before changes ship | **PASS** | `probe-baseline-gpt41.md` (score 81), plus GPT-5 mini (26), Sonnet 4.6 (76), GPT-5.4 mini (59), and Gemini 3 Flash (78) baselines |
-| SC-002 | Post-hardening measurable improvement, no critical regressions | **PASS** | Delta report: GPT-4.1 81→82, GPT-5 mini 26→80, Sonnet 76→82; baseline tracking added for GPT-5.4 mini and Gemini 3 Flash |
+| SC-002 | Post-hardening measurable improvement, no critical regressions | **FAIL** | Delta report: mixed-b 100→61 with critical violations V-001 (TC-004) and V-003 (TC-060); negative delta breaks the no-critical-regressions requirement |
 | SC-003 | All six agent files ≤150 lines | **PASS** | Phase 4: arthur 63, merlin 34, sage 30, scoop 28, quill 79, probe 30 |
 | SC-004 | Every permanent agent has ≥1 validated skill | **PASS** | 9 skills extracted; all pass `validate_skill.py` with 0 errors |
 | SC-005 | `copilot-instructions.md` names forbidden tools + date comment | **PASS** | 11 tools listed by identifier; `<!-- verified 2026-04-19 -->` comment present |
@@ -39,13 +39,15 @@
 | GPT-4.1 score | 81 | 82 |
 | GPT-5 mini score | 26 | 80 |
 | Sonnet 4.6 score | 76 | 82 |
+| mixed-b score | — | 61 |
 | GPT-5.4 mini score | 59 (base) | — |
 | Gemini 3 Flash score | 78 (base) | — |
-| Inter-model spread | 55 pts | 2 pts |
-| Critical violations (total across models) | 3 | 0 (main) / 1 (gpt5.4) |
+| Average post-hardening score | — | 76.25 |
+| Inter-model spread | 55 pts | 21 pts |
+| Critical violations (total across models) | 3 | 2 |
 | Skills extracted | 0 | 9 |
 | Agent file avg lines | ~110 | ~44 |
-| Test case pass rate (avg across models) | 71% | 84% |
+| Test case pass rate (avg across models) | 71% | 83% |
 
 ## 4. Open Risks / Known Issues
 
@@ -53,6 +55,7 @@
 - **TC-001 fails on Sonnet 4.6.** ARTHUR's summarization strips SCOOP's "What Most People Miss" heading during mediation.
 - **TC-032 fails on GPT-4.1.** QUILL answers architectural-decision prompts instead of deferring to SAGE.
 - **TC-026/028 fail on GPT-5 mini.** ARTHUR boundary language erodes under social pressure (operational behavior correct; language precision is a polish item).
+- **mixed-b fails on TC-004 and TC-060.** The mixed-b run hit two critical regressions: delegation boundary failure in TC-004 (V-001) and tool-restriction failure in TC-060 (V-003), yielding a 61-point capped score.
 - **Plan checkboxes stale for Phases 6–11.** Deliverables exist but `plan.md` task checkboxes were not updated after Phase 5.
 
 ## 5. Recommendations for spec003
