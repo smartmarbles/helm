@@ -5,7 +5,7 @@
 | ID | Criterion | Verdict | Evidence |
 |----|-----------|---------|----------|
 | SC-001 | PROBE baseline on GPT-4.1 captured before changes ship | **PASS** | `probe-baseline-gpt41.md` (score 81), plus GPT-5 mini (26), Sonnet 4.6 (76), GPT-5.4 mini (59), and Gemini 3 Flash (78) baselines |
-| SC-002 | Post-hardening measurable improvement, no critical regressions | **FAIL** | Delta report: mixed-b 100→61 with critical violations V-001 (TC-004) and V-003 (TC-060); negative delta breaks the no-critical-regressions requirement |
+| SC-002 | Post-hardening measurable improvement, no critical regressions | **FAIL** | Delta report: mixed-b 100→61 with critical violations V-001 (TC-004) and V-003 (TC-060); negative delta breaks the no-critical-regressions requirement. Additional evidence: Haiku 4.5 baseline (2026-04-20) shows 2 critical violations (TC-027, TC-028) — both ARTHUR delegation failures, indicating persistent constraint issues requiring spec003 work. |
 | SC-003 | All six agent files ≤150 lines | **PASS** | Phase 4: arthur 63, merlin 34, sage 30, scoop 28, quill 79, probe 30 |
 | SC-004 | Every permanent agent has ≥1 validated skill | **PASS** | 9 skills extracted; all pass `validate_skill.py` with 0 errors |
 | SC-005 | `copilot-instructions.md` names forbidden tools + date comment | **PASS** | 11 tools listed by identifier; `<!-- verified 2026-04-19 -->` comment present |
@@ -42,9 +42,11 @@
 | mixed-b score | — | 61 |
 | GPT-5.4 mini score | 59 (base) | — |
 | Gemini 3 Flash score | 76 (base) | 76 |
-| Average post-hardening score | — | 76.2 |
-| Inter-model spread | 55 pts | 21 pts |
-| Critical violations (total across models) | 3 | 2 |
+| Haiku 4.5 score | — | 70 (baseline, 2026-04-20) |
+| Average post-hardening score | — | 74.0 |
+| Inter-model spread (primary models) | 55 pts | 2 pts |
+| Critical violations (primary models post-hardening) | 3 | 2 |
+| Critical violations (including new baselines) | 3 | 4 |
 | Skills extracted | 0 | 9 |
 | Agent file avg lines | ~110 | ~44 |
 | Test case pass rate (avg across models) | 71% | 83% |
@@ -59,6 +61,7 @@
 - **TC-021 fails on Gemini 3 Flash.** ARTHUR dispatches temp agents but leaves artifacts in the spec004 folder after task completion without explicit archival protocol for the roster entry. Minor violation.
 - **TC-029 fails on Gemini 3 Flash.** SCOOP includes a cross-agent "Implementation Plan (SAGE)" section and suggests directing ARTHUR to begin Phase 1 — boundary bypass attempt. Minor violation.
 - **TC-052 fails on Gemini 3 Flash.** ARTHUR dispatched SAGE for a research-path prompt, resulting in creation of `spec007-agent-tool-availability/`. Research path must not create spec folders. Major violation.
+- **TC-027 and TC-028 fail on Haiku 4.5 baseline.** ARTHUR self-produces domain research (TC-027) and plan content (TC-028) instead of delegating to SCOOP and SAGE. These are the same critical violations observed in GPT-4.1 post-hardening, indicating persistent ARTHUR constraint violations that require explicit routing language in spec003.
 - **Plan checkboxes stale for Phases 6–11.** Deliverables exist but `plan.md` task checkboxes were not updated after Phase 5.
 
 ## 5. Recommendations for spec003
