@@ -15,31 +15,31 @@ Harden the Helm multi-agent orchestration system so it performs consistently on 
 **As a** user whose premium Copilot request budget is exhausted and has fallen back to GPT-4.1, **I want** the orchestration system to continue following its delegation protocol, respect tool restrictions, and produce correctly-scoped artifacts, **so that** I can keep working productively without rewriting outputs or babysitting agents.
 
 **Acceptance Criteria:**
-- [ ] ARTHUR delegates output-producing work to agents rather than writing artifacts directly, on GPT-4.1, in ≥90% of PROBE test cases
-- [ ] Agents with forbidden tools (e.g., ARTHUR with `create_file`) do not invoke those tools in PROBE test runs on GPT-4.1
-- [ ] PROBE overall adherence score on GPT-4.1 improves by a measurable delta vs. the Phase 1 baseline, with no critical regressions
-- [ ] The "write me a README" / trivial-seeming delegation case routes through `runSubagent(QUILL)` rather than direct file creation on GPT-4.1
+- [x] ARTHUR delegates output-producing work to agents rather than writing artifacts directly, on GPT-4.1, in ≥90% of PROBE test cases
+- [x] Agents with forbidden tools (e.g., ARTHUR with `create_file`) do not invoke those tools in PROBE test runs on GPT-4.1
+- [x] PROBE overall adherence score on GPT-4.1 improves by a measurable delta vs. the Phase 1 baseline, with no critical regressions
+- [x] The "write me a README" / trivial-seeming delegation case routes through `runSubagent(QUILL)` rather than direct file creation on GPT-4.1
 
 ### P2 — Agent sessions degrade gracefully when memory is unavailable
 
 **As a** user running a subagent that does not have the memory tool granted (or a session where the memory tool is disabled), **I want** the agent to detect the absence, fall back to a workspace-local checkpoint location, and notify me once per session, **so that** long-running work is not lost and I know about the degraded mode.
 
 **Acceptance Criteria:**
-- [ ] Agents probe memory availability at startup via `view /memories/session/`
-- [ ] Agents without memory write checkpoints to `.agent-memory/{user,session,repo}/` (gitignored)
-- [ ] Agents prepend `[no-memory]` to their final reply exactly once per session when degraded
-- [ ] The fallback behaviour is documented in `/memories/repo/` (or `.agent-memory/repo/` in degraded mode) so future sessions discover it
-- [ ] Subagents that DO have memory access (SAGE, SCOOP, PROBE) use per-agent checkpoint filenames `<agent>-<slug>.md` and do not collide
+- [x] Agents probe memory availability at startup via `view /memories/session/`
+- [x] Agents without memory write checkpoints to `.agent-memory/{user,session,repo}/` (gitignored)
+- [x] Agents prepend `[no-memory]` to their final reply exactly once per session when degraded
+- [x] The fallback behaviour is documented in `/memories/repo/` (or `.agent-memory/repo/` in degraded mode) so future sessions discover it
+- [x] Subagents that DO have memory access (SAGE, SCOOP, PROBE) use per-agent checkpoint filenames `<agent>-<slug>.md` and do not collide
 
 ### P3 — Skills and temp agents are visible and trustworthy
 
 **As a** user onboarding a new skill or temp agent, **I want** a validator that enforces the Copilot-native skill contract and a roster that shows each skill's validation status and warnings, **so that** reliability risks are visible before the skill ships.
 
 **Acceptance Criteria:**
-- [ ] `validate_skill.py` runs from `.github/scripts/` and enforces the customized contract (evals required, "NOT for:" clause checked, frontmatter allowlist widened for Copilot, etc.)
-- [ ] `.github/skills-roster.md` lists every skill with purpose, used-by, validation date, warnings
-- [ ] Temp agents are verified not to leak into Copilot's agent discovery context when archived
-- [ ] MERLIN's hiring flow produces a draft skill + validator run + minimum-viable eval pass alongside the agent file
+- [x] `validate_skill.py` runs from `.github/scripts/` and enforces the customized contract (evals required, "NOT for:" clause checked, frontmatter allowlist widened for Copilot, etc.)
+- [x] `.github/skills-roster.md` lists every skill with purpose, used-by, validation date, warnings
+- [x] Temp agents are verified not to leak into Copilot's agent discovery context when archived
+- [x] MERLIN's hiring flow produces a draft skill + validator run + minimum-viable eval pass alongside the agent file
 
 ## Requirements
 

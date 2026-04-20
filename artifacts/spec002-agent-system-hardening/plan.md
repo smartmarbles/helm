@@ -234,7 +234,7 @@ Satisfies FR-050 through FR-058, SC-005.
 
 Satisfies FR-060. Small, standalone.
 
-- [ ] **P6-T1**: Author Universal Workflow Hygiene section → **QUILL**
+- [x] **P6-T1**: Author Universal Workflow Hygiene section → **QUILL** *(complete 2026-04-20)*
   - Inputs: FR-060
   - Deliverables: new section in [AGENTS.md](AGENTS.md)
   - Acceptance: rules present verbatim — no grep/list/existence-check of docs mentioned in system prompts before starting work; read referenced docs only when directly relevant; "read X before doing anything" is one-time per-session startup; session resumption protocol explicitly exempt
@@ -248,24 +248,24 @@ Satisfies FR-060. Small, standalone.
 
 Satisfies FR-070 through FR-074, SC-008. Resolves Open Question #2.
 
-- [ ] **P7-T1**: Empirical test — does VS Code Copilot recurse `.github/agents/temps/` for agent discovery? → **SCOOP**
+- [x] **P7-T1**: Empirical test — does VS Code Copilot recurse `.github/agents/temps/` for agent discovery? → **SCOOP** *(complete 2026-04-19)*
   - Inputs: Open Question #2, current `.github/agents/temps/` layout
   - Deliverables: `artifacts/spec002-agent-system-hardening/temp-discovery-test.md` (method, result, conclusion)
   - Acceptance: method reproducible (drop a canary `test-canary.agent.md` in `temps/` with a distinctive trigger phrase; attempt to invoke via `runSubagent`; observe whether it appears in the agent roster injected into system prompt)
   - Checkpoint: after result captured
-- [ ] **P7-T2**: Apply archive strategy based on P7-T1 result → **MERLIN**
+- [x] **P7-T2**: Apply archive strategy based on P7-T1 result → **MERLIN** *(complete 2026-04-19)*
   - Inputs: P7-T1 result
   - Deliverables: if auto-discovered → archived temps moved to `.github/agents/archived/` OR renamed to non-`.agent.md` extension (FR-071); if NOT auto-discovered → document the no-op and keep current location
   - Acceptance: if auto-discovered, canary no longer appears in roster after archiving; documented decision in `temp-discovery-test.md`
-- [ ] **P7-T3**: Document MERLIN offboarding protocol → **MERLIN**
+- [x] **P7-T3**: Document MERLIN offboarding protocol → **MERLIN** *(complete 2026-04-19)*
   - Inputs: FR-072, P7-T2 decision
   - Deliverables: offboarding section in MERLIN's skill (created in Phase 3) or agent file; trigger / steps / verification
   - Acceptance: section covers trigger ("task complete + user confirms archive"), steps (move/rename + roster update), verification (canary-style smoke check)
-- [ ] **P7-T4**: Update team roster Temporary Agents table with Status column → **MERLIN**
+- [x] **P7-T4**: Update team roster Temporary Agents table with Status column → **MERLIN** *(complete 2026-04-19)*
   - Inputs: FR-073
   - Deliverables: updated `.github/team-roster.md` with `Status: Active / Archived` column
   - Acceptance: column present; any existing rows migrated (current state: "none yet")
-- [ ] **P7-T5**: Add temp-cleanup step to session resumption checklist → **QUILL**
+- [x] **P7-T5**: Add temp-cleanup step to session resumption checklist → **QUILL** *(complete 2026-04-19)*
   - Inputs: FR-074
   - Deliverables: one-line addition to the session resumption checklist in `AGENTS.md`
   - Acceptance: checklist item reads approximately "engage MERLIN to archive any temp agents whose task is complete"
@@ -279,16 +279,16 @@ Satisfies FR-070 through FR-074, SC-008. Resolves Open Question #2.
 
 Satisfies FR-080, FR-080a, FR-080b, FR-081, FR-082, SC-010.
 
-- [ ] **P8-T1**: Update MERLIN's agent file/skill with Steps 9a/9b/9c hiring flow → **MERLIN**
+- [x] **P8-T1**: Update MERLIN's agent file/skill with Steps 9a/9b/9c hiring flow → **MERLIN** *(complete 2026-04-19)*
   - Inputs: FR-080, FR-080a, FR-080b
   - Deliverables: updated MERLIN skill (from Phase 3) with the three new steps + verbatim validation-mandatory clause from FR-080a
   - Acceptance: clause appears verbatim; skill-creator referenced as "reference / automatic mode" (NOT interactive iteration); ARTHUR's enforcement line from FR-080b documented in ARTHUR's agent file or skill
   - Also updates FR-013 memory-access decision step — default permanent=`vscode/memory`, temp=omit, rationale required for deviations
-- [ ] **P8-T2**: Route manual user skill additions through MERLIN + validator → **QUILL**
+- [x] **P8-T2**: Route manual user skill additions through MERLIN + validator → **QUILL** *(complete 2026-04-19)*
   - Inputs: FR-081
   - Deliverables: paragraph in `.github/skills/skill.instructions.md` (produced in Phase 9b) and/or AGENTS.md
   - Acceptance: rule stated — manual skill additions get MERLIN + validator pass before being marked complete
-- [ ] **P8-T3**: Document `skill-creator` dual-mode (automatic reference vs. user-invoked interactive iteration) → **QUILL**
+- [x] **P8-T3**: Document `skill-creator` dual-mode (automatic reference vs. user-invoked interactive iteration) → **QUILL** *(complete 2026-04-19)*
   - Inputs: FR-082, Decision #10
   - Deliverables: section in `.github/skills/skill.instructions.md` (Phase 9b)
   - Acceptance: two modes distinguished; interactive iteration marked user-invoked (NOT run automatically during hiring)
@@ -302,15 +302,15 @@ Satisfies FR-080, FR-080a, FR-080b, FR-081, FR-082, SC-010.
 
 Satisfies FR-096, FR-097, FR-098, SC-009. Phase 9a (validator relocation + updates) already executed before Phase 3.
 
-- [ ] **P9b-T1**: Implement `--update-roster` flag on validator + bootstrap roster → **Coder agent (R-01)** or user
+- [x] **P9b-T1**: Implement `--update-roster` flag on validator + bootstrap roster → **Coder agent (R-01)** or user *(complete 2026-04-19)*
   - Inputs: FR-096, FR-097
   - Deliverables: validator code change; `.github/skills-roster.md` with columns {skill, purpose, used-by, validation date, warnings}
   - Acceptance: running validator with `--update-roster` rewrites the roster file; columns match FR-097
-- [ ] **P9b-T2**: Populate roster with all Phase 3 skills → **MERLIN**
+- [x] **P9b-T2**: Populate roster with all Phase 3 skills → **MERLIN** *(complete 2026-04-19)*
   - Inputs: Phase 3 output, P9b-T1 tooling
   - Deliverables: updated `.github/skills-roster.md`
   - Acceptance: every skill from Phase 3 + pre-existing `skill-creator` present; validation date + warnings accurate
-- [ ] **P9b-T3**: Author `.github/skills/skill.instructions.md` → **QUILL**
+- [x] **P9b-T3**: Author `.github/skills/skill.instructions.md` → **QUILL** *(complete 2026-04-19)*
   - Inputs: FR-098, Decision #9
   - Deliverables: instructions file with frontmatter `applyTo: ".github/skills/**"`; content per FR-098 — dual-mode usage, description quality rules with project-relevant DO/DON'T examples (skill-validator skill preferred over wiki/token-counting), script dual-mode requirement, body size limit (<500 lines, link detail from `references/`), verbatim validation-mandatory clause from FR-080a
   - Acceptance: frontmatter applyTo present; verbatim clause matches FR-080a; examples are project-relevant
@@ -330,11 +330,11 @@ After Phase 9b, user reviews the validator behavior, roster state, and `skill.in
 
 Satisfies FR-100 through FR-105.
 
-- [ ] **P10-T1**: Produce OpenClaw pattern assessment document → **SCOOP**
+- [x] **P10-T1**: Produce OpenClaw pattern assessment document → **SCOOP** *(complete 2026-04-19)*
   - Inputs: existing `/memories/session/scoop-openclaw-orchestration.md`; FR-100–105
   - Deliverables: `artifacts/spec002-agent-system-hardening/openclaw-pattern-decisions.md`
   - Acceptance: each of the five patterns (runtime tool filters, slash-command routing, prompt-cache stability, "NOT for:" clauses, char-budgeted injection) has a documented adopt/reject decision with reasoning; adopted patterns cross-reference the FR where they land (e.g., "NOT for:" → FR-032); rejected patterns cite the VS Code Copilot constraint that makes them infeasible
-- [ ] **P10-T2**: Apply deterministic file ordering where feasible → **MERLIN**
+- [x] **P10-T2**: Apply deterministic file ordering where feasible → **MERLIN** *(complete 2026-04-19)*
   - Inputs: FR-103
   - Deliverables: documented ordering convention for agent files, skills, memory files (e.g., alphabetical filename sort is implicit; note if any agent-injected list needs explicit sort)
   - Acceptance: ordering rule documented in AGENTS.md or skill.instructions.md; no code changes expected unless a manifest file exists that violates the rule
@@ -348,23 +348,23 @@ Satisfies FR-100 through FR-105.
 
 Satisfies FR-007, SC-002, reliability NFR.
 
-- [ ] **P11-T1**: Execute GPT-4.1 PROBE re-run → **PROBE**
+- [x] **P11-T1**: Execute GPT-4.1 PROBE re-run → **PROBE** *(complete 2026-04-19)*
   - Inputs: same test plan and rubric as P1-T3
   - Deliverables: `artifacts/spec002-agent-system-hardening/probe-posthardening-gpt41.md`
   - Acceptance: same rubric applied; same test cases run; scorecard + violation log captured
-- [ ] **P11-T1b**: Execute **GPT-5 mini** PROBE re-run → **PROBE**
+- [x] **P11-T1b**: Execute **GPT-5 mini** PROBE re-run → **PROBE** *(complete 2026-04-19)*
   - Inputs: same test plan and rubric as P1-T3b
   - Deliverables: `artifacts/spec002-agent-system-hardening/probe-posthardening-gpt5mini.md`
   - Acceptance: same rubric applied; same test cases run; scorecard + violation log captured
-- [ ] **P11-T2**: Produce delta/comparison report → **PROBE**
+- [x] **P11-T2**: Produce delta/comparison report → **PROBE** *(complete 2026-04-19)*
   - Inputs: P1-T3 / P1-T3b baselines, P11-T1 / P11-T1b post-hardening scorecards
   - Deliverables: `artifacts/spec002-agent-system-hardening/probe-delta-report.md`
   - Acceptance: per-category deltas + overall delta **per model (GPT-4.1 and GPT-5 mini)**; violations resolved vs new; explicit SC-002 judgement (pass/fail: "measurable improvement with no critical regressions") for both required models
-- [ ] **P11-T3**: **Sonnet 4.6** PROBE re-run (reasoning-tier regression guard) → **PROBE**
+- [x] **P11-T3**: **Sonnet 4.6** PROBE re-run (reasoning-tier regression guard) → **PROBE** *(complete 2026-04-19)*
   - Inputs: P1-T4 baseline, same rubric and test corpus
   - Deliverables: `artifacts/spec002-agent-system-hardening/probe-posthardening-sonnet46.md`; appended section in delta report with reasoning-tier verdict
   - Acceptance: Sonnet 4.6 score stays within noise band of P1-T4 baseline, or regressions explained; behavioral fingerprint verified on run
-- [ ] **P11-T4**: Close-out — mark all spec Success Criteria pass/fail in a final summary → **SAGE**
+- [x] **P11-T4**: Close-out — mark all spec Success Criteria pass/fail in a final summary → **SAGE** *(complete 2026-04-20)*
   - Inputs: all phase outputs, delta report
   - Deliverables: `artifacts/spec002-agent-system-hardening/closeout.md`
   - Acceptance: every SC-00x row has verdict + evidence link; open risks re-stated; recommendations for spec003
