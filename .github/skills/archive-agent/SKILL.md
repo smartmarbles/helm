@@ -140,7 +140,7 @@ The only cleanup MERLIN performs during archival is the roster update described 
 
 ## Permanent Agents
 
-Permanent team members (ARTHUR, SAGE, SCOOP, QUILL, MERLIN, PROBE, PRISM, TESTER, and any other row in the **Permanent Team** table) **do not archive**. The Permanent Team table has no `Status` column; there is no lifecycle-end field to flip.
+Permanent team members (ARTHUR, SAGE, SCOOP, QUILL, MERLIN, PROBE, and any other row in the **Permanent Team** table) **do not archive**. The Permanent Team table has no `Status` column; there is no lifecycle-end field to flip.
 
 If a user asks to archive a permanent agent, decline and explain the distinction:
 
