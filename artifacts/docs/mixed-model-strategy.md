@@ -303,8 +303,6 @@ model: "GPT-5 mini (copilot)"
 model: "GPT-5.3-Codex (copilot)"
 ```
 
-> **Warning:** Claude Opus 4.6 and GPT-5.3-Codex frontmatter names are not confirmed in models_list20260419.md. Verify exact names from the VS Code model picker UI before committing them to `.agent.md` files. An unrecognized model name in frontmatter causes the agent to silently fall back to the picker default.
-
 ### Scenario D — Best Blend *(Recommended)*
 
 **Recommended Picker (ARTHUR):** `Gemini 3 Flash (Preview) (copilot)`
