@@ -6,6 +6,9 @@ artifacts/testing/
 # Local fallback memory used when Copilot memory tool is unavailable (spec002)
 .agent-memory/
 .vscode/
+
+artifacts/docs/*
+!artifacts/docs/.gitkeep
 # Python bytecode cache
 __pycache__/
 *.pyc
