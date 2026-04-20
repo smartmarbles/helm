@@ -5,7 +5,7 @@ artifacts/testing/
 !artifacts/spec001-helm-test-plan
 # Local fallback memory used when Copilot memory tool is unavailable (spec002)
 .agent-memory/
-
+.vscode/
 # Python bytecode cache
 __pycache__/
 *.pyc
