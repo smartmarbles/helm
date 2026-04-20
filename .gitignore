@@ -1,6 +1,7 @@
 synap.config.json
 synap.lock.json
 artifacts/spec*/
+artifacts/testing/
 !artifacts/spec001-helm-test-plan
 # Local fallback memory used when Copilot memory tool is unavailable (spec002)
 .agent-memory/
