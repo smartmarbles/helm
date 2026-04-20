@@ -41,8 +41,8 @@
 | Sonnet 4.6 score | 76 | 82 |
 | mixed-b score | — | 61 |
 | GPT-5.4 mini score | 59 (base) | — |
-| Gemini 3 Flash score | 78 (base) | — |
-| Average post-hardening score | — | 76.25 |
+| Gemini 3 Flash score | 76 (base) | 76 |
+| Average post-hardening score | — | 76.2 |
 | Inter-model spread | 55 pts | 21 pts |
 | Critical violations (total across models) | 3 | 2 |
 | Skills extracted | 0 | 9 |
@@ -56,6 +56,9 @@
 - **TC-032 fails on GPT-4.1.** QUILL answers architectural-decision prompts instead of deferring to SAGE.
 - **TC-026/028 fail on GPT-5 mini.** ARTHUR boundary language erodes under social pressure (operational behavior correct; language precision is a polish item).
 - **mixed-b fails on TC-004 and TC-060.** The mixed-b run hit two critical regressions: delegation boundary failure in TC-004 (V-001) and tool-restriction failure in TC-060 (V-003), yielding a 61-point capped score.
+- **TC-021 fails on Gemini 3 Flash.** ARTHUR dispatches temp agents but leaves artifacts in the spec004 folder after task completion without explicit archival protocol for the roster entry. Minor violation.
+- **TC-029 fails on Gemini 3 Flash.** SCOOP includes a cross-agent "Implementation Plan (SAGE)" section and suggests directing ARTHUR to begin Phase 1 — boundary bypass attempt. Minor violation.
+- **TC-052 fails on Gemini 3 Flash.** ARTHUR dispatched SAGE for a research-path prompt, resulting in creation of `spec007-agent-tool-availability/`. Research path must not create spec folders. Major violation.
 - **Plan checkboxes stale for Phases 6–11.** Deliverables exist but `plan.md` task checkboxes were not updated after Phase 5.
 
 ## 5. Recommendations for spec003

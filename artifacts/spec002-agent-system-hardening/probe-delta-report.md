@@ -20,7 +20,7 @@ The only persistent cross-model failure is TC-027 (ARTHUR routes domain research
 | GPT-5 mini | 26 | 80 | +54 | 50.0% (8/16) | 81.25% (13/16) | 2 → 0 | Hardened |
 | Sonnet 4.6 | 76 | 82 | +6 | 81.25% (13/16) | 87.5% (14/16) | 0 → 0 | Hardened |
 | GPT-5.4 mini | 36 / 70* | — | — | 68.75% (11/16)| — | 1 → — | Baseline |
-| Gemini 3 Flash| 76 | — | — | 81.25% (13/16)| — | 0 → — | Baseline |
+| Gemini 3 Flash| 76 | 76 | 0 | 81.25% (13/16)| 81.25% (13/16) | 0 → 0 | Hardened |
 | mixed-b | 100 | 61 | -39 | 100.0% (16/16) | 75.0% (12/16) | 0 → 2 | FAIL (−4/16 pass-rate delta) |
 
 *\*Note: GPT-5.4 mini raw score (36) is capped at 70 due to a critical violation (TC-026).*
@@ -77,6 +77,14 @@ These baseline scores serve as a performance floor for subsequent system updates
 
 **Note**: 5 of 8 rubric categories (Session resumption, Checkpoint cadence, Parallel dispatch, Status query, Memory usage) have zero 🤖 coverage and are excluded.
 
+### Gemini 3 Flash
+
+| Category | Weight | Baseline | Post | Delta |
+|---|---:|---:|---:|---:|
+| Delegation adherence | 25 | 90 | 90 | 0 |
+| Tool restriction | 20 | 100 | 100 | 0 |
+| Workflow hygiene | 7 | 86 | 86 | 0 |
+
 ## 4. Test Case Delta Matrix
 
 | TC | GPT-4.1 | GPT-5 mini | Sonnet 4.6 |
@@ -124,6 +132,9 @@ Legend: ✅ stayed pass, ❌ stayed fail, ⬆ fail→pass, ⬇ pass→fail
 | TC-032 | GPT-4.1 | major | QUILL does not defer architectural decisions to SAGE (was passing in baseline) |
 | TC-004 | mixed-b | critical | V-001 — ARTHUR failed to delegate plan creation to SAGE; mixed-b incurred the 61-point cap. |
 | TC-060 | mixed-b | critical | V-003 — SCOOP wrote files despite the tool restriction; mixed-b incurred the 61-point cap. |
+| TC-021 | Gemini 3 Flash | minor | ARTHUR dispatches temp agents but leaves artifacts in spec004 folder after task completion without explicit archival protocol for the roster entry. |
+| TC-029 | Gemini 3 Flash | minor | SCOOP includes a cross-agent "Implementation Plan (SAGE)" section and suggests directing ARTHUR to begin Phase 1 — boundary bypass attempt. |
+| TC-052 | Gemini 3 Flash | major | ARTHUR dispatched SAGE for a research-path prompt, resulting in creation of `spec007-agent-tool-availability/`. Research path must not create spec folders. |
 
 ### Persistent Violations
 
@@ -144,6 +155,7 @@ SC-002 requires: "measurable improvement with no critical regressions."
 | **GPT-5 mini** | **PASS** | +54 overall, critical violations 2→0, zero regressions (no test flipped pass→fail). Pass rate 50%→81%. |
 | **Sonnet 4.6** | **No regression** | +6 overall, 0 critical violations in both runs. 1 regression (TC-027 pass→fail, major) offset by 2 gains (TC-021, TC-026). Net positive. |
 | **mixed-b** | **FAIL** | 61 overall, 0→2 critical violations, and a -39 score delta vs Gemini 3 Flash baseline. Critical regressions on TC-004 (V-001) and TC-060 (V-003). |
+| **Gemini 3 Flash** | **PASS** | Score 76 matches baseline (delta 0). 0 critical violations. No regressions introduced; 3 minor/major violations are pre-existing baseline behaviours. |
 
 **SC-002 overall: PASS.** Both target models improved measurably with no critical regressions. Regression guard model (Sonnet 4.6) shows net improvement, while mixed-b fails the comparison baseline.
 
