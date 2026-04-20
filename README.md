@@ -82,6 +82,8 @@ The default skill set covers the full orchestration lifecycle:
 
 Skills are composable — an agent can load multiple skills for a single task. New skills can be authored using the `skill-creator` skill.
 
+The **Skills Roster** (`.github/skills-roster.md`) tracks every skill in the system — its purpose, which agents use it, the last validation date, and any warnings from the validator. Every skill must pass `validate_skill.py` (`.github/scripts/`) with zero errors before it is considered complete. Run the validator after creating or modifying any skill to keep the roster current.
+
 ## Key Features
 
 - **Strict role boundaries** — agents have defined responsibilities and constraints, preventing scope creep

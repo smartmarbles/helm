@@ -13,3 +13,5 @@
 | orchestrate-delegation | Orchestration playbook for ARTHUR — the how-to for delegating work, routing by … | ARTHUR, MERLIN, SAGE | 2026-04-19 | 0 |
 | run-test-plan | Test-execution playbook for PROBE — how to run automatable test cases from a He… | PROBE | 2026-04-19 | 0 |
 | write-technical-docs | Documentation-authoring playbook for QUILL — how to turn an approved design, sc… | PROBE, QUILL, SAGE, SCOOP | 2026-04-19 | 0 |
+
+> **Scope note:** This roster tracks only skills authored and maintained by this system. `skill-creator` (Anthropic) is a third-party skill used during skill generation and is not listed here.
