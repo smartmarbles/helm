@@ -154,7 +154,9 @@ If the rubric does not have a rule that fits an observation, record the observat
 
 The scorecard *schema* is defined by the rubric (see the `design-test-rubric` skill). *Filling it in* is execution work:
 
-1. Load the scorecard template for the run (e.g., `artifacts/spec002-agent-system-hardening/probe-baseline-<model>.md`).
+> **Required format:** All PROBE report files MUST follow the canonical template at `artifacts/testing/probe-report-template.md`. Read that file before authoring any new report. LENS validates that the `run_type` and `chat_log` frontmatter fields are present — reports missing these fields will be rejected by LENS and treated as pre-template artifacts.
+
+1. Copy the canonical template from `artifacts/testing/probe-report-template.md` for the new run. Name the output file `artifacts/testing/probe-<run_type>-<model>_<YYYY-MM-DD>.md` (e.g., `probe-baseline-gpt41_2026-04-22.md`). Replace all `{{PLACEHOLDER}}` values with run-specific data.
 2. For each scoring category in the scorecard, tally the pass/fail tests and violations whose `category` field targets it.
 3. Copy each violation's `expected`/`actual`/`evidence` into the scorecard row for its test. Do not paraphrase.
 4. Leave subjective / narrative cells empty if the observation doesn't speak to them — do NOT fabricate commentary.

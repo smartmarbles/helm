@@ -330,6 +330,8 @@ def _write_roster(results, roster_path, skills_base_dir):
         lines.append(f"| {skill} | {purpose} | {used_by} | {today} | {warn_count} |")
 
     lines.append("")
+    lines.append("> **Scope note:** This roster tracks only skills authored and maintained by this system. `skill-creator` (Anthropic) is a third-party skill used during skill generation and is not listed here.")
+    lines.append("")
     with open(roster_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 

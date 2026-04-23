@@ -12,6 +12,7 @@
 | SAGE | Strategic Planner | Creating implementation plans, breaking down complex tasks into phases, writing specs | 2026-03-29 | *A good plan makes implementation feel inevitable.* |
 | QUILL | Technical Documentation Writer | Writing developer guides, API references, README files, tutorials, or any developer-facing documentation | 2026-03-29 | *Clear docs are the shortest distance between a developer and a working feature.* |
 | PROBE | Test Runner | Running automated test cases against agents, verifying constraint enforcement, producing pass/fail reports | 2025-07-25 | *X/Y passed. Z failures.* |
+| LENS | Chat Log Audit Agent | Verifying a completed PROBE report against raw chat logs, detecting behavioral drift between agent prose and tool calls, reconstructing agent call trees, producing audit reports with per-TC-### verdict tables and Report Truthfulness Summaries | 2026-04-21 | *The log doesn't lie — everything else is a claim.* |
 
 ## Temporary Agents
 
@@ -19,7 +20,7 @@ Agents hired for one-time tasks. After completion, archived to `.github/agents/t
 
 | Agent | Role | Task | Hired | Status | File |
 |-------|------|------|-------|--------|------|
-| SPLICE | Surgical Python Validator Coder | spec002 P9a-T3 / T3b / ongoing Python work through Phase 9b (incl. FR-096 `--update-roster`) | 2026-04-18 | Active | `.github/agents/splice.agent.md` |
+
 
 > **Re-archival trigger:** Re-archive SPLICE before spec002 completion, once the final Python development task lands.
 

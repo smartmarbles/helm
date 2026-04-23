@@ -4,14 +4,15 @@
 
 | Skill | Purpose | Used By | Validation Date | Warnings |
 |-------|---------|---------|-----------------|----------|
-| archive-agent | Offboarding playbook for MERLIN — how to archive a temp agent whose task is com… | MERLIN, SCOOP | 2026-04-19 | 0 |
-| conduct-research | Research-execution playbook for SCOOP — how to plan an investigation, triage so… | MERLIN, QUILL, SAGE, SCOOP | 2026-04-19 | 0 |
-| create-plan | Implementation-plan authoring playbook for SAGE — the how-to for turning an app… | ARTHUR, SAGE, SCOOP | 2026-04-19 | 0 |
-| create-spec | Specification authoring playbook for SAGE — the how-to for turning a user reque… | ARTHUR, SAGE, SCOOP | 2026-04-19 | 0 |
-| design-test-rubric | Rubric-design playbook for PROBE — how to author a Helm test-run scorecard (wei… | PROBE | 2026-04-19 | 0 |
-| hire-agent | Hiring playbook for MERLIN — the how-to for adding a new AI team member, from r… | ARTHUR, MERLIN, SCOOP | 2026-04-19 | 1 |
-| orchestrate-delegation | Orchestration playbook for ARTHUR — the how-to for delegating work, routing by … | ARTHUR, MERLIN, SAGE | 2026-04-19 | 0 |
-| run-test-plan | Test-execution playbook for PROBE — how to run automatable test cases from a He… | PROBE | 2026-04-19 | 0 |
-| write-technical-docs | Documentation-authoring playbook for QUILL — how to turn an approved design, sc… | PROBE, QUILL, SAGE, SCOOP | 2026-04-19 | 0 |
+| archive-agent | Offboarding playbook for MERLIN — how to archive a temp agent whose task is com… | MERLIN, SCOOP | 2026-04-21 | 0 |
+| audit-chat-log | Audit-execution playbook for LENS — how to read raw VS Code Copilot chat logs, … | MERLIN, PROBE, QUILL, SCOOP | 2026-04-21 | 0 |
+| conduct-research | Research-execution playbook for SCOOP — how to plan an investigation, triage so… | MERLIN, QUILL, SAGE, SCOOP | 2026-04-21 | 0 |
+| create-plan | Implementation-plan authoring playbook for SAGE — the how-to for turning an app… | ARTHUR, SAGE, SCOOP | 2026-04-21 | 0 |
+| create-spec | Specification authoring playbook for SAGE — the how-to for turning a user reque… | ARTHUR, SAGE, SCOOP | 2026-04-21 | 0 |
+| design-test-rubric | Rubric-design playbook for PROBE — how to author a Helm test-run scorecard (wei… | PROBE | 2026-04-21 | 0 |
+| hire-agent | Hiring playbook for MERLIN — the how-to for adding a new AI team member, from r… | ARTHUR, MERLIN, SCOOP | 2026-04-21 | 0 |
+| orchestrate-delegation | Orchestration playbook for ARTHUR — the how-to for delegating work, routing by … | ARTHUR, MERLIN, SAGE | 2026-04-21 | 0 |
+| run-test-plan | Test-execution playbook for PROBE — how to run automatable test cases from a He… | PROBE | 2026-04-21 | 0 |
+| write-technical-docs | Documentation-authoring playbook for QUILL — how to turn an approved design, sc… | PROBE, QUILL, SAGE, SCOOP | 2026-04-21 | 0 |
 
 > **Scope note:** This roster tracks only skills authored and maintained by this system. `skill-creator` (Anthropic) is a third-party skill used during skill generation and is not listed here.

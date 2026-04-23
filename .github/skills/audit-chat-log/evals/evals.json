@@ -1,0 +1,53 @@
+{
+  "skill_name": "audit-chat-log",
+  "evals": [
+    {
+      "id": "audit-probe-report-against-chat-log",
+      "prompt": "LENS, audit the PROBE baseline report at artifacts/testing/probe-baseline-sonnet46_2026-04-18.md against the chat log at the path specified in its frontmatter. Produce a full audit report with a Session-Level Anomaly Summary, per-TC-### verdict tables, violation log, and Report Truthfulness Summary.",
+      "expected_output": "LENS reads the test-plan.md first to establish independent expectations, then reads the chat log and detects extensionVersion to select the correct result-retrieval strategy, then reads the PROBE report last. The output opens with a Session-Level Anomaly Summary documenting extensionVersion, result-retrieval strategy, hook-log status, and parallel dispatch count. Each TC-### in scope gets a five-column comparison table (Expected / Agent Prose / PROBE Report / Chat Log / Verdict). Every verdict includes a parenthetical citation (requests[N].response[M].toolSpecificData, field: X). UNVERIFIABLE verdicts document the full search path. The report ends with a violation log and a Report Truthfulness Summary with counts of REPORT CONFIRMED / REPORT MISMATCH / EVIDENCE UNVERIFIABLE.",
+      "files": [],
+      "expectations": [
+        "LENS reads test-plan.md before reading the PROBE report (independent expectation source)",
+        "Detects extensionVersion and explicitly states the result-retrieval strategy selected (inline vs transcript_path)",
+        "Every verdict includes a parenthetical log citation with requests[N].response[M] index and field name",
+        "UNVERIFIABLE verdicts document the full search path — which fields were checked, what was expected and not found",
+        "Report opens with Session-Level Anomaly Summary covering extensionVersion, hook-log status, and parallel dispatch count",
+        "Report Truthfulness Summary appears at the end with counts of each RTS verdict type"
+      ]
+    },
+    {
+      "id": "negative-probe-running-tests",
+      "prompt": "PROBE, run all automatable tests in the smoke set against GPT-4.1. Capture stdout and stderr separately, record violations, and produce a pass/fail report.",
+      "expected_output": "This prompt targets PROBE, not LENS. PROBE should use the run-test-plan skill to execute the smoke set: snapshot pre-test state, dispatch target agents with exact test-plan prompts, evaluate pass criteria, record violations using the violation log schema, clean up, and sign off with a one-line tally. The audit-chat-log skill is NOT triggered — LENS does not run tests.",
+      "files": [],
+      "expectations": [
+        "The audit-chat-log skill is NOT used for this prompt — it targets PROBE, not LENS",
+        "Test execution uses the run-test-plan skill, not the audit-chat-log skill"
+      ]
+    },
+    {
+      "id": "detect-merlin-skipping-scoop-violation",
+      "prompt": "LENS, check the latest PROBE run log for any instance of MERLIN creating an agent file without first invoking SCOOP. Report what you find with log evidence.",
+      "expected_output": "LENS reads the chat log and scans for the MERLIN-skipping-SCOOP violation pattern: MERLIN dispatches (creates agent file via copilot_createFile or similar) but no runSubagent call targeting SCOOP precedes the creation. For each instance found, LENS records it in the violation log with severity (hard), the TC-### if applicable, and the specific log evidence (request index, tool call name, field path). If no violation is found, LENS documents the absence check — which log sections were scanned, what was looked for, and the conclusion.",
+      "files": [],
+      "expectations": [
+        "LENS scans for the MERLIN-skipping-SCOOP pattern specifically: agent file creation with no preceding SCOOP runSubagent",
+        "Each detected violation is recorded with severity, TC-### (if applicable), and specific log evidence (request index, tool call name, field path)",
+        "If no violation found, LENS documents the absence check — what was searched, where, and the negative result",
+        "Self-reads (MERLIN reading its own agent file) are correctly excluded from the impersonation check"
+      ]
+    },
+    {
+      "id": "p2-degradation-missing-frontmatter",
+      "prompt": "LENS, audit the PROBE report at artifacts/testing/probe-baseline-gpt41_2026-04-18.md. Note that this report may be in an older format without run_type and chat_log frontmatter fields.",
+      "expected_output": "LENS checks the PROBE report frontmatter for run_type and chat_log fields. If absent, LENS warns the user that it is operating in P2 (anomaly-only) mode and explains what coverage is affected: per-TC-### tables will not be produced. LENS then proceeds with session-level anomaly detection only. LENS does NOT attempt to parse the old format as if it were the new format, and does NOT silently skip the degradation warning.",
+      "files": [],
+      "expectations": [
+        "LENS explicitly checks for run_type and chat_log frontmatter fields before proceeding",
+        "If fields are absent, LENS warns the user and states it is operating in P2 (anomaly-only) mode",
+        "P2 mode produces session-level anomaly summary but NOT per-TC-### tables",
+        "LENS does not silently degrade — the degradation mode and its coverage impact are communicated to the user"
+      ]
+    }
+  ]
+}
