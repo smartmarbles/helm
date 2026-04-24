@@ -133,22 +133,13 @@ Every task owns the files it touches. Ownership is the contract that makes paral
 
 ## tasks.md Split Rule
 
-For most plans, the embedded checkboxes in `plan.md` are sufficient. Produce a standalone `tasks.md` **only** when one of these triggers fires:
+**Do not produce `tasks.md`.** Every plan uses the embedded checkboxes in `plan.md` as the single source of truth for task tracking.
 
-- **More than ~10 tasks** across all phases combined, or
-- **Work expected to span multiple sessions** (multi-day effort, multi-human handoff).
+A separate `tasks.md` creates a second artifact that must stay in sync with `plan.md`. Because all execution dispatches target `plan.md`, `tasks.md` will always drift — adding maintenance cost with no operational benefit.
 
-When you produce `tasks.md`, it is an **operational checklist** — trackable across sessions, independent of the strategic plan. Format each row as:
+### Rule: plan.md is the only tracker
 
-```
-- [ ] [TaskID] [Phase] [Priority] Description — `file/path`
-```
-
-Group by phase. Include a short dependencies section at the bottom noting which tasks block which. The `plan.md` remains the strategic document; `tasks.md` is the execution tracker.
-
-### Rule: do not pad
-
-A 6-task plan does not need a `tasks.md`. Producing one anyway adds maintenance cost without operational benefit. Only split when the triggers fire.
+All task checkboxes live in `plan.md`. Agents update `plan.md` checkboxes as tasks complete. No secondary tracker is needed, regardless of task count or session span.
 
 ---
 
@@ -156,7 +147,7 @@ A 6-task plan does not need a `tasks.md`. Producing one anyway adds maintenance 
 
 After the plan is written, ARTHUR runs the Plan Checkpoint before any phased execution begins. SAGE's responsibility is to make that checkpoint possible:
 
-1. **Write the file to disk** with `create_file`. Path: `artifacts/spec###-short-name/plan.md` (and `tasks.md` if the split rule fires). Never return plan content as response text.
+1. **Write the file to disk** with `create_file`. Path: `artifacts/spec###-short-name/plan.md`. Never return plan content as response text.
 2. **Report back** to ARTHUR in this exact shape:
    - The spec folder path
    - The file(s) written (`plan.md`, optionally `tasks.md`)
@@ -177,7 +168,7 @@ Plans live in numbered spec folders under `artifacts/`:
 1. **ARTHUR assigns the folder name.** On the full path, use the same folder where the approved spec was written (e.g., `artifacts/spec004-fix-payment-timeout/`).
 2. **On the standard path with no pre-existing folder**, scan `artifacts/` for the highest existing `spec###-*`, increment, and use the provided short name (or `spec###-unnamed` flagged for ARTHUR to rename).
 3. **`create_file` creates missing parent directories automatically.** Do not run a separate mkdir step. Do not ask the user for permission — just write.
-4. **Filenames are always `plan.md` and (when the split rule fires) `tasks.md`.**
+4. **The only filename is `plan.md`.**
 
 ---
 

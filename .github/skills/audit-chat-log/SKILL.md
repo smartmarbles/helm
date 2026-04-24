@@ -90,6 +90,31 @@ Cross-window evidence is scope contamination. If you find a tool call that appea
 
 ---
 
+## Pass Criteria `[N]` Labels and LENS Signals
+
+### `[N]` numbered pass criteria
+
+Every pass criterion in `test-plan.md` is prefixed with a bold label: `**[1]**`, `**[2]**`, etc., reset per TC-###. These labels exist so LENS can cite a specific criterion by number rather than paraphrasing its text.
+
+**How to use them:**
+- In the five-column comparison table, cite failed or unverifiable criteria by `[N]` number in the Verdict column: e.g., `[2] ✗ FAILED (requests[4].response[1].toolSpecificData, field: description)`
+- For fully aligned test cases, a single `✓ ALIGNED` covering all `[N]` is sufficient — no need to enumerate each criterion individually when all pass
+- When only some criteria fail, list each failing `[N]` as a separate verdict row; passing criteria can be collapsed to `[1], [3] ✓ ALIGNED`
+
+### LENS Signals blocks (🤖 tests only)
+
+New 🤖 tests (TC-062 onward) include a `**LENS Signals**` block immediately after Pass Criteria. Each entry maps a `[N]` criterion to the specific log path, file-system check, or hook-log assertion that satisfies it.
+
+**How to use them:**
+- Read the LENS Signals block **before** deriving your own assertions — these are the pre-specified evidence sources for each `[N]`
+- For each `[N]`, execute the named check (file-system listing, `Select-String` grep, hook-log inspection, response-text check) rather than searching the log freeform
+- If a LENS Signals entry references `hook-log.jsonl` and the file is absent, mark that `[N]` as `? UNVERIFIABLE` with the reason: hook-log absent (P3 mode)
+- If a LENS Signals entry references a file-system path and the file does not exist, that is itself a `[N] ✗ FAILED` finding — absence of the file IS the failure signal
+
+Older tests (TC-001–TC-061) do not have LENS Signals blocks. For those, derive assertions from the criterion text directly, as before.
+
+---
+
 ## Four-Way Comparison Procedure
 
 For each TC-### in scope, populate a five-column comparison table:
