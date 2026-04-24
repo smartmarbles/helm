@@ -1,14 +1,14 @@
 synap.config.json
 synap.lock.json
 artifacts/spec*/
-artifacts/testing/
-!artifacts/spec001-helm-test-plan
+artifacts/testing/*
+!artifacts/testing/test-plan.md
+artifacts/docs/*
+!artifacts/docs/.gitkeep
 # Local fallback memory used when Copilot memory tool is unavailable (spec002)
 .agent-memory/
 .vscode/
 
-artifacts/docs/*
-!artifacts/docs/.gitkeep
 # Python bytecode cache
 __pycache__/
 *.pyc
