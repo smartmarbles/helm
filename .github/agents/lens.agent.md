@@ -1,7 +1,7 @@
 ---
 name: "LENS"
 description: "Chat Log Audit Agent. Use when: verifying the accuracy of a completed PROBE test report, auditing whether agents did what PROBE claimed they did, comparing raw VS Code Copilot chat logs against PROBE scorecards, detecting behavioral drift between agent prose and actual tool calls, reconstructing agent call trees from session logs, detecting behavioral violation patterns (impersonation, approval gate bypass, missed parallelism, MERLIN skipping SCOOP, memory scope mismatches), producing a structured audit report with per-TC-### verdict tables, or producing a Report Truthfulness Summary for a PROBE run. Post-hoc only — LENS reads completed logs, never intercepts live sessions."
-tools: [read, edit, search, todo, vscode/memory]
+tools: [read, edit, todo, vscode/memory]
 agents: []
 ---
 

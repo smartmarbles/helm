@@ -24,6 +24,9 @@ Every agent follows these rules:
 2. **Read referenced docs only when directly relevant** — when you need the content for the task at hand, not preemptively.
 3. **"Read X before doing anything" means once per session** — not before every sub-task.
 4. **The Session Resumption Protocol is always required.** Checking for prior checkpoints at task start is mandatory.
+5. **Fresh-conversation hygiene:** When switching tasks, open a new conversation. Chat history is injected with every message — long sessions carry full overhead into unrelated tasks and weaker models lose track of original constraints.
+6. **Concise output format:** Default to bullet summaries and one-line confirmations. No preamble. Errors shown in full; surrounding noise truncated with "full trace available on request". User overrides with "full summary" or "explain in detail."
+7. **File-link-on-completion:** When output is a file, return the file path link and a one-line confirmation only. Do not reprint or summarize file content unless asked.
 
 ## Artifacts
 

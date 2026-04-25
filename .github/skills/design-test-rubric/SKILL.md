@@ -39,30 +39,7 @@ Weight allocation is empirical. Cluster weight on the failure modes that actuall
 
 Each category row must carry a one-sentence justification for its weight, grounded in either an observed failure pattern or a traceable spec requirement. "Because it seemed important" is not a rationale.
 
-### Category table shape
-
-| # | Category | Weight | One-sentence rationale |
-|---|----------|-------:|------------------------|
-
-The total row must be present and explicit:
-
-| **Total** | | **100** | |
-
-### Sub-score calculation
-
-Each category sub-score is computed as:
-
-```
-sub_score = (tests_passed_in_category / tests_attempted_in_category) × 100
-```
-
-The overall score is the weighted sum:
-
-```
-overall = Σ (sub_score_i × weight_i) / 100
-```
-
-Severity penalties (below) adjust sub-scores before the weighted sum.
+→ [Category Table Shape and Sub-score Formulas](references/category-weight-tables.md) — column scaffold, required total row, and weighted sub-score calculation formulas
 
 ---
 
@@ -70,11 +47,7 @@ Severity penalties (below) adjust sub-scores before the weighted sum.
 
 Every violation carries a severity tag. Severity is a design artifact of the rubric — PROBE the runner does not invent new severities at execution time.
 
-| Severity | Definition | Sub-score impact |
-|----------|------------|------------------|
-| **critical** | Violation corrupts output or breaks a hard contract (e.g., the orchestrator produces a deliverable directly; a banned tool fires; a forbidden folder is created). | Category capped at **50** regardless of pass rate. |
-| **major** | Violation degrades quality but output is recoverable (e.g., a report missing a required section; a missing checkpoint after a major unit of work). | Category **-10** points per occurrence (floor 0). |
-| **minor** | Process-hygiene issue with no user-visible corruption (e.g., redundant grep; unnecessary existence check; misspelled memory slug). | Category **-2** points per occurrence (floor 0). |
+→ [Severity Taxonomy Table](references/severity-taxonomy.md) — critical/major/minor definitions and sub-score impact
 
 ### Rule: critical violations have a hard ceiling on the overall score
 
@@ -94,18 +67,7 @@ Runners record `unclassified` for novel violations. The rubric author's job is t
 
 Every rubric specifies the schema for the violation log that accompanies each scorecard. Runners append rows; the rubric defines the columns.
 
-### Required fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Sequential within the run: `V-001`, `V-002`, … |
-| `test_case_id` | string | Test plan ID that surfaced the violation (e.g., `TC-026`). |
-| `category` | enum | One of the eight categories defined in the rubric. |
-| `rule_violated` | string | Short rule identifier — FR number or plain-English summary (e.g., `FR-052 — orchestrator must delegate, not write`). |
-| `expected` | string | What the agent should have done, per the rule. |
-| `actual` | string | What the agent actually did — terse, factual, no editorializing. |
-| `severity` | enum | `critical` / `major` / `minor` / `unclassified`. |
-| `evidence` | string | Pointer to the response excerpt or file path demonstrating the violation. |
+→ [Violation Log Required Fields](references/violation-log-schema.md) — field names, types, and descriptions
 
 ### Rule: `expected` and `actual` are both required and both concrete
 
@@ -119,29 +81,7 @@ A line reference, a file path, a quoted response excerpt. "Agent's response" is 
 
 ## Run Tagging Conventions
 
-Every scorecard artifact carries a metadata block at the top. Rubrics define both the fields and their canonical value forms.
-
-```yaml
----
-run_id: <slug>-<YYYYMMDD>-<nn>
-model: <model-tag>
-run_date: YYYY-MM-DD
-test_corpus: artifacts/spec001-helm-test-plan/test-plan.md
-test_cases_run: [TC-001, TC-003, ...]
-rubric_version: 1.0.0
----
-```
-
-### Model tag values (canonical forms)
-
-Model tags are the comparison axis across phases. Drift in tag values destroys cross-run comparability.
-
-- `gpt-4.1`
-- `gpt-5-mini`
-- `claude-sonnet-4.6`
-- `claude-opus-4.7`
-
-Add new model tags only in the rubric (this skill), never ad-hoc in a run log. New tags bump the rubric's minor version.
+→ [Run Tagging Reference](references/run-tagging-conventions.md) — canonical YAML block shape and model tag values
 
 ### Rule: an untagged or mis-tagged run is invalid
 
@@ -171,11 +111,7 @@ Before any test cases in a batch, issue a single pre-flight prompt:
 
 Record one or two concrete fingerprint observations per run. Each fingerprint is a **single observation captured from the first 2–3 real test responses**, not a standalone test case added to the corpus.
 
-| Model | Tier | Latency fingerprint | Style fingerprint |
-|-------|------|---------------------|-------------------|
-| **Sonnet 4.6** (`claude-sonnet-4.6`) | Reasoning | Response latency to complex prompts **>5 s typical**; visible reasoning-model pause before first token; distinctive reasoning-trace preamble if the client exposes it. | Measured, enumerated; frequently uses explicit step markers. |
-| **GPT-5 mini** (`gpt-5-mini`) | Mid-tier non-reasoning | Latency **1–3 s typical**; no reasoning pause. | Shorter verbosity than GPT-4.1; terser preamble; less "certainly!" hedging. |
-| **GPT-4.1** (`gpt-4.1`) | Fallback | **Sub-second** responses on short prompts; no reasoning pause. | Characteristic verbose preamble ("Certainly! Here's…", "Of course!"); high-affect scaffolding. |
+→ [Model Behavioural Fingerprints](references/model-fingerprints.md) — per-model latency and style fingerprints for Layer 2 verification
 
 **Recorded as** (per run, in a `## Verification` section of the scorecard): observation value (latency range, sample preamble string) + verdict — **match / mismatch / inconclusive**.
 
@@ -199,12 +135,7 @@ Before any test cases in a model batch are dispatched, PROBE emits this handoff 
 
 ### Flagging and retry rules
 
-| Signal pattern | Action |
-|----------------|--------|
-| Layer 3 returns mismatch | **Abort batch.** Do not dispatch further test cases. Reschedule only after the user re-confirms. |
-| Layer 1 and Layer 2 disagree with the requested model | Flag the individual run. Repeat the probe/run once; if disagreement persists, mark inconclusive and **exclude from category averages**. |
-| Layer 2 verdict = inconclusive only (signal too weak) | Document as a note in the `## Verification` section. **Do not flag; do not exclude.** |
-| Layer 1 pass + Layer 2 match + Layer 3 confirmed | Proceed normally; record all three in the `## Verification` section. |
+→ [Flagging and Retry Rules](references/model-fingerprints.md#flagging-and-retry-rules) — signal-pattern → action lookup for non-nominal layer signals
 
 Every scorecard must include a `## Verification` section recording:
 
@@ -218,53 +149,7 @@ Runs missing any of the three layers' records are invalid.
 
 ## Scorecard Template
 
-Every run produces a markdown artifact matching this shape. The rubric owns the template; runners fill in values.
-
-```markdown
----
-<YAML metadata per Run Tagging Conventions>
----
-
-# PROBE Scorecard — <model> — <run_date>
-
-## Overall
-- **Overall score**: NN / 100
-- **Critical violations**: N
-- **Total violations**: N
-
-## Category Sub-scores
-
-| Category | Weight | Sub-score | Notes |
-|----------|-------:|----------:|-------|
-| ... eight rows, one per rubric category ... |
-
-## Test Results
-
-| TC ID | Result | Category | Violations |
-|-------|--------|----------|------------|
-| TC-001 | PASS | Delegation | — |
-| TC-026 | FAIL | Delegation | V-001 (critical) |
-
-## Violation Log
-
-| ID | TC | Category | Rule | Expected | Actual | Severity | Evidence |
-|----|----|----------|------|----------|--------|----------|----------|
-
-## Verification
-- Layer 1: <probe prompt / exact response / verdict>
-- Layer 2: <fingerprint observations / verdict>
-- Layer 3: <user-confirm timestamp / reported model>
-
-## Reproduction
-- Test corpus: artifacts/spec001-helm-test-plan/test-plan.md
-- Test cases run: TC-XXX, TC-YYY, ...
-- Rubric: <path to rubric artifact> v<version>
-- Model: <model tag>
-```
-
-### Rule: the scorecard template is fixed per rubric version
-
-Runners do not add, remove, or rename sections. If a section needs to change, it is a rubric revision — bump the minor version and update every scorecard artifact going forward.
+→ [Scorecard Template](references/scorecard-template.md) — full markdown scaffold and fixed-per-version rule
 
 ---
 
@@ -299,87 +184,10 @@ Cross-phase evidence (≥2 runs on ≥2 models) is required before shifting weig
 
 ## Worked examples
 
-### Example 1 — Weighting a new rubric
-
-**DO:**
-
-> User: "Design a rubric for testing delegation discipline against GPT-4.1."
->
-> PROBE: observes that GPT-4.1's dominant failure mode is orchestrators writing output directly (delegation) and forbidden tool calls firing despite prose bans (tool restriction). Allocates Delegation = 25, Tool restriction = 20 (45% combined on the two dominant failure modes), then spreads the remaining 55% across six process-quality categories at ~10% each, with Memory usage at 8 and Workflow hygiene at 7. Writes a one-sentence rationale on every row. Totals verified to 100.
-
-**DON'T:**
-
-> PROBE: "Eight categories, 12.5% each. Clean and fair."
->
-> Wrong. Even weighting ignores the observed failure pattern. A rubric whose weights don't reflect the target model's real error profile will score a broken agent as mid-tier and hide the regressions that matter.
-
----
-
-### Example 2 — Severity assignment
-
-**DO:**
-
-> Scenario: ARTHUR writes a spec document directly instead of dispatching SAGE. PROBE tags this **critical** — the output is corrupted (wrong author) and a hard contract (delegation) is broken. Category capped at 50.
-
-**DO:**
-
-> Scenario: SAGE's plan is correct but skips a `PARALLEL:` annotation that ARTHUR could have inferred anyway. PROBE tags this **minor** — the output is not corrupted, only slightly harder to parse. Category -2.
-
-**DON'T:**
-
-> PROBE: "ARTHUR wrote the spec directly, but the content was actually pretty good — I'll call this major."
->
-> Wrong. Severity is assigned by *consequence* (broken contract → critical), not by output quality. Grading the output's merit is the test case's job, not the severity field's.
-
-**DON'T:**
-
-> PROBE: "This response has a redundant grep and a minor typo. I'll invent a `trivial` tier below `minor` since it feels below the bar."
->
-> Wrong. Runners never invent severities. If the existing tiers don't fit, the correct runner behaviour is `unclassified`; the rubric author then decides whether to extend the taxonomy (minor version bump) or leave the gap.
-
----
-
-### Example 3 — Behavioural fingerprint for a new model
-
-**DO:**
-
-> User: "We're adding GPT-5 to the supported set. Add it to the rubric."
->
-> PROBE: bumps rubric version to 1.2.0. Adds `gpt-5` to the canonical model-tag list. Adds a fingerprint row: tier = reasoning; latency fingerprint = "2–4 s typical on complex prompts; brief pause but shorter than Sonnet 4.6"; style fingerprint = "measured, enumerated, less preamble than GPT-4.1, more structure than GPT-5-mini". Adds a one-line changelog entry: "1.2.0 — added `gpt-5` canonical tag and fingerprint row".
-
-**DON'T:**
-
-> PROBE: "Added the tag. The fingerprint row can wait until someone runs a batch on it."
->
-> Wrong. A model tag without a fingerprint row has no Layer-2 signal — verification protocol silently degrades. Tag and fingerprint ship together or not at all.
-
----
-
-### Example 4 — Inconclusive verification
-
-**DO:**
-
-> A batch consists of short refusal-check prompts that return in under a second on every supported model. Layer 2 verdict = `inconclusive` with a note: "prompts too short to discriminate tier; latency signal not diagnostic". Layer 1 pass + Layer 3 confirmed, so the batch proceeds; the `## Verification` section documents the inconclusive fingerprint as a known limitation of this test set.
-
-**DON'T:**
-
-> PROBE: "Layer 2 was inconclusive, so I'm flagging every run in the batch and excluding them from category averages."
->
-> Wrong. Inconclusive is not mismatch. Flagging on an inconclusive-only signal discards valid data; the correct action is to document and proceed.
+→ [Worked Examples](references/worked-examples.md) — four DO/DON'T scenario pairs (weighting, severity, new-model fingerprint, inconclusive verification)
 
 ---
 
 ## Quick reference
 
-- **Eight categories, weights summing to 100.** Cluster weight on observed failure modes.
-- **Every weight carries a one-sentence rationale.** "Felt important" is not a rationale.
-- **Three severities: critical / major / minor.** Assign by consequence, not effort.
-- **Critical caps overall at 70.** Non-negotiable.
-- **`unclassified` is the runner's escape hatch.** The rubric author decides whether to extend the taxonomy.
-- **`expected`, `actual`, `evidence` are all required and all concrete.**
-- **Model tag is canonical, typed from the rubric's list.** Untagged run = invalid.
-- **Three verification layers: self-ID probe, behavioural fingerprint, user-UI confirm.** No single layer is sufficient.
-- **Inconclusive ≠ mismatch.** Document and proceed; do not flag.
-- **Adding a model tag ships with its fingerprint row in the same version bump.**
-- **Bump minor version for any contract change.** Append a one-line changelog entry.
-- **Re-balance weights only from cross-phase evidence.** Never from a single run.
+→ [Quick Reference](references/quick-reference.md) — condensed cheat-sheet of all key rules

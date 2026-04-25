@@ -11,7 +11,7 @@ Read this skill whenever a task brief asks for any developer-facing written arti
 
 ## How to use this skill
 
-1. **Classify the doc type** using the Doc-Type Decision Table.
+1. **Classify the doc type** using the [Doc-Type Decision Table](references/doc-type-table.md).
 2. **Identify the audience** — evaluator, implementer, or troubleshooter — and state it in the opening.
 3. **Plan the structure first** (outline before prose).
 4. **Draft code before prose.** Every section leads with a runnable snippet; the prose explains it.
@@ -20,47 +20,9 @@ Read this skill whenever a task brief asks for any developer-facing written arti
 
 ---
 
-## Boundaries: writing vs researching vs deciding
+→ [Boundaries](references/boundaries.md) — role-ownership table and refusal scripts for writing vs. researching vs. deciding
 
-QUILL writes. QUILL does not research primary library capabilities, and QUILL does not make architectural or product decisions. The lines:
-
-| Task | Who owns it | QUILL's role |
-|------|-------------|--------------|
-| "What can library X do? What are its limits?" | SCOOP (primary research) | Take SCOOP's findings, turn into reader-facing docs. |
-| "Which approach should we use: A or B?" | SAGE (architectural decision) | Document the decision once SAGE has made it. |
-| "Write a doc describing library X's feature set." | QUILL | Own the entire deliverable. |
-| "Compare libraries X and Y and recommend one." | SCOOP (research) + SAGE (decision) + QUILL (doc) | Write the comparison after research; present the chosen option after SAGE decides. |
-| "Implement feature Z." | an implementer | Document after it's built. |
-
-**If a request asks QUILL to decide, choose, or recommend a technical approach, refuse explicitly.** Say: "This is SAGE's responsibility. I'll document the decision once SAGE has made it." Offer to draft a neutral comparison in the meantime if that unblocks the requester.
-
-**If a request asks QUILL to investigate a library's internals or capabilities from scratch, refuse explicitly.** Say: "This is SCOOP's responsibility. I'll turn the findings into docs once SCOOP returns." Do not skim docs and write from memory — that produces the unrunnable-sample failure mode.
-
----
-
-## Doc-Type Decision Table
-
-Pick one primary type before drafting. A single document may borrow elements from another type (a README almost always contains a mini-quickstart), but the primary type governs the structure.
-
-| Type | When to use | Governing question the doc answers | Required sections |
-|------|-------------|------------------------------------|-------------------|
-| **README** | Project root or package root; first thing a developer sees | "What is this, should I use it, and how do I get started in 60 seconds?" | One-line summary, Why use it / When to use it, Prerequisites, Install, Quickstart (runnable), Links to deeper docs, License/contributing link |
-| **API reference** | Every public function, class, or endpoint needs documented surface area | "What does this identifier do, what does it take, and what does it return?" | Per entry: signature, parameters (with types), return value, side effects, errors/exceptions, minimal example, "See also" links. Consistent template per entry. |
-| **Tutorial** | Zero → visible result path; reader is learning | "How do I build a working thing from nothing?" | Prerequisites, final-result screenshot or output shown up top, numbered steps with imports on step 1, checkpoint output after each step, "What you've built" summary, next-steps links |
-| **Developer guide** | Task-oriented walkthrough for a specific use case | "How do I accomplish task X with this tool?" | Problem framing ("you want to …"), working end-state code first, layered explanation, edge cases and gotchas, "How to choose" verdict if alternatives exist |
-| **Comparison doc** | Evaluating two or more libraries, frameworks, or approaches | "Given my needs, which of these should I pick?" | Audience statement, conceptual mapping table (X's `Foo` ≈ Y's `Bar`), side-by-side code panels per functional area, feature gap matrix (✅/❌/🔶), verdict per category, "How to choose" synthesis at the end |
-| **Migration guide** | Version N → N+1, or framework A → framework B | "I have working code today. How do I get to the new version without breaking anything?" | Version pinning (from X.Y.Z to A.B.C), breaking-change summary table, concept mapping, step-by-step transition path, gotchas, rollback note |
-| **Quickstart** | Subset of README or tutorial — under 5 minutes to green | "Give me the shortest working path so I can evaluate." | Install command, minimal working snippet, expected output, one link to "now what?" |
-
-### Which am I writing? decision heuristic
-
-- Reader's first contact with the project? → **README**
-- Reader needs to look up a specific identifier? → **API reference**
-- Reader is learning from zero with time to follow along? → **Tutorial**
-- Reader has a specific task in mind? → **Developer guide**
-- Reader is evaluating between options? → **Comparison doc**
-- Reader has working code and needs to move versions? → **Migration guide**
-- Reader has 5 minutes to decide if it's worth more time? → **Quickstart**
+→ [Doc-Type Decision Table](references/doc-type-table.md) — lookup table mapping doc type to use case, governing question, and required sections, plus the "Which am I writing?" decision heuristic
 
 ---
 
@@ -74,16 +36,7 @@ Before drafting, answer these three questions in writing (internally or in the s
 
 State the audience in the document's opening sentence or an explicit "Who this is for" callout. Every paragraph that follows earns its place by answering a question this reader is likely to have.
 
-### Terminology gating
-
-- Define a term on first use. Put the definition *before* the term is needed, not after.
-- Reuse the term exactly once defined. The same concept must always use the same name.
-- In comparison docs, qualify terms with their source library on first use: "React's `useEffect`", "Vue's `watch`". Never mix contexts without qualification.
-- Jargon without definition on first use destroys trust instantly. When in doubt, define.
-
-### When the audience is mixed (e.g., a README for both evaluators and implementers)
-
-Structure the doc in layers: the first 60 seconds serves evaluators (what, why, when to use); the quickstart serves implementers (how). Troubleshooters are served by a "Common issues" or "Gotchas" section at the bottom, or by a link to a separate troubleshooting doc. Do not attempt to serve all three audiences in the same paragraph.
+→ [Writing Standards](references/writing-standards.md) — terminology gating rules and mixed-audience layering patterns
 
 ---
 
@@ -152,61 +105,7 @@ Rewrite anything that fails the review pass. Rewrite is not "polish" — it is s
 
 ---
 
-## Structural conventions
-
-### Headings
-
-- Top of file: H1 with the document's title and, where useful, version stamp in a subtitle.
-- Section headings: H2. Subsections: H3. Rarely H4; if you need H5, the document is too deep — split into linked files.
-- Question- or task-oriented phrasing: "How do I …", "Setting up …", "Comparing …", "When to use …". Reference docs can use identifier names as headings (`authenticate()`).
-
-### Code blocks
-
-- Always fenced with the appropriate language tag: ` ```typescript `, ` ```python `, ` ```bash `, etc. Never unfenced.
-- Line-1 comment for version context when it matters: `// typescript 5.4, @my/lib 2.1.0`.
-- Show full imports or includes. Do not use `// ...existing imports` in samples the reader is meant to run.
-- Keep samples focused on one concept. Extract setup into prose before the sample if needed.
-
-### Tables
-
-- Use for structured comparisons, parameter lists, feature matrices, mapping between two things.
-- Keep columns narrow enough to render in a 100-column terminal preview — long prose belongs below the table, not inside cells.
-- Always commentary after: what does the table tell the reader, and what should they take away.
-
-### Callouts
-
-- `> **Note:** ...` for contextual asides.
-- `> **Warning:** ...` for behaviour that breaks silently.
-- `> **Version Note:** ...` for claims likely to change.
-- `> **Experimental:** ...` or `> **Unstable API:** ...` for pre-stable interfaces.
-
-### Feature gap matrix (comparison docs only)
-
-For comparison docs, use a ✅/❌/🔶 matrix per functional category:
-
-| Feature | Library A | Library B |
-|---------|-----------|-----------|
-| Zero-config setup | ✅ | ❌ |
-| Plugin system | ✅ | 🔶 (community only) |
-| Type inference | ✅ | ✅ |
-
-- ✅ = supported, stable.
-- ❌ = not supported.
-- 🔶 = partial or caveat — always note the caveat in the cell.
-
-Follow every matrix with a verdict paragraph.
-
-### Front-loaded summary
-
-Every document and every section opens with a short statement of what the reader will get. For a full doc:
-
-> This guide shows you how to authenticate requests to the Widget API using OAuth2. You'll end with a working Node.js client that can fetch your account details. Reading time: ~7 minutes.
-
-For a section:
-
-> This section covers the three error types the client can throw. By the end you'll know how to distinguish transient from permanent errors and when to retry.
-
-This earns the reader's attention. If the promise cannot be kept, don't make it.
+→ [Structural Conventions](references/structural-conventions.md) — headings, code blocks, tables, callouts, feature gap matrix, and front-loaded summary patterns
 
 ---
 
@@ -222,133 +121,14 @@ For any doc likely to exceed ~500 lines (full API references, multi-chapter guid
 
 ---
 
-## Output standards
-
-- **Format:** GitHub-Flavored Markdown unless the brief specifies otherwise.
-- **File placement:** Write to the spec folder named in the task brief. If no spec folder is named (standalone documentation task), write to `artifacts/docs/`.
-- **Length:** As long as necessary, as short as possible. Respect the reader's time. A 600-line doc that could be 300 is a failure.
-- **Pinned versions:** Document header or code-sample line-1 comment. Flag claims likely to drift with `> **Version Note:** ...`.
-- **Full imports:** Always. Import paths and module names vary between libraries and must never be assumed.
-- **Unstable APIs:** Explicitly noted with `> **Experimental:** ...` or `> **Unstable API:** ...`.
+→ [Output Standards](references/output-standards.md) — format, file placement, length, version pinning, full imports, and unstable API flagging rules
 
 ---
 
-## DO / DON'T worked examples
-
-### Example 1 — Concept before code
-
-**DO:**
-
-```markdown
-## How do I authenticate a request?
-
-The client library signs every request with your API key. The flow is: initialize the client with your key, then call any method — signing is automatic.
-
-```typescript
-// typescript 5.4, @widget/client 2.1.0
-import { WidgetClient } from "@widget/client";
-
-const client = new WidgetClient({ apiKey: process.env.WIDGET_API_KEY! });
-const me = await client.accounts.me();
-console.log(me.email);
-```
-
-The `apiKey` is read once on construction. Rotate keys by constructing a new client; the existing one continues using its original key.
-```
-
-Prose frames the governing question ("how do I authenticate?"), code shows the complete flow with imports and version pinned, prose after the sample answers a secondary question the reader will have.
-
-**DON'T:**
-
-```markdown
-## Authentication
-
-Authentication is the process by which the client library verifies your identity to the Widget API server using a cryptographic credential known as an API key. The `WidgetClient` class accepts an options object which includes an `apiKey` field of type `string`. When you invoke methods on the client, the library automatically signs each outbound request using the provided key. For code examples, see the API reference.
-```
-
-Heading is a noun, not a question. Four sentences of concept before any code. Jargon ("cryptographic credential") without definition. Reader is told to look elsewhere for samples — the doc that is supposed to answer the question offloads the actual answer. Confused Developer Test: fails.
+→ [Worked Examples](references/worked-examples.md) — four DO/DON'T pairs: concept-before-code ordering, comparison verdicts, unverified code samples, and SCOOP research transformation
 
 ---
 
-### Example 2 — Comparison verdict
+→ [Quick Reference](references/quick-reference.md) — nine-bullet summary lookup for common decision points
 
-**DO:**
 
-```markdown
-### State management — verdict
-
-Use Vuex if you're already invested in the Vue ecosystem and want tight integration with devtools. Use Pinia for new projects — it's the officially recommended path in Vue 3 and has better TypeScript ergonomics. Neither is strictly faster than the other at typical app scale; pick on developer experience, not runtime performance.
-```
-
-Three sentences, concrete recommendation, names the condition under which each wins, explicitly rejects the performance-benchmark framing as a tiebreaker. Reader knows how to choose.
-
-**DON'T:**
-
-```markdown
-### State management
-
-Both Vuex and Pinia are powerful state management solutions for Vue applications. Each has its own strengths and the right choice depends on your specific needs and preferences.
-```
-
-No verdict. False balance. Marketing voice ("powerful"). "Depends on your specific needs" is the author surrendering to the reader. If the reader knew their needs well enough to pick, they wouldn't be reading a comparison doc.
-
----
-
-### Example 3 — Unverified code sample
-
-**DO:**
-
-```markdown
-> **Version Note:** I was not able to verify this against a running `@widget/client` v2.1.0 at the time of writing. The signature is taken from the library's published types; behaviour under concurrent calls has not been confirmed.
-
-```typescript
-// typescript 5.4, @widget/client 2.1.0 (signature per published types; behaviour unverified)
-await client.batch.submit({ ids: [1, 2, 3] });
-```
-```
-
-The limitation is flagged loudly. The reader knows what has and hasn't been verified. If the sample later breaks, the flag proves the claim was not overstated.
-
-**DON'T:**
-
-```markdown
-The batch submit method is fast and handles thousands of IDs in parallel:
-
-```typescript
-await client.batch.submit({ ids: [1, 2, 3] });
-```
-```
-
-Unverified claim ("is fast", "thousands of IDs in parallel") presented as fact. No version pin. No flag. Marketing voice. If the claim is wrong, the doc loses the reader permanently. Code samples carry more authority than prose — shipping an unverified sample without a flag is a trust violation.
-
----
-
-### Example 4 — Turning SCOOP research into a doc
-
-**DO:**
-
-> SCOOP returns a research packet on "how OAuth2 PKCE works in single-page apps". The packet has: flow diagram (prose), 7-step sequence, threat-model notes, browser support caveats, links to 3 RFCs.
->
-> QUILL's output: a developer guide titled "How do I set up OAuth2 PKCE in a React SPA?". Opens with audience (implementer, React 18, using `oidc-client-ts`). Section 1: the 60-second version — one code sample showing the end state. Section 2: setup (install, configure). Section 3: the flow, with the diagram and a running snippet per step (3 of the 7 steps need code; the other 4 are described in prose). Section 4: gotchas from SCOOP's threat-model notes, framed as "if you see X, fix Y". Section 5: browser support caveats. Links to RFCs live in a "Further reading" footer — not interleaved in the main flow.
-
-Research is turned into reader-facing docs. SCOOP's structure (by topic) becomes QUILL's structure (by reader task). Nothing fabricated, nothing left un-flagged, nothing decided.
-
-**DON'T:**
-
-> SCOOP's packet is reformatted section-for-section into the doc with the same headings SCOOP used. "Threat model" becomes a section titled "Threat model". RFCs are quoted at length inline. No code sample appears until section 4.
-
-Research structure ≠ documentation structure. Readers don't come to a React guide to read threat-model analysis from an RFC — they come to implement. QUILL's job is to *transform*, not relay.
-
----
-
-## Quick reference
-
-- **Which doc type?** → Doc-Type Decision Table. Pick one primary type before drafting.
-- **Who's the reader?** → State audience in the opening. Evaluator, implementer, or troubleshooter.
-- **Plan before prose.** → Outline headings, identify samples, flag unverified claims up front.
-- **Code before concept.** → Every section leads with a runnable sample, then prose explains it.
-- **Verdict after comparison.** → No comparison section ships without a 2–3 sentence synthesis.
-- **Version-pin every sample.** → Line-1 comment. Flag drift risk with `> **Version Note:** ...`.
-- **Run the review pass.** → Accuracy, structure, terminology, headings, code, callouts, comparisons, marketing voice, links, typos, Confused Developer Test.
-- **Large doc?** → Outline to `/memories/session/`, section per file, index last.
-- **Asked to decide or research?** → Refuse explicitly. Route to SAGE (decisions) or SCOOP (research). Offer to document once they're done.

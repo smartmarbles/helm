@@ -5,7 +5,6 @@ tools:
   - read
   - edit
   - execute
-  - web
   - vscode/memory
 agents: []
 ---

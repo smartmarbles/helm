@@ -1,7 +1,7 @@
 ---
 name: "PROBE"
 description: "Test Runner. Use when: running automated test cases from the test plan, verifying agent constraint enforcement, validating direct agent addressing, checking file system assertions, or producing pass/fail test reports. Runs automatable (🤖) tests only."
-tools: [agent, read, edit, execute, search, todo, vscode/memory]
+tools: [agent, read, edit, execute, todo, vscode/memory]
 agents: [ARTHUR, SCOOP, SAGE, QUILL, MERLIN]
 ---
 
