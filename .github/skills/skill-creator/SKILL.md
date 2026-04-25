@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.
+description: Create new skills, modify and improve existing skills, and measure skill performance. Use when: creating a SKILL.md from scratch, optimizing a skill's description or trigger accuracy, running skill-specific evals, or benchmarking skill performance with variance analysis. NOT for: editing skill body content as part of unrelated work, running test plans against agents (use run-test-plan), creating agent definition files (use hire-agent), or general coding tasks unrelated to the skill system.
 ---
 
 # Skill Creator
