@@ -69,6 +69,17 @@ Every agent you create must include:
 - **Output standards** — How this agent formats and delivers their work
 - **Constraints** — What this agent must NOT do (clear boundaries to prevent scope creep)
 
+### Size limit: ≤150 lines
+
+Agent files must be **≤150 lines** (frontmatter + body). This is a reliability threshold, not a style preference — agent files are always-on context that loads on every dispatch for that agent. Oversized files inflate cost and degrade instruction-following on weaker models.
+
+When the content budget is tight, apply this priority order:
+1. **Keep:** identity, constraints, responsibilities, output standards — these are always-on behavioral rules
+2. **Move to a skill:** task-specific procedural expertise (e.g., a step-by-step protocol for a specific task type) — makes it load *only* when that task fires, invisible otherwise
+3. **Move to `references/`:** worked examples, lookup tables, appendix material — agent reads via tool call when needed
+
+If the Research Foundation section from SCOOP's research would push the file over 150 lines, summarize the key findings into 5–8 bullet points in the agent file and link to a `references/scoop-research.md` file for the full notes.
+
 ## Temporary vs Permanent
 
 - **Permanent**: Agents with recurring, reusable expertise → stays in `.github/agents/`, added to permanent roster

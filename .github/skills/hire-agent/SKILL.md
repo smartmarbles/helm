@@ -41,6 +41,11 @@ Strict sequential protocol. Do not reorder. Do not merge steps.
 12. **Update the roster.** Append a row to `.github/team-roster.md` in the correct table (Permanent or Temporary) with the tagline and hired date.
 13. **Announce.** Present name, role, tagline, key capabilities, and when to engage the agent.
 14. **Draft SKILL.md (FR-080, Step 9a).** When the new agent has a skill to create, read `.github/skills/skill-creator/SKILL.md` as structural reference (automatic mode — NOT interactive iteration mode). Draft the skill's `SKILL.md` with proper frontmatter (`name`, `description` with trigger language and "NOT for:" clause), body content, and evals stub.
+
+   **Skill size limit (≤500 lines):** The `SKILL.md` body must be under 500 lines. This is a hard limit — skills load in full on every trigger, and oversized bodies degrade instruction-following reliability on weaker models. If the content would exceed 500 lines, apply this split strategy:
+   - **Keep in SKILL.md:** procedural steps the agent must execute (the workflow), constraints, decision tables, and output format rules
+   - **Move to `references/`:** worked examples, lookup tables, scoring templates, appendix material — reference with a link and one-line description in the skill body
+   The skill body is the *executor*; `references/` files are the *lookup library*. The agent follows the skill and reads references only when needed.
 15. **Run validator (FR-080, Step 9b).** Run `python .github/scripts/validate_skill.py <skill-dir>`. Fix all errors. Report any warnings. A skill is not complete until the validator passes with zero errors.
 16. **Minimum-viable eval (FR-080, Step 9c).** Ensure `evals/evals.json` exists with at least 1 test case (3+ recommended). Deliver the eval alongside the agent file.
 

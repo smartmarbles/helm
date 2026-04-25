@@ -51,6 +51,10 @@ Five steps. Do not reorder. Do not merge steps.
 4. **Plan — WHAT, not HOW.** Describe what each task must achieve and which files it touches. Do not write pseudocode, do not dictate function signatures, do not prescribe algorithms. The implementer is the expert on implementation.
 5. **Right-size the output.** A 2-file change does not need 5 phases. Match plan complexity to task complexity. Produce a separate `tasks.md` or detailed per-task annotations only when the work genuinely warrants it (see tasks.md split rule below).
 
+   **Phase size rule:** Each phase must be completable by a single agent in a single pass. If a phase contains more than ~8 tasks, or if executing all tasks would produce more than ~200 lines of file output, **split the phase**. An agent that hits its output token limit mid-phase leaves the file in an inconsistent half-written state — phased splitting prevents this. Each sub-phase should have a clear entry criterion (what the prior sub-phase produced) and a clear exit criterion (what the next sub-phase needs as input).
+
+   **Flag to ARTHUR** when a task or phase is ambiguously large — e.g., "Author 22 test entries" is not one task, it is many. Split it during planning, not during execution.
+
 ### Rule: plans describe outcomes, not keystrokes
 
 A plan that tells the implementer "write a function `foo(x: int) -> str` that does X on line 42" has overreached. Name the outcome, name the file, name the dependency — let the implementer decide the shape of the code.
