@@ -629,6 +629,7 @@ def _agent_stats(turns: list[dict]) -> dict:
                 "total_tokens": 0,
                 "by_turn": {},
                 "by_model": {},
+                "max_call_tokens": 0,
             }
         a = agents[name]
         turn = t["turn"]
@@ -637,6 +638,8 @@ def _agent_stats(turns: list[dict]) -> dict:
             a["calls"] += 1
             a["call_tokens"] += t["tokens"]
             a["by_turn"][turn]["call"] += t["tokens"]
+            if t["tokens"] > a["max_call_tokens"]:
+                a["max_call_tokens"] = t["tokens"]
         else:
             a["result_tokens"] += t["tokens"]
             a["by_turn"][turn]["result"] += t["tokens"]
@@ -670,34 +673,34 @@ def print_agent_report(agents: dict, turns: list[dict], per_turn: bool = True):
 
     if multi_model:
         print(f"\n{BOLD}Per-agent breakdown:{RESET}  ({total_agent_tokens:,} agent tokens total)")
-        print(f"  {'Agent':<32} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9}  {'Model':<22}")
-        print(f"  {'─'*32} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9}  {'─'*22}")
+        print(f"  {'Agent':<32} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9} {'Max/call':>9}  {'Model':<22}")
+        print(f"  {'─'*32} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9} {'─'*9}  {'─'*22}")
     else:
         print(f"\n{BOLD}Per-agent breakdown:{RESET}  ({total_agent_tokens:,} agent tokens total)")
-        print(f"  {'Agent':<32} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9}")
-        print(f"  {'─'*32} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9}")
+        print(f"  {'Agent':<32} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9} {'Max/call':>9}")
+        print(f"  {'─'*32} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9} {'─'*9}")
 
     for name, a in sorted(agents.items(), key=lambda x: -x[1]["total_tokens"]):
-        avg = a["total_tokens"] // a["calls"] if a["calls"] else 0
+        avg = a["call_tokens"] // a["calls"] if a["calls"] else 0
         if multi_model:
             primary = max(a["by_model"], key=a["by_model"].get) if a.get("by_model") else "unknown"
             print(
                 f"  {name:<32} {a['calls']:>6} "
                 f"{a['call_tokens']:>8,} {a['result_tokens']:>8,} "
-                f"{a['total_tokens']:>8,} {avg:>9,}  {_short_model(primary):<22}"
+                f"{a['total_tokens']:>8,} {avg:>9,} {a.get('max_call_tokens', 0):>9,}  {_short_model(primary):<22}"
             )
         else:
             print(
                 f"  {name:<32} {a['calls']:>6} "
                 f"{a['call_tokens']:>8,} {a['result_tokens']:>8,} "
-                f"{a['total_tokens']:>8,} {avg:>9,}"
+                f"{a['total_tokens']:>8,} {avg:>9,} {a.get('max_call_tokens', 0):>9,}"
             )
 
     # Totals footer
     total_calls      = sum(a["calls"]        for a in agents.values())
     total_call_tok   = sum(a["call_tokens"]   for a in agents.values())
     total_result_tok = sum(a["result_tokens"] for a in agents.values())
-    print(f"  {'─'*32} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9}")
+    print(f"  {'─'*32} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9} {'─'*9}")
     print(f"  {'  Total':<32} {total_calls:>6} {total_call_tok:>8,} {total_result_tok:>8,} {total_agent_tokens:>8,}")
     if multi_model:
         models_sorted = sorted(agent_model_totals.items(), key=lambda x: -x[1])
@@ -736,49 +739,49 @@ def print_agent_report(agents: dict, turns: list[dict], per_turn: bool = True):
         if name.startswith("[root~]/"):
             tool_name = name[len("[root~]/"):]
             if tool_name in ARTHUR_FORBIDDEN_TOOLS:
-                confirmed_violations.append((name, a["calls"], a["call_tokens"], a["result_tokens"], a["total_tokens"], primary_model))
+                confirmed_violations.append((name, a["calls"], a["call_tokens"], a["result_tokens"], a["total_tokens"], primary_model, a.get("max_call_tokens", 0)))
         elif name.startswith("[root]/"):
             tool_name = name[len("[root]/"):]
             if tool_name in ARTHUR_FORBIDDEN_TOOLS:
-                possible_violations.append((name, a["calls"], a["call_tokens"], a["result_tokens"], a["total_tokens"], primary_model))
+                possible_violations.append((name, a["calls"], a["call_tokens"], a["result_tokens"], a["total_tokens"], primary_model, a.get("max_call_tokens", 0)))
 
     VIO_COL = 32  # tool name column width in violation tables
     if confirmed_violations:
         print(f"\n{ERR}{BOLD}✗  Confirmed orchestrator constraint violations:{RESET}")
         print(f"  ARTHUR called forbidden tools with no delegation context in scope:")
         if multi_model:
-            print(f"  {'Tool':<{VIO_COL}} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9}  {'Model':<22}")
-            print(f"  {'─'*VIO_COL} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9}  {'─'*22}")
+            print(f"  {'Tool':<{VIO_COL}} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9} {'Max/call':>9}  {'Model':<22}")
+            print(f"  {'─'*VIO_COL} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9} {'─'*9}  {'─'*22}")
         else:
-            print(f"  {'Tool':<{VIO_COL}} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9}")
-            print(f"  {'─'*VIO_COL} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9}")
-        for name, calls, in_tok, out_tok, total, model in sorted(confirmed_violations, key=lambda x: -x[4]):
-            avg = total // calls if calls else 0
+            print(f"  {'Tool':<{VIO_COL}} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9} {'Max/call':>9}")
+            print(f"  {'─'*VIO_COL} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9} {'─'*9}")
+        for name, calls, in_tok, out_tok, total, model, max_call in sorted(confirmed_violations, key=lambda x: -x[4]):
+            avg = in_tok // calls if calls else 0
             if multi_model:
-                print(f"  {ERR}{name:<{VIO_COL}}{RESET} {calls:>6} {in_tok:>8,} {out_tok:>8,} {total:>8,} {avg:>9,}  {_short_model(model):<22}")
+                print(f"  {ERR}{name:<{VIO_COL}}{RESET} {calls:>6} {in_tok:>8,} {out_tok:>8,} {total:>8,} {avg:>9,} {max_call:>9,}  {_short_model(model):<22}")
             else:
-                print(f"  {ERR}{name:<{VIO_COL}}{RESET} {calls:>6} {in_tok:>8,} {out_tok:>8,} {total:>8,} {avg:>9,}")
+                print(f"  {ERR}{name:<{VIO_COL}}{RESET} {calls:>6} {in_tok:>8,} {out_tok:>8,} {total:>8,} {avg:>9,} {max_call:>9,}")
         total_cv_calls  = sum(x[1] for x in confirmed_violations)
         total_cv_in     = sum(x[2] for x in confirmed_violations)
         total_cv_out    = sum(x[3] for x in confirmed_violations)
         total_cv_tokens = sum(x[4] for x in confirmed_violations)
-        print(f"  {'─'*VIO_COL} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9}")
+        print(f"  {'─'*VIO_COL} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9} {'─'*9}")
         print(f"  {ERR}{'  Total':<{VIO_COL}}{RESET} {total_cv_calls:>6} {total_cv_in:>8,} {total_cv_out:>8,} {total_cv_tokens:>8,}")
     if possible_violations:
         print(f"\n{WARN}{BOLD}⚠  Possible orchestrator constraint violations:{RESET}")
         print(f"  Root-level calls to forbidden tools — could be VS Code tagging gaps:")
         if multi_model:
-            print(f"  {'Tool':<{VIO_COL}} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9}  {'Model':<22}")
-            print(f"  {'─'*VIO_COL} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9}  {'─'*22}")
+            print(f"  {'Tool':<{VIO_COL}} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9} {'Max/call':>9}  {'Model':<22}")
+            print(f"  {'─'*VIO_COL} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9} {'─'*9}  {'─'*22}")
         else:
-            print(f"  {'Tool':<{VIO_COL}} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9}")
-            print(f"  {'─'*VIO_COL} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9}")
-        for name, calls, in_tok, out_tok, total, model in sorted(possible_violations, key=lambda x: -x[4]):
-            avg = total // calls if calls else 0
+            print(f"  {'Tool':<{VIO_COL}} {'Calls':>6} {'→ In':>8} {'← Out':>8} {'Total':>8} {'Avg/call':>9} {'Max/call':>9}")
+            print(f"  {'─'*VIO_COL} {'─'*6} {'─'*8} {'─'*8} {'─'*8} {'─'*9} {'─'*9}")
+        for name, calls, in_tok, out_tok, total, model, max_call in sorted(possible_violations, key=lambda x: -x[4]):
+            avg = in_tok // calls if calls else 0
             if multi_model:
-                print(f"  {WARN}{name:<{VIO_COL}}{RESET} {calls:>6} {in_tok:>8,} {out_tok:>8,} {total:>8,} {avg:>9,}  {_short_model(model):<22}")
+                print(f"  {WARN}{name:<{VIO_COL}}{RESET} {calls:>6} {in_tok:>8,} {out_tok:>8,} {total:>8,} {avg:>9,} {max_call:>9,}  {_short_model(model):<22}")
             else:
-                print(f"  {WARN}{name:<{VIO_COL}}{RESET} {calls:>6} {in_tok:>8,} {out_tok:>8,} {total:>8,} {avg:>9,}")
+                print(f"  {WARN}{name:<{VIO_COL}}{RESET} {calls:>6} {in_tok:>8,} {out_tok:>8,} {total:>8,} {avg:>9,} {max_call:>9,}")
     if not confirmed_violations and not possible_violations:
         root_tools = [n for n in agents if n.startswith("[root~]/") or n.startswith("[root]/")]
         if root_tools:
@@ -845,7 +848,52 @@ def print_agent_report(agents: dict, turns: list[dict], per_turn: bool = True):
     print(f"  {BOLD}{'  Total orchestrator tokens':<38}{RESET} {orch_total:>8,}")
 
 
-def print_session_report(path, turns: list[dict], summary_only: bool = False):
+def _tool_type_stats(turns: list[dict]) -> dict:
+    stats: dict[str, dict] = {}
+    for t in turns:
+        role = t["role"]
+        if role.startswith("tool_call(") and role.endswith(")"):
+            inner = role[10:-1]
+            direction = "call"
+        elif role.startswith("tool_result(") and role.endswith(")"):
+            inner = role[12:-1]
+            direction = "result"
+        else:
+            continue
+        if "/" in inner:
+            base = inner.rsplit("/", 1)[1]
+        else:
+            base = inner
+        if base not in stats:
+            stats[base] = {"calls": 0, "call_tokens": 0, "result_tokens": 0, "total_tokens": 0}
+        s = stats[base]
+        if direction == "call":
+            s["calls"] += 1
+            s["call_tokens"] += t["tokens"]
+        else:
+            s["result_tokens"] += t["tokens"]
+        s["total_tokens"] += t["tokens"]
+    return stats
+
+
+def print_tool_type_report(tool_stats: dict):
+    if not tool_stats:
+        return
+    total_calls      = sum(s["calls"]         for s in tool_stats.values())
+    total_call_tok   = sum(s["call_tokens"]   for s in tool_stats.values())
+    total_result_tok = sum(s["result_tokens"] for s in tool_stats.values())
+    total_tokens     = sum(s["total_tokens"]  for s in tool_stats.values())
+    print(f"\n{BOLD}Tool type breakdown:{RESET}  ({len(tool_stats)} unique tools)")
+    print(f"  {'Tool':<32} {'Calls':>6}  {'→ In':>6} {'← Out':>8} {'Total':>8} {'Avg/call':>8}")
+    print(f"  {'─'*32} {'─'*6}  {'─'*6} {'─'*8} {'─'*8} {'─'*8}")
+    for name, s in sorted(tool_stats.items(), key=lambda x: -x[1]["total_tokens"]):
+        avg = s["total_tokens"] // s["calls"] if s["calls"] else 0
+        print(f"  {name:<32} {s['calls']:>6}  {s['call_tokens']:>6,} {s['result_tokens']:>8,} {s['total_tokens']:>8,} {avg:>8,}")
+    print(f"  {'─'*32} {'─'*6}  {'─'*6} {'─'*8} {'─'*8} {'─'*8}")
+    print(f"  {'  Total':<32} {total_calls:>6}  {total_call_tok:>6,} {total_result_tok:>8,} {total_tokens:>8,}")
+
+
+def print_session_report(path, turns: list[dict], summary_only: bool = False, top_n: int = 0):
     if not turns:
         return
 
@@ -865,18 +913,32 @@ def print_session_report(path, turns: list[dict], summary_only: bool = False):
     print(f"{'─'*72}")
 
     if not summary_only:
-        print(f"{'Turn':<6} {'Role':<32} {'Tokens':>8}  {'Preview'}")
+        display_turns = sorted(turns, key=lambda t: -t["tokens"])[:top_n] if top_n > 0 else turns
+        display_turns = sorted(display_turns, key=lambda t: (t["turn"], turns.index(t)))
+        if top_n > 0 and len(display_turns) < len(turns):
+            print(f"  (showing top {top_n} of {len(turns)} entries by tokens)")
+        print(f"{'Turn':<6} {'Role':<32} {'Tokens':>8} {'%Tot':>6}  {'Preview'}")
         print(f"{'─'*72}")
-        for t in turns:
-            preview = t["content"].replace("\n", " ")[:60]
-            if len(t["content"]) > 60:
+        for t in display_turns:
+            pct = t["tokens"] / total * 100 if total else 0
+            preview = t["content"].replace("\n", " ")[:55]
+            if len(t["content"]) > 55:
                 preview += "…"
-            print(f"{t['turn']:<6} {role_label(t['role'], 32)} {t['tokens']:>8,}  {preview}")
+            print(f"{t['turn']:<6} {role_label(t['role'], 32)} {t['tokens']:>8,} {pct:>5.1f}%  {preview}")
         print(f"{'─'*72}")
+        if len(turns) >= 6:
+            top5 = sorted(turns, key=lambda t: -t["tokens"])[:5]
+            print(f"\nTop 5 most expensive entries:")
+            print(f"  {'Rank':<4}  {'Turn':<6}  {'Role':<32}  {'Tokens':>6}  {'%Tot':>5}")
+            print(f"  {'─'*4}  {'─'*6}  {'─'*32}  {'─'*6}  {'─'*5}")
+            for i, t in enumerate(top5, 1):
+                pct = t["tokens"] / total * 100 if total else 0
+                print(f"  #{i:<3}  {t['turn']:<6}  {t['role']:<32}  {t['tokens']:>6,}  {pct:>4.1f}%")
 
     # Per-agent breakdown
     agents = _agent_stats(turns)
     print_agent_report(agents, turns, per_turn=not summary_only)
+    print_tool_type_report(_tool_type_stats(turns))
 
     # Per-model breakdown (per-session)
     model_totals: dict[str, int] = {}
@@ -1121,6 +1183,8 @@ def main():
                              "(named <source>_tokens.md). Default: on for --file, off for --dir/auto")
     parser.add_argument("--no-md", action="store_true",
                         help="Suppress Markdown output even when --file is used")
+    parser.add_argument("--top", type=int, default=0, metavar="N",
+                        help="In the detail table, show only the N most expensive rows (0 = all)")
     args = parser.parse_args()
 
     # --file mode: write markdown by default unless --no-md is set
@@ -1203,13 +1267,13 @@ def main():
         if args.md:
             buf = io.StringIO()
             with redirect_stdout(buf):
-                print_session_report(f, turns, summary_only=args.summary)
+                print_session_report(f, turns, summary_only=args.summary, top_n=args.top)
             session_text = buf.getvalue()
             print(session_text, end="")
             md_path = f.parent / f"{f.stem}_tokens.md"
             _write_markdown(md_path, session_text)
         else:
-            print_session_report(f, turns, summary_only=args.summary)
+            print_session_report(f, turns, summary_only=args.summary, top_n=args.top)
 
     print(f"\n  Parsed {parsed_count} session file(s) with content.")
 
