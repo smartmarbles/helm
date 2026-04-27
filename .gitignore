@@ -3,6 +3,8 @@ synap.lock.json
 artifacts/spec*/
 artifacts/testing/*
 !artifacts/testing/test-plan.md
+!artifacts/testing/probe-report-template.md
+!artifacts/testing/probe-scoring-rubric.md
 artifacts/docs/*
 !artifacts/docs/.gitkeep
 # Local fallback memory used when Copilot memory tool is unavailable (spec002)

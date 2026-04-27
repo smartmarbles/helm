@@ -12,12 +12,16 @@ Read this skill whenever a request asks PROBE to execute tests, run a smoke pass
 ## How to use this skill
 
 1. **Accept the command** (`run all`, `run TC-XXX`, `run category X`, `run smoke`) — parse scope.
-2. **Load the test plan** at `artifacts/spec001-helm-test-plan/test-plan.md` and the pre-existing scorecard (if the run targets one).
-3. **Execute each test** via the Execution Protocol — snapshot → run → evaluate → check side effects → record → clean up.
-4. **Capture streams** for any shell or tool command using the Stream Capture rules.
-5. **Record violations** into the Violation Log using the schema below — observed, not inferred.
-6. **Populate the scorecard** with what was observed (severity/weight come from the rubric; *filling it in* is execution).
-7. **Report** with the pass/fail summary format and sign off with the one-line tally.
+2. **Load the test plan** at `artifacts/testing/test-plan.md` and the pre-existing scorecard (if the run targets one).
+3. **Read the Summary Checklist** — located near the bottom of the test plan under the heading `## Summary Checklist`. This is the authoritative source for each test's mode. Build your run list from it before reading individual test bodies. Never infer mode from icons in the test body.
+   - **🤖** — fully automatable. Run all pass criteria.
+   - **👤** — skip the entire test: `⏭️ SKIP — manual test, requires human execution`.
+   - **🤖/👤** — partial. Run ONLY the `**🤖 Automatable Portion**` criteria. Skip `**👤 Manual Portion**` criteria: `⏭️ SKIP — manual criteria, requires human execution`.
+4. **Execute each test** via the Execution Protocol — snapshot → run → evaluate → check side effects → record → clean up.
+5. **Capture streams** for any shell or tool command using the Stream Capture rules.
+6. **Record violations** into the Violation Log using the schema below — observed, not inferred.
+7. **Populate the scorecard** with what was observed (severity/weight come from the rubric; *filling it in* is execution).
+8. **Report** with the pass/fail summary format and sign off with the one-line tally.
 
 ---
 
@@ -51,10 +55,12 @@ PROBE records observations, not judgments. If an agent's output is ambiguous, re
 
 | Command | Scope |
 |---------|-------|
-| `run all` | All 🤖 tests in the plan, in order |
 | `run TC-XXX` | One test by ID |
-| `run category X` | All 🤖 tests in a category (e.g., `run category E`) |
-| `run smoke` | Only the 🤖 tests in the Smoke Test set |
+| `run category X` | All 🤖 and 🤖/👤 tests in a category (e.g., `run category E`) |
+| `run smoke` | Only the 🤖 and 🤖/👤 tests in the Smoke Test set |
+| `Finalize <report_file>` | Tally and append final summary to an in-progress report |
+
+> **Note:** `run all` is no longer a valid PROBE command. Full-suite runs are orchestrated by ARTHUR, which dispatches PROBE once per category. PROBE always receives a scoped brief — never `run all`.
 
 👤 (manual) tests are NEVER run. Report them as `⏭️ SKIP — manual test, requires human execution` and move on.
 
@@ -163,6 +169,19 @@ The scorecard *schema* is defined by the rubric (see the `design-test-rubric` sk
 
 ---
 
+## Multi-Dispatch Append Behavior
+
+When PROBE is dispatched as one category in a batched `all` run (orchestrated by ARTHUR), the brief will include a `Report file: <path>` field and one of two modes:
+
+- **Create mode** (category A, or when the file does not exist): Copy the canonical template from `artifacts/testing/probe-report-template.md`, replace all `{{PLACEHOLDER}}` values with run-specific data, and write it to the named path. Then append this category's results.
+- **Append mode** (categories B–L): Open the existing file. Append this category's result rows to the Results Table and any new violations to the Violation Log. Do NOT overwrite or re-create the header, frontmatter, or sections already written.
+
+When you receive a `Finalize <report_file>` brief: read the full report file, tally pass/fail counts across all result rows, and append the consolidated scorecard totals and the one-line sign-off (`X/Y passed. Z failures.`) to the report.
+
+**Rule: never re-create an existing report file.** If the file already exists and the brief says append, append only. Overwriting destroys prior categories' results.
+
+---
+
 ## Cleanup Protocol
 
 **CRITICAL: Clean up after every test. No exceptions.**
@@ -195,12 +214,12 @@ Stop the run. A stale artifact from TC-001 will corrupt TC-052. Do not continue 
 
 ## Report Format
 
-After all requested tests complete:
+**Single-scope dispatches** (`run smoke`, `run TC-###`, standalone `run category X` without a `Report file:` brief): produce the full inline report after all tests in scope complete:
 
 ```
 ## Test Report — [date]
 
-**Scope**: [what was run — "all automatable", "category E", "TC-029", etc.]
+**Scope**: [what was run — "category E", "TC-029", "smoke", etc.]
 **Result**: X/Y passed. Z failures.
 
 | ID | Name | Result | Details |
@@ -227,6 +246,8 @@ All test artifacts cleaned up successfully.
 
 Sign off with the single-line tally: `X/Y passed. Z failures.`
 
+**Multi-dispatch category runs** (brief includes `Report file: <path>`): do NOT produce a full inline report. Append this category's result rows to the report file per the Multi-Dispatch Append Behavior section, then confirm inline with a single line: `Category {X} complete — {n} passed, {m} failed. Results appended to {report_file}.`
+
 ---
 
 **Worked examples** — Four annotated DO/DON'T pairs covering stream capture, file-system assertion, unclassified severity, and git cleanup.
@@ -236,11 +257,13 @@ Sign off with the single-line tally: `X/Y passed. Z failures.`
 
 ## Quick reference
 
-- **Which tests?** → 🤖 only. 👤 → SKIP.
+- **Which tests?** → 🤖 and 🤖/👤. 👤 → SKIP. For 🤖/👤, run only the `🤖 Automatable Portion` criteria; skip `👤 Manual Portion` criteria.
 - **Pass criteria?** → Read from the plan, not the registry. ALL must pass.
 - **Stream capture?** → `Start-Process -RedirectStandardOutput/-RedirectStandardError` to separate temp files. Never `2>&1`.
 - **File assertion?** → Pre-test snapshot, post-test listing, diff. No shortcuts.
 - **Violation severity?** → Rubric rule applies, or `unclassified`. Never invent.
 - **Cleanup?** → Specific paths, verify with diff. NEVER `git checkout`.
 - **Cleanup failed?** → Stop the run, report, escalate.
-- **Report?** → Summary table + Failures + Violation Log + Cleanup Status + one-line tally.
+- **Report (single-scope)?** → Full inline summary table + Failures + Violation Log + Cleanup Status + one-line tally.
+- **Report (multi-dispatch category)?** → Append to report file only. One-line inline confirmation.
+- **Report (Finalize)?** → Read report file, tally all rows, append scorecard totals + one-line sign-off.

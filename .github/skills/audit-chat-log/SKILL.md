@@ -26,7 +26,7 @@ Read this skill whenever a request asks LENS to audit a session, verify a PROBE 
 
 1. **Verify required inputs are present.** Before doing any work, check which files have been provided:
    - `chat-*.json` — **required always.** If absent, halt: `"Audit cannot proceed — no chat log file provided. Please provide a file matching chat-*.json."`
-   - PROBE report (`probe-*.md`) — **required for P1 mode.** If P1 was requested and no PROBE report is provided, halt: `"P1 audit requires a PROBE report. Provide a probe-baseline-*.md or probe-posthardening-*.md file, or switch to P2 (anomaly-only) mode."`
+   - PROBE report (`probe-*.md`) — **required for P1 mode.** If P1 was requested and no PROBE report is provided, halt: `"P1 audit requires a PROBE report. Provide a probe-baseline-*.md or probe-regression-*.md file, or switch to P2 (anomaly-only) mode."`
    - `hook-log.jsonl` — optional. If absent, note it and proceed in P3 mode (transcript-dependent checks marked `? UNVERIFIABLE`).
    - `test-plan.md` — **required always.** If absent, halt: `"Audit cannot proceed — test-plan.md is required as the independent expectation source."`
    If any required file is missing, stop and list all missing files in a single message before asking the user to supply them. Do not proceed partially.

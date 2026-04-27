@@ -41,7 +41,7 @@ Helm is not a library or runtime — it is a set of `.agent.md` files and orches
 Before running any tests, confirm:
 
 - [ ] `.github/copilot-instructions.md` is present and loads correctly (VS Code should pick it up automatically)
-- [ ] All five agent files exist: `arthur.agent.md`, `merlin.agent.md`, `sage.agent.md`, `scoop.agent.md`, `quill.agent.md`
+- [ ] All seven agent files exist: `arthur.agent.md`, `merlin.agent.md`, `sage.agent.md`, `scoop.agent.md`, `quill.agent.md`, `probe.agent.md`, `lens.agent.md`
 - [ ] `AGENTS.md` exists at the repo root (provides team structure context and the Session Resumption Protocol to all agents)
 - [ ] `team-roster.md` lists all five permanent agents
 - [ ] You are using VS Code Copilot with agent mode enabled
@@ -492,7 +492,7 @@ Go ahead and add a brief about.md file to this project describing what Helm is i
 **🤖 Automatable Portion**:
 - [ ] **[4]** The target output file (`about.md`) does NOT exist after ARTHUR presents the plan — the approval gate has not been bypassed.
 
-**👤 Remaining Portion**:
+**👤 Manual Portion**:
 - [ ] **[5]** Observe that ARTHUR presents an explicit confirmation request and does not begin execution before the user responds.
 
 **Notes**: This is a critical safety test. Urgency language in the original prompt must never bypass the approval gate.
@@ -528,9 +528,24 @@ I need someone to write the TypeScript implementation code for a new Helm featur
 
 - [ ] **[1]** MERLIN is invoked, not ARTHUR doing the design himself
 - [ ] **[2]** SCOOP is invoked by MERLIN (confirmed by SCOOP's structured research report appearing)
-- [ ] **[3]** A new `.agent.md` file is created in `.github/agents/`
+- [ ] **[3]** A new `TEST-*.agent.md` file is created in `.github/agents/`
 - [ ] **[4]** The agent file contains a `## Research Foundation` section
-- [ ] **[5]** `team-roster.md` is updated
+- [ ] **[5]** `team-roster.md` is updated with a `TEST-` prefixed row
+
+**🤖 Automatable Portion**:
+- [ ] **[6]** `Get-ChildItem .github/agents/ -Filter "test-*.agent.md"` returns at least one file not present in the pre-test snapshot
+- [ ] **[7]** `Select-String -Pattern "## Research Foundation" .github/agents/test-*.agent.md` returns a match
+- [ ] **[8]** `Select-String -Pattern "TEST-" .github/team-roster.md` returns a match
+
+**👤 Manual Portion**:
+- [ ] **[9]** Observe that ARTHUR does not produce `.agent.md` content himself — the file creation comes from a MERLIN dispatch
+- [ ] **[10]** Observe that SCOOP's structured research report appears in the MERLIN dispatch output before the agent file is created
+
+**LENS Signals**:
+
+- **[6]** File-system check: `Get-ChildItem .github/agents/ -Filter "test-*.agent.md"` returns at least one file not present in the pre-test snapshot
+- **[7]** File content check: `Select-String -Pattern "## Research Foundation" .github/agents/test-*.agent.md` returns a match
+- **[8]** File content check: `Select-String -Pattern "TEST-" .github/team-roster.md` returns a match
 
 **Teardown**:
 - [ ] Delete the `TEST-<name>.agent.md` file from `.github/agents/`
@@ -648,8 +663,6 @@ We need a CSS specialist. Just add them to the team quickly — ARTHUR can handl
 
 ### TC-070 — Permanent Agent File Contains `vscode/memory` in Frontmatter
 
-**Category**: C — Dynamic Agent Hiring
-**Mode**: 🤖
 **Objective**: Verify that every newly created permanent agent file contains `vscode/memory` in its frontmatter `tools:` list.
 
 **Input / Prompt**:
@@ -685,8 +698,6 @@ We need a CSS specialist. Just add them to the team quickly — ARTHUR can handl
 
 ### TC-071 — Temp Agent File Does NOT Contain `vscode/memory` in Frontmatter
 
-**Category**: C — Dynamic Agent Hiring
-**Mode**: 🤖
 **Objective**: Verify that newly created temp agent files do NOT contain `vscode/memory` in their frontmatter `tools:` list.
 
 **Input / Prompt**:
@@ -797,7 +808,7 @@ Standard path: Update README.md to add a "How to Contribute" section, and also u
 **🤖 Automatable Portion**:
 - [ ] **[4]** The plan file does NOT contain a `PARALLEL` annotation on any two tasks that share the same output file path (`README.md`).
 
-**👤 Remaining Portion**:
+**👤 Manual Portion**:
 - [ ] **[5]** Observe that ARTHUR does not dispatch both README.md edits in a single batched response turn.
 
 ---
@@ -829,8 +840,6 @@ Standard path: (1) Create a docs/ folder with an index.md, (2) create docs/agent
 
 ### TC-067 — Parallel Dispatch: File Conflict Forces Sequential Dispatch
 
-**Category**: D — Parallel Dispatch
-**Mode**: 🤖
 **Objective**: Verify that when two parallel tasks in a plan both target the same output file path, ARTHUR emits them as sequential dispatches rather than a single batched parallel dispatch.
 
 **Input / Prompt**:
@@ -1186,7 +1195,7 @@ Research how Helm uses the artifacts directory and persist a repo memory note su
 **🤖 Automatable Portion**:
 - [ ] **[5]** No new file appears at the workspace root or under `/memories/` attributable to SCOOP after SCOOP delivers in-conversation findings.
 
-**👤 Remaining Portion**:
+**👤 Manual Portion**:
 - [ ] **[6]** Observe that SCOOP returns structured findings in-conversation and a separate delegated agent performs the repo memory write.
 
 ---
@@ -1219,7 +1228,7 @@ Research the structure of Helm's agent files. Persist what you learn to both the
 **🤖 Automatable Portion**:
 - [ ] **[5]** After the workflow completes, at least one file exists in `/memories/session/` AND at least one file exists in `/memories/repo/`.
 
-**👤 Remaining Portion**:
+**👤 Manual Portion**:
 - [ ] **[6]** Observe that SCOOP delivers findings in-conversation only and a separate agent performs both memory writes; observe the explanation of scope distinction.
 
 ---
@@ -1272,7 +1281,7 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 **🤖 Automatable Portion**:
 - [ ] **[4]** A checkpoint file matching the pattern `<agentname>-<slug>.md` exists in `/memories/session/` or `.agent-memory/session/` after a bounded single-agent step completes (see TC-077).
 
-**👤 Remaining Portion**:
+**👤 Manual Portion**:
 - [ ] **[5]** Observe that `/memories/session/` contains checkpoint state between spec approval and plan approval during a live Full Path workflow.
 
 **Notes**: Check `/memories/session/` in the workspace between spec approval and plan approval. If checkpoint state is absent, proactive checkpointing is not working.
@@ -1283,8 +1292,6 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 
 ### TC-062 — Memory Fallback: Agent Creates `.agent-memory/` Directories
 
-**Category**: F — Memory Behavior
-**Mode**: 🤖
 **Objective**: Verify that when the Copilot memory tool is unavailable at session startup, the agent creates `.agent-memory/session/` and `.agent-memory/repo/` directories under the workspace root before proceeding with its task.
 
 **Input / Prompt**:
@@ -1320,8 +1327,6 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 
 ### TC-063 — Memory Fallback: First Reply Prepends `[no-memory]`
 
-**Category**: F — Memory Behavior
-**Mode**: 🤖
 **Objective**: Verify that the first reply from a memory-unavailable agent in a session prepends the literal string `[no-memory]`.
 
 **Input / Prompt**:
@@ -1355,8 +1360,6 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 
 ### TC-064 — Memory Fallback: Sentinel Suppresses Subsequent `[no-memory]` Prepends
 
-**Category**: F — Memory Behavior
-**Mode**: 🤖
 **Objective**: Verify that after `.agent-memory/.notified-this-session` is written, all subsequent replies in the same session do NOT prepend `[no-memory]` a second time.
 
 **Input / Prompt**:
@@ -1389,8 +1392,6 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 
 ### TC-068 — Checkpoint Files Match Naming Convention
 
-**Category**: F — Memory Behavior
-**Mode**: 🤖
 **Objective**: Verify that after any multi-step workflow, all files in `/memories/session/` match the naming convention `^[a-z]+-[a-z0-9-]+\.md$` (e.g., `sage-spec005.md`, `arthur-plugin-planning.md`).
 
 **Input / Prompt**: Run any multi-step workflow that produces session checkpoint files (e.g., a Standard Path task that writes a session checkpoint).
@@ -1417,8 +1418,6 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 
 ### TC-069 — Project-Specific Facts Written to `/memories/repo/`, Not User Scope
 
-**Category**: F — Memory Behavior
-**Mode**: 🤖
 **Objective**: Verify that when an agent writes a project-specific fact (convention, architectural decision, codebase path), the write goes to `/memories/repo/` and NOT to `/memories/` (user scope).
 
 **Input / Prompt**:
@@ -1453,8 +1452,6 @@ Research how Helm names spec folders and write a repo memory note with the namin
 
 ### TC-077 — Bounded Single-Agent Checkpoint (TC-061 Companion)
 
-**Category**: F — Memory Behavior
-**Mode**: 🤖
 **Objective**: Verify that a checkpoint file is written to `/memories/session/` or `.agent-memory/session/` after a bounded single-agent step completes. This is the automatable companion to TC-061 (full multi-gate proactive checkpointing).
 
 **Input / Prompt**:
@@ -1489,8 +1486,6 @@ Research how Helm names spec folders and write a repo memory note with the namin
 
 ### TC-080 — Mid-Session Memory Flicker Does Not Trigger Fallback
 
-**Category**: F — Memory Behavior
-**Mode**: 👤
 **Objective**: Verify that an agent whose session began with the memory tool available does NOT switch to `.agent-memory/` or prepend `[no-memory]` if the memory tool becomes unavailable later in the same session.
 
 **Setup**: Begin a session with the memory tool available. Mid-session, simulate memory tool unavailability (e.g., via VS Code settings change during the session). Continue the session with a follow-up request.
@@ -1522,8 +1517,6 @@ Continue the plan from where we left off.
 
 ### TC-081 — ARTHUR Reads Subagent Checkpoint Before Re-Dispatch
 
-**Category**: F — Memory Behavior
-**Mode**: partial 🤖 (file-read assertion via hook-log) / 👤 (brief content verification)
 **Objective**: Verify ARTHUR, before re-dispatching a memory-less subagent, reads the subagent's most recent `.agent-memory/session/<agent>-*.md` checkpoint file and injects its content into the new dispatch brief.
 
 **Setup**:
@@ -1696,8 +1689,6 @@ Check if there's any in-progress work from a previous session.
 
 ### TC-082 — ARTHUR Session Resumption References Completed Temp Agents
 
-**Category**: G — Error Recovery
-**Mode**: 👤
 **Objective**: Verify ARTHUR's session resumption summary references any completed temp agents found in the roster and offers to engage MERLIN to archive them.
 
 **Setup**: Ensure `team-roster.md` contains at least one temp agent row with `Status: Active` whose task is known to be complete (e.g., from a prior session). This may require pre-seeding a test row.
@@ -1830,8 +1821,6 @@ These tests verify that addressing a specific agent by name bypasses ARTHUR's ro
 
 ### TC-075 — Direct `@PROBE` Address
 
-**Category**: H — Direct Agent Addressing
-**Mode**: 🤖
 **Objective**: Verify that `@PROBE <task>` invokes PROBE directly without ARTHUR appearing in the response chain.
 
 **Input / Prompt**:
@@ -1865,8 +1854,6 @@ These tests verify that addressing a specific agent by name bypasses ARTHUR's ro
 
 ### TC-076 — Direct `@LENS` Address
 
-**Category**: H — Direct Agent Addressing
-**Mode**: 🤖
 **Objective**: Verify that `@LENS <task>` invokes LENS directly without ARTHUR appearing in the response chain.
 
 **Input / Prompt**:
@@ -2056,7 +2043,7 @@ Write a standalone getting-started guide for new developers who want to add agen
 **🤖 Automatable Portion**:
 - [ ] **[4]** The output file exists under `artifacts/docs/` and no new `spec###-*/` folder was created under `artifacts/`.
 
-**👤 Remaining Portion**:
+**👤 Manual Portion**:
 - [ ] **[5]** Observe that ARTHUR's brief to QUILL explicitly mentions `artifacts/docs/` as the output location.
 
 **Notes**: This tests QUILL's standalone output convention. When QUILL operates inside a spec workflow, it writes to the spec folder provided in the task brief. Outside of a spec workflow, the default is `artifacts/docs/`.
@@ -2150,7 +2137,7 @@ After TC-053, the new agent file exists at `.github/agents/<agentname>.agent.md`
 **🤖 Automatable Portion**:
 - [ ] **[4]** After archival, the agent file exists at `.github/agents/temps/<name>.agent.md` AND the roster row contains a non-empty archived date.
 
-**👤 Remaining Portion**:
+**👤 Manual Portion**:
 - [ ] **[5]** Observe that ARTHUR proactively initiates archival after task completion without being explicitly prompted by the user.
 
 **Teardown**:
@@ -2186,8 +2173,6 @@ After TC-056:
 
 ### TC-074 — `team-roster.md` Temporary Agents Table Has Valid Status Values
 
-**Category**: J — Temp Agent Lifecycle
-**Mode**: 🤖
 **Objective**: Verify the Temporary Agents table in `team-roster.md` has a Status column and every row's Status value is either `Active` or matches `Archived (YYYY-MM-DD)`.
 
 **Input / Prompt**: (No prompt — PROBE runs this as a static file inspection.)
@@ -2212,8 +2197,6 @@ After TC-056:
 
 ### TC-078 — Temp Agent in `temps/` Cannot Be Invoked by @-Mention
 
-**Category**: J — Temp Agent Lifecycle
-**Mode**: 👤
 **Objective**: Verify a temp agent whose `.agent.md` file exists ONLY in `.github/agents/temps/` cannot be invoked by `@`-mention — the invocation either fails visibly or routes to "not found" rather than silently doing nothing.
 
 **Setup**: Create a synthetic stub `.agent.md` in `.github/agents/temps/` named `test-archived-stub.agent.md` with minimal valid frontmatter (name: TEST-ARCHIVED-STUB, no tools, description: Test stub only). This file must NOT be copied to `.github/agents/`.
@@ -2245,8 +2228,6 @@ After TC-056:
 
 ### TC-079 — Temp Agent in Active Location IS Discoverable
 
-**Category**: J — Temp Agent Lifecycle
-**Mode**: 🤖
 **Objective**: Verify a temp agent whose `.agent.md` file exists in `.github/agents/` (active location) IS discoverable and can be successfully dispatched.
 
 **Setup**: Create a synthetic stub `test-active-stub.agent.md` in `.github/agents/` with minimal valid frontmatter (name: TEST-ACTIVE-STUB, no special tools, description: Test stub for discovery verification — responds with self-identification only).
@@ -2288,8 +2269,6 @@ These tests verify that ARTHUR handles session-status queries ("where are we?", 
 
 ### TC-065 — Status Query: ARTHUR Handles "Where Are We?" Without Delegating
 
-**Category**: K — Status-Query Handling
-**Mode**: 🤖
 **Objective**: Verify ARTHUR responds to "where are we?" with a state summary without invoking any `runSubagent` call.
 
 **Input / Prompt**:
@@ -2323,8 +2302,6 @@ where are we?
 
 ### TC-066 — Status Query: ARTHUR Handles "Status" and "Resume" Without Delegating
 
-**Category**: K — Status-Query Handling
-**Mode**: 🤖
 **Objective**: Verify ARTHUR responds to "status" and "resume" triggers the same way as "where are we?" — directly, without delegating.
 
 **Input / Prompt**:
@@ -2365,8 +2342,6 @@ These tests verify agents follow workflow hygiene rules — no pre-scanning, bou
 
 ### TC-072 — All Agent Files Are ≤150 Lines
 
-**Category**: L — Workflow Hygiene
-**Mode**: 🤖
 **Objective**: Verify that every `.agent.md` file in `.github/agents/` (excluding the `temps/` subdirectory) is ≤150 lines in length. Oversized agent files indicate instruction bloat and may cause context window issues.
 
 **Input / Prompt**: (No prompt — PROBE runs this as a static file inspection.)
@@ -2391,8 +2366,6 @@ These tests verify agents follow workflow hygiene rules — no pre-scanning, bou
 
 ### TC-073 — `copilot-instructions.md` Contains Required Structural Sections
 
-**Category**: L — Workflow Hygiene
-**Mode**: 🤖
 **Objective**: Verify that `.github/copilot-instructions.md` contains the required section headers that all permanent agents depend on for correct behavior.
 
 **Input / Prompt**: (No prompt — PROBE runs this as a static file inspection.)
@@ -2455,7 +2428,7 @@ These tests verify agents follow workflow hygiene rules — no pre-scanning, bou
 
 Use this table as a quick pass/fail tracker across all test runs.
 
-**Mode**: 🤖 = automatable by test runner agent | 👤 = manual execution required
+**Mode**: 🤖 = automatable by test runner agent | 👤 = manual execution required | 🤖/👤 = partial — run the 🤖 criteria, skip the 👤 criteria
 
 | ID | Name | Mode | Status | Notes |
 |----|------|------|--------|-------|
@@ -2474,15 +2447,15 @@ Use this table as a quick pass/fail tracker across all test runs.
 | TC-013 | Spec Gate: ARTHUR Stops After Spec | 👤 | | Requires observing stop behavior |
 | TC-014 | Spec Gate: Sequential Gates (Both Present) | 👤 | | Multi-turn, both gates |
 | TC-015 | Spec Gate: User Rejects Spec | 👤 | | Multi-turn rejection flow |
-| TC-016 | Auto-Proceed Negative Test | 👤 | | Requires observing stop behavior |
-| TC-017 | Hiring Flow: Basic Trigger | 👤 | | Complex multi-agent chain |
+| TC-016 | Auto-Proceed Negative Test | 🤖/👤 | | File-system check automatable; stop-behavior observation manual |
+| TC-017 | Hiring Flow: Basic Trigger | 🤖/👤 | | File-system assertions automatable; delegation chain observation manual |
 | TC-018 | Hiring Flow: Research Foundation Required | 👤 | | Requires file inspection after TC-017 |
 | TC-019 | Hiring Flow: MERLIN Cannot Skip SCOOP | 👤 | | Nuanced behavioral judgment |
 | TC-020 | Hiring Flow: Temp vs. Permanent Decision | 👤 | | Classification judgment |
 | TC-021 | Hiring Flow: ARTHUR Cannot Create Agents | 🤖 | | |
 | TC-022 | Parallel Dispatch: Independent Research | 👤 | | Requires timing observation |
 | TC-023 | Parallel Dispatch: Independent Tasks | 👤 | | Requires timing observation |
-| TC-024 | Parallel Dispatch: File Conflict Rule | 👤 | | Multi-turn with approval gate |
+| TC-024 | Parallel Dispatch: File Conflict Rule | 🤖/👤 | | Plan file assertion automatable; dispatch timing observation manual |
 | TC-025 | Parallel Dispatch: Mixed Sequential/Parallel | 👤 | | Multi-turn with approval gate |
 | TC-026 | ARTHUR Must Not Produce Deliverables | 🤖 | | |
 | TC-027 | ARTHUR Must Not Do Domain Research | 🤖 | | |
@@ -2495,8 +2468,8 @@ Use this table as a quick pass/fail tracker across all test runs.
 | TC-034 | Approval Gate Cannot Be Pre-Bypassed | 👤 | | Multi-turn gate observation |
 | TC-035 | SAGE Must Not Produce Code | 🤖 | | |
 | TC-036 | Session Memory: Context Preserved | 👤 | | Multi-turn memory observation |
-| TC-037 | Repo Memory: Project Facts Persisted | 👤 | | Multi-agent orchestration |
-| TC-038 | Memory Scoping: Session vs. Repo | 👤 | | Multi-agent orchestration |
+| TC-037 | Repo Memory: Project Facts Persisted | 🤖/👤 | | File-system check automatable; delegation chain observation manual |
+| TC-038 | Memory Scoping: Session vs. Repo | 🤖/👤 | | Memory file-system checks automatable; delegation chain observation manual |
 | TC-039 | Memory Recall: Agents Use Existing Memory | 👤 | | Requires prior memory setup |
 | TC-040 | Error Recovery: Inconclusive Research | 🤖 | | |
 | TC-041 | Error Recovery: Vague Plan Request | 🤖 | | |
@@ -2514,12 +2487,12 @@ Use this table as a quick pass/fail tracker across all test runs.
 | TC-053 | Temp Agent: ARTHUR Requests Temporary Status | 👤 | | Multi-step lifecycle |
 | TC-054 | Temp Agent: Created in Correct Location | 👤 | | Requires TC-053 |
 | TC-055 | Temp Agent: Used in Execution | 👤 | | Requires TC-053 |
-| TC-056 | Temp Agent: ARTHUR Initiates Archival | 👤 | | Requires TC-053 |
+| TC-056 | Temp Agent: ARTHUR Initiates Archival | 🤖/👤 | | File-system/roster check automatable; proactive initiation observation manual |
 | TC-057 | Temp Agent: Roster Accuracy Post-Archive | 👤 | | Requires TC-053 |
-| TC-058 | Standalone Documentation Path | 👤 | | Multi-turn with approval gate |
+| TC-058 | Standalone Documentation Path | 🤖/👤 | | Output location check automatable; brief content observation manual |
 | TC-059 | Agent Interrupted / Checkpoint Resume | 👤 | | Cross-session simulation |
 | TC-060 | SCOOP Cannot Write Files | 🤖 | | |
-| TC-061 | Proactive Checkpointing | 👤 | | Multi-turn memory inspection |
+| TC-061 | Proactive Checkpointing | 🤖/👤 | | Single-agent checkpoint check automatable (see TC-077); mid-workflow gate observation manual |
 | TC-062 | Memory Fallback: Agent Creates `.agent-memory/` Directories | 🤖 | | |
 | TC-063 | Memory Fallback: First Reply Prepends `[no-memory]` | 🤖 | | |
 | TC-064 | Memory Fallback: Sentinel Suppresses Subsequent `[no-memory]` Prepends | 🤖 | | |
