@@ -838,7 +838,7 @@ def print_agent_report(agents: dict, turns: list[dict], per_turn: bool = True):
     if confirmed_total:
         v_parts = ", ".join(
             f"{n.replace('[root~]/', '')}\u00d7{c}"
-            for n, c, _i, _o, _t, _m in sorted(confirmed_violations, key=lambda x: -x[4])
+            for n, c, _i, _o, _t, _m, _mx in sorted(confirmed_violations, key=lambda x: -x[4])
         )
         v_suffix = (v_parts[:48] + "…") if len(v_parts) > 48 else v_parts
         print(f"  {ERR}{'  Confirmed violations':<38}{RESET} {confirmed_total:>8,}  {v_suffix}")
