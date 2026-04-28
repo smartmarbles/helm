@@ -865,11 +865,13 @@ def _tool_type_stats(turns: list[dict]) -> dict:
         else:
             base = inner
         if base not in stats:
-            stats[base] = {"calls": 0, "call_tokens": 0, "result_tokens": 0, "total_tokens": 0}
+            stats[base] = {"calls": 0, "call_tokens": 0, "result_tokens": 0, "total_tokens": 0, "max_call_tokens": 0}
         s = stats[base]
         if direction == "call":
             s["calls"] += 1
             s["call_tokens"] += t["tokens"]
+            if t["tokens"] > s["max_call_tokens"]:
+                s["max_call_tokens"] = t["tokens"]
         else:
             s["result_tokens"] += t["tokens"]
         s["total_tokens"] += t["tokens"]
@@ -884,12 +886,12 @@ def print_tool_type_report(tool_stats: dict):
     total_result_tok = sum(s["result_tokens"] for s in tool_stats.values())
     total_tokens     = sum(s["total_tokens"]  for s in tool_stats.values())
     print(f"\n{BOLD}Tool type breakdown:{RESET}  ({len(tool_stats)} unique tools)")
-    print(f"  {'Tool':<32} {'Calls':>6}  {'→ In':>6} {'← Out':>8} {'Total':>8} {'Avg/call':>8}")
-    print(f"  {'─'*32} {'─'*6}  {'─'*6} {'─'*8} {'─'*8} {'─'*8}")
+    print(f"  {'Tool':<32} {'Calls':>6}  {'→ In':>6} {'← Out':>8} {'Total':>8} {'Avg/call':>9} {'Max/call':>9}")
+    print(f"  {'─'*32} {'─'*6}  {'─'*6} {'─'*8} {'─'*8} {'─'*9} {'─'*9}")
     for name, s in sorted(tool_stats.items(), key=lambda x: -x[1]["total_tokens"]):
-        avg = s["total_tokens"] // s["calls"] if s["calls"] else 0
-        print(f"  {name:<32} {s['calls']:>6}  {s['call_tokens']:>6,} {s['result_tokens']:>8,} {s['total_tokens']:>8,} {avg:>8,}")
-    print(f"  {'─'*32} {'─'*6}  {'─'*6} {'─'*8} {'─'*8} {'─'*8}")
+        avg = s["call_tokens"] // s["calls"] if s["calls"] else 0
+        print(f"  {name:<32} {s['calls']:>6}  {s['call_tokens']:>6,} {s['result_tokens']:>8,} {s['total_tokens']:>8,} {avg:>9,} {s.get('max_call_tokens', 0):>9,}")
+    print(f"  {'─'*32} {'─'*6}  {'─'*6} {'─'*8} {'─'*8} {'─'*9} {'─'*9}")
     print(f"  {'  Total':<32} {total_calls:>6}  {total_call_tok:>6,} {total_result_tok:>8,} {total_tokens:>8,}")
 
 
