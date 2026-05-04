@@ -24,12 +24,26 @@ Read this skill whenever a request asks LENS to audit a session, verify a PROBE 
 
 ## Audit Intake Sequence
 
-1. **Verify required inputs are present.** Before doing any work, check which files have been provided:
-   - `chat-*.json` — **required always.** If absent, halt: `"Audit cannot proceed — no chat log file provided. Please provide a file matching chat-*.json."`
-   - PROBE report (`probe-*.md`) — **required for P1 mode.** If P1 was requested and no PROBE report is provided, halt: `"P1 audit requires a PROBE report. Provide a probe-baseline-*.md or probe-regression-*.md file, or switch to P2 (anomaly-only) mode."`
+1. **Verify required inputs are present.** Before doing any work, check which files have been provided and whether they exist:
+   - `chat-*.json` — **required for standard audits.** Resolve as follows:
+     1. If a path was provided, check whether that exact file exists.
+     2. If it does not exist at the given path, search `artifacts/testing/chats/` (the canonical drop location) and the VS Code session log directory (`VSCODE_TARGET_SESSION_LOG`). Report exactly where you searched.
+     3. If still not found after searching, **halt immediately**: `"Audit cannot proceed — chat log '{filename}' not found. Searched: [list locations checked]. Export the chat log via VS Code (Command Palette → Export Chat), save it into artifacts/testing/chats/, then re-run the audit."` Do not proceed past this point.
+
+     > **Canonical drop location:** Exported chat logs belong in `artifacts/testing/chats/`. This folder is gitignored and LENS searches it automatically — no path argument needed when the file is placed here.
+     - If no chat log was provided at all and the inputs are NOT fixture `.md` files (see Fixture Audit Mode below), halt: `"Audit cannot proceed — no chat log file provided. Please provide a file matching chat-*.json."`
+   - PROBE report (`probe-*.md`) — **required for P1 mode.** Check whether the file exists at the given path. If not found, search `artifacts/testing/reports/` before halting. If P1 was requested and no PROBE report can be found, halt: `"P1 audit requires a PROBE report. Provide a probe-baseline-*.md or probe-regression-*.md file, or switch to P2 (anomaly-only) mode."`
    - `hook-log.jsonl` — optional. If absent, note it and proceed in P3 mode (transcript-dependent checks marked `? UNVERIFIABLE`).
    - `test-plan.md` — **required always.** If absent, halt: `"Audit cannot proceed — test-plan.md is required as the independent expectation source."`
-   If any required file is missing, stop and list all missing files in a single message before asking the user to supply them. Do not proceed partially.
+   If any required file is missing after searching, stop and list all missing files and all locations searched in a single message before asking the user to supply them. **Do not proceed partially — halt on the first unresolvable required input.**
+
+   **Fixture Audit Mode** (category N / TC-090–TC-095): When the provided inputs match the pattern `tc###-log.md` + `tc###-probe-report.md` from `artifacts/testing/fixtures/lens-test-fixtures/`, switch to Fixture Audit Mode:
+   - `chat-*.json` is NOT required — the `tc###-log.md` file is the log source.
+   - Model/date cross-check (step 2 below) is skipped — fixtures have no frontmatter timestamps.
+   - `extensionVersion` detection is skipped — fixtures use plain markdown, not JSON chat export format.
+   - All other steps (four-way comparison, violation detection, report format) apply normally.
+   - Fixture files are permanent test infrastructure — do not delete or modify them.
+   - **Citation format for fixture evidence**: use `(tc###-log.md, Turn N, [tool call / prose description])` in place of the standard `(requests[N].response[M].toolSpecificData)` format — fixture `.md` files have no JSON structure.
 
 2. **Cross-check model and date consistency.** Before reading any file content in depth, perform these checks:
    - Extract `model` and `run_date` from the PROBE report frontmatter (if provided).
@@ -42,9 +56,11 @@ Read this skill whenever a request asks LENS to audit a session, verify a PROBE 
    Do not proceed past this step until the user confirms or corrects the mismatched files.
 
 3. Detect `extensionVersion` from `chat-*.json` agent metadata (see Log Parsing below).
-4. Read `artifacts/testing/test-plan.md` for TC-### expected behaviors — this is the independent expectation source.
+4. Read `artifacts/testing/test-plan.md` for TC-### expected behaviors — this is the independent expectation source. **You MUST read test-plan.md before reading the PROBE report.** This is a hard ordering constraint, not a suggestion.
 5. Check for `run_type` and `chat_log` frontmatter fields in the PROBE report. If absent, warn the user and switch to P2 (anomaly-only) mode.
 6. Read the PROBE report **last** — after forming independent log observations from the chat log and hook log.
+
+> **Hard ordering rule: chat log → test-plan.md → PROBE report.** Reading the PROBE report before test-plan.md is a protocol violation — record it as a behavioral violation in the audit report and note which TC-### analyses were affected.
 
 This sequence is not optional. Reading the PROBE report first causes unconscious anchoring that defeats the audit's independence.
 
@@ -170,7 +186,7 @@ Detect these nine patterns across the full session, independent of TC-### scope:
 6. **Missed parallelism** — sequential dispatch of tasks the test plan marks as independent (two independent `runSubagent` calls issued in separate turns rather than in the same `response[]` array)
 7. **Artifact placement violations** — files written to wrong spec folders or outside `artifacts/`
 8. **Memory scope mismatches** — session-scope notes written to user scope (`/memories/` without `session/` prefix), or user-scope content written as repo/session
-9. **Per-agent file-write constraint violations** — agent uses `edit` or `create_file` when their constraints prohibit it (e.g., ARTHUR writing deliverables directly)
+9. **Per-agent deliverable constraint violations** — agent produces deliverable content in violation of their constraints; two sub-types: (a) **prose deliverable** — agent writes deliverable content in response prose when forbidden (e.g., ARTHUR writing README content in his own turn); (b) **file-write deliverable** — agent uses `edit` or `create_file` when their constraints prohibit it
 
 Record each detected violation in the violation log with: severity (hard / soft), TC-### if applicable, and the specific log evidence (request index, tool call name, field path).
 
@@ -189,6 +205,36 @@ Warn the user at the start of the audit when operating below P1. Document which 
 ---
 
 ## Output Format
+
+### Frontmatter (every audit report)
+
+Every LENS audit report file must open with YAML frontmatter using exactly these fields:
+
+```yaml
+---
+audit_id: "{audited_run_id}-lens"           # e.g. baseline-20260501-01-lens
+audited_report: "{probe-report-filename}"   # e.g. probe-baseline-sonnet46_2026-05-01-01.md
+chat_log: "{chat-log-filename}"             # actual filename as provided
+hook_log: "present | absent"
+model: "{model-slug}"                       # from PROBE report frontmatter
+run_date: "YYYY-MM-DD"                      # from PROBE report frontmatter
+run_type: "{run_type}"                      # from PROBE report frontmatter
+audit_mode: "P1 | P2 | P3"
+audit_start: "YYYY-MM-DDTHH:MM:SS"         # when LENS began reading the chat log — use actual current date/time
+audit_end: "YYYY-MM-DDTHH:MM:SS"           # when the audit report was complete — use actual current date/time
+audit_duration: "{Xh Ym Zs}"              # human-readable elapsed time
+session_id: "{session-id}"                 # from chat log if extractable; omit if unavailable
+scope: "{TC range or category label}"      # e.g. TC-090 – TC-095 (Category N)
+tc_count: N                                # total TC-### rows evaluated
+confirmed_count: N                         # ✓ REPORT CONFIRMED
+mismatch_count: N                          # ⚠ REPORT MISMATCH
+unverifiable_count: N                      # ? EVIDENCE UNVERIFIABLE
+---
+```
+
+`audit_start` is recorded when LENS begins reading the chat log (after intake verification). `audit_end` is recorded when the final report section is written. Populate `confirmed_count`, `mismatch_count`, and `unverifiable_count` last, after the RTS table is complete (P1 only); set all three to `n/a` in P2/P3 mode.
+
+---
 
 ### Session-Level Anomaly Summary (every run)
 
@@ -218,6 +264,16 @@ Severity is `hard` or `soft`. Evidence is the specific log field path and index.
 ### Report Truthfulness Summary (P1 only)
 
 After the violation log: verdict counts and MISMATCH details.
+
+Required table format — use exactly these four column names:
+
+| TC | Report Claim | Log Evidence | Verdict |
+|----|--------------|--------------|---------|
+
+- **TC**: TC-### identifier (e.g., `TC-001`)
+- **Report Claim**: PROBE's stated verdict verbatim (e.g., `✅ PASS` or `❌ FAIL (V-001 minor)`)
+- **Log Evidence**: A specific log citation supporting or refuting the claim — e.g., `(toolCallId: toolu_xxx, result: "DISCREPANCY detected")`. Must be a log reference, NOT a verdict string or paraphrase.
+- **Verdict**: One of `✓ REPORT CONFIRMED`, `⚠ REPORT MISMATCH`, or `? EVIDENCE UNVERIFIABLE`
 
 ---
 

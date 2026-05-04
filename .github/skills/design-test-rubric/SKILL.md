@@ -123,15 +123,13 @@ If the prompts run in a batch are too short or simple to discriminate between ti
 
 When a new model tag is introduced, the rubric must grow a fingerprint row for it in the same minor-version bump. A model tag without a fingerprint row has no Layer-2 signal and silently degrades the protocol.
 
-### Layer 3 — User-UI confirm (strong signal)
+### Layer 3 — Model label (informational)
 
-Before any test cases in a model batch are dispatched, PROBE emits this handoff prompt verbatim to ARTHUR, who relays it to the user:
+The model slug passed in the brief (`model=<slug>`) is the report label for this run. PROBE records it in the `## Verification` section as-is. No interactive confirmation is required — the VS Code model dropdown is the ground-truth handle the user controls directly, and the model running is always the one selected there.
 
-> **Model-batch handoff:** About to dispatch the `<model-name>` test batch. Please confirm the VS Code chat model indicator reads `<model-name>` before I proceed. Reply "confirmed" or the actual model name shown.
-
-- PROBE **awaits explicit confirmation** before dispatching any test cases.
-- If the user reports a different model than expected, the batch is **aborted** (see flagging rules).
-- This is the strongest of the three signals because the VS Code chat model indicator is the ground-truth handle the user controls directly.
+- PROBE does **not** emit a handoff prompt or await user confirmation.
+- The `model=<slug>` value is used for report filenames and the Verification section only.
+- If no slug is provided, PROBE uses `unknown` as the label.
 
 ### Flagging and retry rules
 
@@ -141,7 +139,7 @@ Every scorecard must include a `## Verification` section recording:
 
 - Layer 1: probe prompt issued, exact response, verdict.
 - Layer 2: fingerprint observations (latency sample, preamble sample) + verdict.
-- Layer 3: user-confirm timestamp (or ARTHUR-relayed note) + reported model string.
+- Layer 3: model slug from brief (or `unknown` if omitted) + note that no interactive confirmation is required.
 
 Runs missing any of the three layers' records are invalid.
 

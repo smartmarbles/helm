@@ -16,12 +16,7 @@
 
 ## Temporary Agents
 
-Agents hired for one-time tasks. After completion, archived to `.github/agents/temps/`.
+Agents hired for one-time tasks. After completion, their row is removed from this table and the file is moved to `.github/agents/temps/`.
 
-| Agent | Role | Task | Hired | Status | File |
-|-------|------|------|-------|--------|------|
-
-
-> **Re-archival trigger:** Re-archive SPLICE before spec002 completion, once the final Python development task lands.
-
-
+| Agent | Role | Use When | Hired | Tagline | Status |
+|-------|------|----------|-------|---------|--------|

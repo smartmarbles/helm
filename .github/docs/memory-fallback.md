@@ -35,9 +35,11 @@ Mode is determined **once at startup and is sticky for the session**. Do not re-
 
 When you detect memory unavailability at startup and switch to fallback mode:
 
-1. Prepend `[no-memory]` to your final reply **exactly once** this session.
-2. Immediately write the sentinel file: `.agent-memory/.notified-this-session`
-3. On all subsequent replies this session: check for the sentinel file. If it exists, do NOT prepend `[no-memory]` again.
+1. Before composing your first degraded reply, create `.agent-memory/session/` and `.agent-memory/repo/` under the workspace root if they do not already exist.
+2. Prepend `[no-memory]` to your **first reply in degraded mode** exactly once this session.
+3. Immediately write the sentinel file: `.agent-memory/.notified-this-session`
+
+On all subsequent replies this session: check for the sentinel file. If it exists, do NOT prepend `[no-memory]` again.
 
 **Sentinel file:** `.agent-memory/.notified-this-session`
 

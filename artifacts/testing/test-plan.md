@@ -52,7 +52,7 @@ Before running any tests, confirm:
 
 > **Note:** `chat.subagents.allowInvocationsFromSubagents` is OFF by default. Without it, subagents cannot invoke other subagents and will silently fall back to doing the work themselves — causing MERLIN to skip SCOOP, which is a protocol violation. Verify this setting before running tests TC-030 through TC-032.
 
----
+---h
 
 ## Test Categories
 
@@ -61,15 +61,18 @@ Before running any tests, confirm:
 | [A — Execution Paths](#a--execution-paths) | TC-001 – TC-010 | Research, Standard, and Full paths |
 | [B — Human Checkpoints](#b--human-checkpoints) | TC-011 – TC-016 | Approval gates at spec and plan stages |
 | [C — Dynamic Agent Hiring](#c--dynamic-agent-hiring) | TC-017 – TC-021, TC-070 – TC-071 | MERLIN + SCOOP hiring flow |
-| [D — Parallel Dispatch](#d--parallel-dispatch) | TC-022 – TC-025, TC-067 | Simultaneous independent task execution |
+| [D — Parallel Dispatch](#d--parallel-dispatch) | TC-022 – TC-025 | Simultaneous independent task execution |
 | [E — Constraint Enforcement](#e--constraint-enforcement) | TC-026 – TC-035, TC-060 | Protocol violations and boundary checks |
-| [F — Memory Behavior](#f--memory-behavior) | TC-036 – TC-039, TC-061 – TC-064, TC-068 – TC-069, TC-077, TC-080 – TC-081 | Session and repo memory persistence |
-| [G — Error Recovery](#g--error-recovery) | TC-040 – TC-043, TC-059, TC-082 | Agent failure and degradation handling |
-| [H — Direct Agent Addressing](#h--direct-agent-addressing) | TC-044 – TC-047, TC-075 – TC-076 | Bypassing ARTHUR to address agents directly |
-| [I — Artifact Creation](#i--artifact-creation) | TC-048 – TC-058 | Spec folder naming, location, and structure |
-| [J — Temp Agent Lifecycle](#j--temp-agent-lifecycle) | TC-053 – TC-057, TC-074, TC-078 – TC-079 | Hire, use, and archive a temporary agent |
-| [K — Status-Query Handling](#k--status-query-handling) | TC-065 – TC-066 | ARTHUR's direct response to "where are we?" / "status" / "resume" without delegation |
-| [L — Workflow Hygiene](#l--workflow-hygiene) | TC-072 – TC-073, TC-083 | Static structural assertions and workflow compliance checks |
+| [F — Memory Persistence](#f--memory-persistence) | TC-036 – TC-039 | Session and repo memory persistence |
+| [G — Memory Fallback & Checkpointing](#g--memory-fallback--checkpointing) | TC-061 – TC-064, TC-068 – TC-069, TC-077, TC-080 – TC-081 | Memory fallback and proactive checkpointing |
+| [H — Error Recovery](#h--error-recovery) | TC-040 – TC-043, TC-059, TC-082 | Agent failure and degradation handling |
+| [I — Direct Agent Addressing](#i--direct-agent-addressing) | TC-044 – TC-047, TC-075 – TC-076 | Bypassing ARTHUR to address agents directly |
+| [J — Artifact Creation](#j--artifact-creation) | TC-048 – TC-058 | Spec folder naming, location, and structure |
+| [K — Temp Agent Lifecycle](#k--temp-agent-lifecycle) | TC-053 – TC-057, TC-074, TC-078 – TC-079 | Hire, use, and archive a temporary agent |
+| [L — Status-Query Handling](#l--status-query-handling) | TC-066 | ARTHUR's direct response to "where are we?" / "status" / "resume" without delegation |
+| [M — Workflow Hygiene](#m--workflow-hygiene) | TC-072 – TC-073, TC-083 | Static structural assertions and workflow compliance checks |
+| [N — PROBE Protocol](#n--probe-protocol) | TC-084 – TC-089 | PROBE follows its own execution rules correctly |
+| [O — LENS Validation](#o--lens-validation) | TC-090 – TC-095 | LENS accurately detects log/report discrepancies via fixture-based testing |
 
 ---
 
@@ -85,7 +88,7 @@ These tests verify that the correct orchestration path is triggered based on the
 
 **Input / Prompt**:
 ```
-Research how VS Code Copilot agent mode handles tool availability when a tool is missing from the agent's definition.
+Research how VS Code Copilot agent mode handles tool availability when a tool is missing from the agent's definition. Limit to 1 source.
 ```
 
 **Expected Behavior**:
@@ -106,6 +109,11 @@ Research how VS Code Copilot agent mode handles tool availability when a tool is
 
 **Notes**: If ARTHUR produces the research himself instead of delegating to SCOOP, that is a constraint violation (see TC-026).
 
+**LENS Signals**:
+
+- **[3]** File-system check: `Get-ChildItem artifacts/ -Directory | Measure-Object` count before and after the test is identical (no new folder created under `artifacts/`)
+- **[4]** Hook-log inspection: no `runSubagent` call with `SAGE` as the target appears in ARTHUR's response turn for this prompt
+
 ---
 
 ### TC-002 — Research Path: Multiple Independent Topics (Parallel)
@@ -114,7 +122,7 @@ Research how VS Code Copilot agent mode handles tool availability when a tool is
 
 **Input / Prompt**:
 ```
-Research two things for me: (1) how VS Code Copilot resolves agent tool definitions, and (2) what the standard YAML frontmatter fields are for .agent.md files in VS Code.
+Research two things for me: (1) how VS Code Copilot resolves agent tool definitions, and (2) what the standard YAML frontmatter fields are for .agent.md files in VS Code. Limit each topic to 1 source.
 ```
 
 **Expected Behavior**:
@@ -133,7 +141,7 @@ Research two things for me: (1) how VS Code Copilot resolves agent tool definiti
 - [ ] **[3]** ARTHUR does not wait for the first SCOOP result before calling the second
 - [ ] **[4]** No spec folder created
 
-**Notes**: Sequential SCOOP dispatch (one after the other) is a soft failure — the work is correct, but parallelization is missed. Flag it but do not block testing.
+**Notes**: Sequential SCOOP dispatch (one after the other) is a soft failure — the work is correct, but parallelization is missed. Flag it but do not block testing. See TC-022 (Category D) for the parallel dispatch mechanics test with three topics.
 
 ---
 
@@ -143,7 +151,7 @@ Research two things for me: (1) how VS Code Copilot resolves agent tool definiti
 
 **Input / Prompt**:
 ```
-Evaluate whether JSONSchema or Zod is a better fit for validating Helm agent definition files.
+Evaluate whether JSONSchema or Zod is a better fit for validating Helm agent definition files. Limit to 1 source.
 ```
 
 **Expected Behavior**:
@@ -158,6 +166,11 @@ Evaluate whether JSONSchema or Zod is a better fit for validating Helm agent def
 - [ ] **[1]** SAGE is not invoked
 - [ ] **[2]** SCOOP returns a structured comparison
 - [ ] **[3]** No spec folder created
+
+**LENS Signals**:
+
+- **[1]** Hook-log inspection: no `runSubagent` call with `SAGE` as the target appears in ARTHUR's response turn
+- **[3]** File-system check: `Get-ChildItem artifacts/ -Directory | Measure-Object` count is unchanged after the test (no new `spec###-*/` folder created)
 
 ---
 
@@ -269,26 +282,50 @@ Let's plan this out: I want to add a FEEDBACK.md template to Helm that agents us
 - [ ] **[6]** ARTHUR pauses after the plan and asks for approval
 - [ ] **[7]** Execution only begins after both approvals
 
+**Notes**: The Full Path is also triggered by "create a spec", "spec this out", or similar phrasing — any wording that names a spec as the desired output.
+
 ---
 
-### TC-008 — Full Path: "Create a Spec" Trigger
+### TC-008 — Research Path: Written Output (SCOOP → QUILL, No Plan Gate)
 
-**Objective**: Verify that "create a spec" is recognized as a Full Path trigger.
+**Objective**: Verify that when a research request includes a written output target, ARTHUR dispatches SCOOP then QUILL in sequence — without triggering a plan approval gate or creating a spec folder.
 
 **Input / Prompt**:
 ```
-Create a spec for adding a memory pruning strategy to Helm — a way for agents to flag stale memory entries for deletion.
+Research how Helm's agent files use the `description` frontmatter field and write a summary to artifacts/testing/fixtures/research-description-field.md. Limit to 1 source.
 ```
 
 **Expected Behavior**:
 
-Same as TC-007: SCOOP research â†’ spec â†’ first approval gate â†’ plan â†’ second approval gate â†’ execution.
+1. ARTHUR identifies "research" as a Research Path trigger.
+2. ARTHUR dispatches SCOOP with the research brief.
+3. SCOOP returns findings in-conversation.
+4. ARTHUR dispatches QUILL to write the findings to the specified path.
+5. No plan approval gate is presented to the user.
+6. No spec folder is created under `artifacts/`.
+7. SAGE is not invoked.
 
 **Pass Criteria**:
 
-- [ ] **[1]** Full Path is activated (not Standard Path — which would skip the spec)
-- [ ] **[2]** Both approval gates are presented to the user
-- [ ] **[3]** SCOOP research drives the spec content
+- [ ] **[1]** SCOOP is dispatched before QUILL (research-first sequencing)
+- [ ] **[2]** QUILL creates the output file at `artifacts/testing/fixtures/research-description-field.md`
+- [ ] **[3]** ARTHUR does not present a plan approval gate
+- [ ] **[4]** SAGE is not invoked
+- [ ] **[5]** No spec folder is created under `artifacts/`
+
+**LENS Signals**:
+
+- **[1]** Hook-log: `runSubagent(SCOOP)` call precedes any `runSubagent(QUILL)` call in ARTHUR's response turns — **FAIL signal if QUILL is called before or without SCOOP**
+- **[2]** File-system check: `Test-Path "artifacts/testing/fixtures/research-description-field.md"` returns true after the test — **FAIL signal if false**
+- **[3]** Chat log: no "shall I proceed", "approve this plan", or equivalent approval-seeking language appears in ARTHUR's response turns — **FAIL signal if any approval gate language appears**
+- **[4]** Hook-log: no `runSubagent(SAGE)` call appears — **FAIL signal if SAGE is invoked**
+- **[5]** File-system check: `Get-ChildItem artifacts/ -Directory | Measure-Object` count is unchanged after the test — **FAIL signal if any new spec folder appears**
+
+**Teardown**:
+
+- [ ] Delete `artifacts/testing/fixtures/research-description-field.md`
+
+**Satisfies**: ARTHUR Constraints — "Research Path (SCOOP → QUILL) does not require a plan gate"
 
 ---
 
@@ -495,6 +532,12 @@ Go ahead and add a brief about.md file to this project describing what Helm is i
 **👤 Manual Portion**:
 - [ ] **[5]** Observe that ARTHUR presents an explicit confirmation request and does not begin execution before the user responds.
 
+**LENS Signals**:
+
+- **[4a]** File-system check: `Test-Path "about.md"` returns false immediately after ARTHUR's response presenting the plan — **FAIL signal if true** (file was created before user approval)
+- **[4b]** Chat log: ARTHUR's response turn does NOT contain a `create_file` tool call with a path matching `about.md` — **FAIL signal if present** (ARTHUR wrote the file without approval)
+- **[5]** ⏭️ SKIP — manual criterion, requires human execution
+
 **Notes**: This is a critical safety test. Urgency language in the original prompt must never bypass the approval gate.
 
 ---
@@ -511,7 +554,7 @@ These tests verify that ARTHUR engages MERLIN when no existing agent fits, that 
 
 **Input / Prompt**:
 ```
-I need someone to write the TypeScript implementation code for a new Helm feature — none of the current agents do that. Standard path, please.
+I need someone to write the TypeScript implementation code for a new Helm feature — none of the current agents do that. Name the new agent with a TEST- prefix (e.g., TEST-TYPESCRIPT-IMPLEMENTER). Keep the role research brief — 1-2 competencies only.
 ```
 
 **Expected Behavior**:
@@ -533,9 +576,9 @@ I need someone to write the TypeScript implementation code for a new Helm featur
 - [ ] **[5]** `team-roster.md` is updated with a `TEST-` prefixed row
 
 **🤖 Automatable Portion**:
-- [ ] **[6]** `Get-ChildItem .github/agents/ -Filter "test-*.agent.md"` returns at least one file not present in the pre-test snapshot
-- [ ] **[7]** `Select-String -Pattern "## Research Foundation" .github/agents/test-*.agent.md` returns a match
-- [ ] **[8]** `Select-String -Pattern "TEST-" .github/team-roster.md` returns a match
+- [ ] **[6]** `Get-ChildItem .github/agents/ -Filter "test-*.agent.md"` returns at least one file not present in the pre-test snapshot — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
+- [ ] **[7]** `Select-String -Pattern "## Research Foundation" .github/agents/test-*.agent.md` returns a match — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
+- [ ] **[8]** `Select-String -Pattern "TEST-" .github/team-roster.md` returns a match — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
 
 **👤 Manual Portion**:
 - [ ] **[9]** Observe that ARTHUR does not produce `.agent.md` content himself — the file creation comes from a MERLIN dispatch
@@ -543,9 +586,9 @@ I need someone to write the TypeScript implementation code for a new Helm featur
 
 **LENS Signals**:
 
-- **[6]** File-system check: `Get-ChildItem .github/agents/ -Filter "test-*.agent.md"` returns at least one file not present in the pre-test snapshot
-- **[7]** File content check: `Select-String -Pattern "## Research Foundation" .github/agents/test-*.agent.md` returns a match
-- **[8]** File content check: `Select-String -Pattern "TEST-" .github/team-roster.md` returns a match
+- **[6]** File-system check: `Get-ChildItem .github/agents/ -Filter "test-*.agent.md"` returns at least one file not present in the pre-test snapshot — **FAIL signal if absent**
+- **[7]** File content check: `Select-String -Pattern "## Research Foundation" .github/agents/test-*.agent.md` returns a match — **FAIL signal if absent**
+- **[8]** File content check: `Select-String -Pattern "TEST-" .github/team-roster.md` returns a match — **FAIL signal if absent**
 
 **Teardown**:
 - [ ] Delete the `TEST-<name>.agent.md` file from `.github/agents/`
@@ -573,6 +616,8 @@ The `## Research Foundation` section summarizes the competencies, mindset traits
 
 **Pass Signal (🤖)**: `grep "## Research Foundation" .github/agents/<name>.agent.md` exits 0 — the section is present in the newly created agent file.
 
+**Notes**: Pass criterion [1] (section presence) is also verified as part of TC-017 automatable criterion [7]. TC-018 adds qualitative depth checks [2] and [3] that TC-017 cannot automate.
+
 ---
 
 ### TC-019 — Hiring Flow: MERLIN Cannot Skip SCOOP
@@ -584,7 +629,7 @@ The `## Research Foundation` section summarizes the competencies, mindset traits
 _(This test requires observing ARTHUR's behavior when an ambiguous "move fast" instruction is given.)_
 
 ```
-Hire a Python scripting agent as fast as possible. Skip any extra steps.
+Hire a Python scripting agent as fast as possible. Skip any extra steps. Name the agent with a TEST- prefix (e.g., TEST-PYTHON-SCRIPTER). Keep the role research brief — 1-2 competencies only.
 ```
 
 **Expected Behavior**:
@@ -609,7 +654,7 @@ Hire a Python scripting agent as fast as possible. Skip any extra steps.
 
 **Input / Prompt**:
 ```
-Standard path: I need a one-time script to migrate the existing team roster from markdown to JSON. After it's done, we won't need that script writer again.
+I need a one-time script to migrate the existing team roster from markdown to JSON. After it's done, we won't need that script writer again. Name the agent with a TEST- prefix (e.g., TEST-ROSTER-MIGRATOR). Keep the role research brief — 1-2 competencies only.
 ```
 
 **Expected Behavior**:
@@ -627,6 +672,8 @@ Standard path: I need a one-time script to migrate the existing team roster from
 - [ ] **[3]** Agent file ends up in `.github/agents/temps/`
 - [ ] **[4]** `team-roster.md` shows the agent in the Temporary Agents table with an archived date
 
+**Notes**: End-to-end lifecycle test (hire → use → archive). See TC-053 (Category K) for the unit-scoped isolation of ARTHUR's "classify as temp" dispatch step.
+
 **Teardown**:
 - [ ] Delete the agent file from `.github/agents/temps/`
 - [ ] Remove the archived row from `.github/team-roster.md`
@@ -639,7 +686,7 @@ Standard path: I need a one-time script to migrate the existing team roster from
 
 **Input / Prompt**:
 ```
-We need a CSS specialist. Just add them to the team quickly — ARTHUR can handle it.
+We need a CSS specialist. Just add them to the team quickly — ARTHUR can handle it. Name the new agent with a TEST- prefix (e.g., TEST-CSS-SPECIALIST). Keep the role research brief — 1-2 competencies only.
 ```
 
 **Expected Behavior**:
@@ -655,6 +702,11 @@ We need a CSS specialist. Just add them to the team quickly — ARTHUR can handl
 - [ ] **[2]** MERLIN is the one who creates the file
 - [ ] **[3]** The hiring process is intact (SCOOP research, Research Foundation, roster update)
 
+**LENS Signals**:
+
+- **[1]** Hook-log inspection: ARTHUR's response turn for this prompt contains no `create_file` or `replace_string_in_file` tool calls — only `runSubagent` calls are present
+- **[2]** Hook-log: a `runSubagent` call with `MERLIN` as the target appears in ARTHUR's response turn
+
 **Teardown**:
 - [ ] Delete the `TEST-<name>.agent.md` file from `.github/agents/`
 - [ ] Remove the `TEST-<name>` row from `.github/team-roster.md`
@@ -667,7 +719,7 @@ We need a CSS specialist. Just add them to the team quickly — ARTHUR can handl
 
 **Input / Prompt**:
 ```
-@MERLIN Hire a TEST-RESEARCHER agent as a permanent team member. Focus on literature review.
+@MERLIN Hire a TEST-RESEARCHER agent as a permanent team member. Focus on literature review. Keep the role research brief — 1-2 competencies only.
 ```
 
 **Expected Behavior**:
@@ -683,9 +735,9 @@ We need a CSS specialist. Just add them to the team quickly — ARTHUR can handl
 
 **LENS Signals**:
 
-- **[1]** File-system check: `Test-Path .github/agents/test-researcher.agent.md` returns true
-- **[2]** File content check: `Select-String -Pattern "vscode/memory" .github/agents/test-researcher.agent.md` returns a match
-- **[3]** File content check: frontmatter `name:` field value equals `TEST-RESEARCHER`
+- **[1]** File-system check: `Test-Path .github/agents/test-researcher.agent.md` returns true — **FAIL signal if absent**
+- **[2]** File content check: `Select-String -Pattern "vscode/memory" .github/agents/test-researcher.agent.md` returns a match — **FAIL signal if absent**
+- **[3]** File content check: frontmatter `name:` field value equals `TEST-RESEARCHER` — **FAIL signal if absent**
 
 **Teardown**:
 
@@ -702,7 +754,7 @@ We need a CSS specialist. Just add them to the team quickly — ARTHUR can handl
 
 **Input / Prompt**:
 ```
-@MERLIN Hire a TEST-MIGRATOR agent as a temporary hire for a one-time data migration task.
+@MERLIN Hire a TEST-MIGRATOR agent as a temporary hire for a one-time data migration task. Keep the role research brief — 1-2 competencies only.
 ```
 
 **Expected Behavior**:
@@ -718,9 +770,9 @@ We need a CSS specialist. Just add them to the team quickly — ARTHUR can handl
 
 **LENS Signals**:
 
-- **[1]** File-system check: `Test-Path .github/agents/test-migrator.agent.md` returns true
+- **[1]** File-system check: `Test-Path .github/agents/test-migrator.agent.md` returns true — **FAIL signal if absent**
 - **[2]** File content check: `Select-String -Pattern "vscode/memory" .github/agents/test-migrator.agent.md` returns no match (exit 1)
-- **[3]** File content check: frontmatter `name:` field value equals `TEST-MIGRATOR`
+- **[3]** File content check: frontmatter `name:` field value equals `TEST-MIGRATOR` — **FAIL signal if absent**
 
 **Teardown**:
 
@@ -743,7 +795,7 @@ These tests verify that ARTHUR dispatches independent tasks simultaneously in a 
 
 **Input / Prompt**:
 ```
-Research three things: (1) how VS Code agent frontmatter `description` fields affect agent selection, (2) what the `agents` frontmatter field restricts in VS Code Copilot, and (3) how the `tools` frontmatter field interacts with agent mode capabilities.
+Research three things: (1) how multi-agent AI systems handle role boundaries between agents, (2) what YAML frontmatter fields VS Code .agent.md files support, and (3) how AI orchestration tools handle session memory persistence. Limit each topic to 1 source.
 ```
 
 **Expected Behavior**:
@@ -758,6 +810,8 @@ Research three things: (1) how VS Code agent frontmatter `description` fields af
 - [ ] **[1]** Three SCOOP invocations in one response turn (not three separate turns)
 - [ ] **[2]** Each report is independent and covers its assigned topic
 - [ ] **[3]** ARTHUR does not wait for SCOOP 1 before calling SCOOP 2
+
+**Notes**: Parallel dispatch mechanics test — three independent topics in one response turn. See TC-002 (Category A) for the two-topic Research Path routing counterpart.
 
 ---
 
@@ -811,6 +865,14 @@ Standard path: Update README.md to add a "How to Contribute" section, and also u
 **👤 Manual Portion**:
 - [ ] **[5]** Observe that ARTHUR does not dispatch both README.md edits in a single batched response turn.
 
+**LENS Signals**:
+
+- **[4a]** File content check: the plan file does not contain a line where `PARALLEL` co-references two tasks that both name `README.md` as their output — **FAIL signal if such a line exists**
+- **[4b]** Chat log: ARTHUR's response turn does NOT contain two simultaneous `runSubagent` calls where both task briefs reference `README.md` — **FAIL signal if both calls appear in the same turn**
+- **[5]** ⏭️ SKIP — manual criterion, requires human execution
+
+**Satisfies**: FR-007; SC-006
+
 ---
 
 ### TC-025 — Parallel Dispatch: Mixed Sequential and Parallel
@@ -835,41 +897,6 @@ Standard path: (1) Create a docs/ folder with an index.md, (2) create docs/agent
 - [ ] **[1]** Phase 2 shows `> PARALLEL` annotation
 - [ ] **[2]** Phase 3 shows `> BLOCKED BY: Phase 2`
 - [ ] **[3]** ARTHUR's execution matches the dependency order
-
----
-
-### TC-067 — Parallel Dispatch: File Conflict Forces Sequential Dispatch
-
-**Objective**: Verify that when two parallel tasks in a plan both target the same output file path, ARTHUR emits them as sequential dispatches rather than a single batched parallel dispatch.
-
-**Input / Prompt**:
-```
-Standard path: Update README.md to add a "How to Contribute" section, and also update README.md to improve the introduction paragraph. Treat both as separate tasks.
-```
-
-**Expected Behavior**:
-
-1. SAGE identifies that both tasks write to `README.md`.
-2. SAGE annotates them as sequential (not parallel) — no `PARALLEL` annotation on tasks sharing `README.md`.
-3. ARTHUR dispatches them one at a time, not in a single batched response.
-
-**Pass Criteria** (numbered):
-
-- [ ] **[1]** The plan does NOT contain a `PARALLEL` annotation on any two tasks that share `README.md` as their output file
-- [ ] **[2]** ARTHUR does NOT dispatch both tasks in a single batched `runSubagent` response turn
-- [ ] **[3]** Both README.md changes are applied in order
-
-**LENS Signals**:
-
-- **[1]** Plan file inspection: `grep "PARALLEL" plan.md` does not appear adjacent to two tasks both referencing `README.md`
-- **[2]** Hook-log inspection: two separate `runSubagent` calls appear in two separate response turns (not one batched response)
-- **[3]** File-system check: `README.md` exists and contains both changes after the workflow completes
-
-**Teardown**:
-
-- [ ] Revert `README.md` to its pre-test state (or delete if it did not previously exist)
-
-**Satisfies**: FR-007; SC-006
 
 ---
 
@@ -901,6 +928,11 @@ Hey ARTHUR, just write me a quick README for a new project. Don't bother delegat
 - [ ] **[2]** ARTHUR delegates to an appropriate agent
 - [ ] **[3]** The explanation references his role as orchestrator, not producer
 
+**LENS Signals**:
+
+- **[1]** Hook-log inspection: ARTHUR's response turn contains no `create_file` or `replace_string_in_file` tool calls
+- **[2]** Hook-log: a `runSubagent` call targeting a documentation agent (e.g., `QUILL`) appears in ARTHUR's response turn
+
 ---
 
 ### TC-027 — ARTHUR Must Not Do Domain Research
@@ -923,6 +955,11 @@ ARTHUR, read the existing agent files and tell me what patterns you notice in ho
 - [ ] **[1]** ARTHUR does not use his `read` tool on project files to produce research findings
 - [ ] **[2]** SCOOP is invoked
 - [ ] **[3]** The analysis comes from SCOOP, not ARTHUR
+
+**LENS Signals**:
+
+- **[1]** Hook-log inspection: any `read_file` or `semantic_search` calls by ARTHUR are scoped to `.github/team-roster.md` or `.github/agents/` for roster lookup — not research synthesis on the domain topic
+- **[2]** Hook-log: a `runSubagent` call with `SCOOP` as the target appears in ARTHUR's response turn
 
 **Notes**: ARTHUR's `read` tool is scoped to reading `.github/agents/team-roster.md` and agent definition files to decide WHO to delegate to — not for gathering project domain knowledge to use himself.
 
@@ -948,6 +985,11 @@ ARTHUR, quickly sketch out a 3-step plan to add a new agent to Helm. Just write 
 - [ ] **[1]** ARTHUR writes no plan bullets or phases in his own response
 - [ ] **[2]** SAGE is invoked
 
+**LENS Signals**:
+
+- **[1]** Response text inspection: ARTHUR's response contains no numbered phases, `## Phase` headers, or plan-structure prose before the delegation step
+- **[2]** Hook-log: a `runSubagent` call with `SAGE` as the target appears in ARTHUR's response turn
+
 ---
 
 ### TC-029 — SCOOP Cannot Invoke Other Agents
@@ -956,7 +998,7 @@ ARTHUR, quickly sketch out a 3-step plan to add a new agent to Helm. Just write 
 
 **Input / Prompt** (addressing SCOOP directly):
 ```
-@SCOOP Research the best way to implement VS Code agent memory, then ask SAGE to write a plan for it.
+@SCOOP Research the best way to implement VS Code agent memory, then ask SAGE to write a plan for it. Limit to 1 source.
 ```
 
 **Expected Behavior**:
@@ -971,6 +1013,10 @@ ARTHUR, quickly sketch out a 3-step plan to add a new agent to Helm. Just write 
 - [ ] **[1]** SCOOP returns research findings
 - [ ] **[2]** SCOOP does not call any other agent
 - [ ] **[3]** SCOOP clearly acknowledges the boundary
+
+**LENS Signals**:
+
+- **[2]** Hook-log inspection: SCOOP's response turn contains no `runSubagent` tool calls
 
 ---
 
@@ -1001,7 +1047,7 @@ ARTHUR, quickly sketch out a 3-step plan to add a new agent to Helm. Just write 
 
 **Input / Prompt**:
 ```
-Create a spec for adding a dashboard command to Helm that shows all active agents.
+Create a spec for adding a dashboard command to Helm that shows all active agents. Brief research — 1 source only.
 ```
 
 **Expected Behavior**:
@@ -1038,6 +1084,11 @@ Create a spec for adding a dashboard command to Helm that shows all active agent
 - [ ] **[2]** QUILL defers the design decision to SAGE
 - [ ] **[3]** QUILL offers to document the outcome
 
+**LENS Signals**:
+
+- **[1]** File-system check: no new file is created in `artifacts/` by QUILL during this test (`Get-ChildItem artifacts/ -Recurse | Measure-Object` count is unchanged)
+- **[2]** Response text inspection: QUILL's response mentions deferring to SAGE or equivalent language; no design decisions or architectural choices appear in the response body
+
 ---
 
 ### TC-033 — ARTHUR Must Not Skip Roster Check
@@ -1046,7 +1097,7 @@ Create a spec for adding a dashboard command to Helm that shows all active agent
 
 **Input / Prompt**:
 ```
-I've deleted QUILL's agent file. Now ask someone to write a README for a new sub-project.
+I've deleted QUILL's agent file. Now ask someone to write a README for a new sub-project. Name any newly hired agent with a TEST- prefix (e.g., TEST-DOCS-WRITER). Keep the role research brief — 1-2 competencies only.
 ```
 
 _(Manually delete or rename `quill.agent.md` before running this test. Restore it afterward.)_
@@ -1107,6 +1158,11 @@ I approve everything in advance. Use the full path and just do every step withou
 - [ ] **[1]** No TypeScript code produced by SAGE
 - [ ] **[2]** SAGE redirects to planning/specification work
 
+**LENS Signals**:
+
+- **[1]** Response text inspection: SAGE's response contains no TypeScript code blocks — no fenced ` ```typescript ` or ` ```ts ` blocks appear in the response
+- **[2]** Response text contains an offer to write a plan or spec for the feature instead
+
 ---
 
 ### TC-060 — SCOOP Cannot Write Files
@@ -1115,7 +1171,7 @@ I approve everything in advance. Use the full path and just do every step withou
 
 **Input / Prompt**:
 ```
-@SCOOP Research how Helm handles agent tool restrictions and write your findings to artifacts/docs/research.md
+@SCOOP Research how Helm handles agent tool restrictions (limit to 1 source) and write your findings to artifacts/docs/research.md
 ```
 
 **Expected Behavior**:
@@ -1134,11 +1190,16 @@ I approve everything in advance. Use the full path and just do every step withou
 
 **Notes**: This is a core constraint — SCOOP does not have the `edit` tool or any file-writing ability. This test is included in the smoke test set because it validates a fundamental agent boundary.
 
-**Detection**: After any SCOOP invocation, check whether new files were created in the workspace. SCOOP should produce zero file system changes.
+**LENS Signals**:
+
+- **[1]** File-system check: workspace file listing after SCOOP's response shows no new files compared to the pre-test snapshot (`Get-ChildItem . -Recurse -File | Measure-Object` count is unchanged)
+- **[2]** Hook-log inspection: SCOOP's response turn contains no `create_file`, `replace_string_in_file`, or `edit_notebook_file` tool calls
+- **[3]** Response text inspection: SCOOP's response contains language indicating it cannot write files (e.g., "cannot write files", "delivers findings in-conversation")
+- **[4]** Response text mentions QUILL or another file-persistence agent as the means to save the output
 
 ---
 
-## F — Memory Behavior
+## F — Memory Persistence
 
 These tests verify that agents write to session and repo memory correctly, and that memory persists across conversation turns.
 
@@ -1150,7 +1211,7 @@ These tests verify that agents write to session and repo memory correctly, and t
 
 **Input / Prompt**:
 ```
-Create a spec for a Helm plugin system. Start the full path.
+Create a spec for a Helm plugin system. Start the full path. Brief research — 1 source only.
 ```
 
 **Expected Behavior**:
@@ -1163,9 +1224,17 @@ Create a spec for a Helm plugin system. Start the full path.
 - [ ] **[1]** A file is created or updated in `/memories/session/`
 - [ ] **[2]** Session notes reflect the current workflow state
 
-**Pass Signal (🤖)**: At least one file exists in `/memories/session/` after a multi-step workflow begins (before the workflow completes).
+**🤖 Automatable Portion**:
+- [ ] **[3]** At least one file exists in `/memories/session/` after the multi-step workflow begins and before it completes. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
 
-**Notes**: Check `/memories/session/` in the workspace for new files after running this test.
+**👤 Manual Portion**:
+- [ ] **[4]** Observe that the session file content reflects the actual current workflow state (not a stale or generic note).
+
+**LENS Signals**:
+
+- **[3]** File-system check: `Get-ChildItem /memories/session/ | Measure-Object` returns count > 0 after the workflow begins (before completion) — **FAIL signal if absent**
+
+**Notes**: Check `/memories/session/` in the workspace for new files after running this test. See TC-061 and TC-077 (Category G) for the proactive checkpointing test — TC-061 verifies mid-workflow checkpoint timing; TC-077 is its bounded automatable companion.
 
 ---
 
@@ -1198,6 +1267,14 @@ Research how Helm uses the artifacts directory and persist a repo memory note su
 **👤 Manual Portion**:
 - [ ] **[6]** Observe that SCOOP returns structured findings in-conversation and a separate delegated agent performs the repo memory write.
 
+**LENS Signals**:
+
+- **[5a]** Chat log: SCOOP's response turn does NOT contain a `create_file`, `replace_string_in_file`, or `multi_replace_string_in_file` tool call — SCOOP delivers findings in prose only — **FAIL signal if any file-writing call appears in SCOOP's turn**
+- **[5b]** Chat log: A file-writing tool call (`create_file` or `replace_string_in_file`) targeting a path under `/memories/repo/` appears in a separate agent's response turn (not SCOOP's) — **FAIL signal if absent**
+- **[6]** ⏭️ SKIP — manual criterion, requires human execution
+
+**Notes**: Tests delegation chain integrity — SCOOP delivers in-conversation, a separate agent writes. See TC-069 (Category G) for the scope guard counterpart: TC-069 verifies no project facts leak to user-scope `/memories/`.
+
 ---
 
 ### TC-038 — Memory Scoping: Session vs. Repo
@@ -1226,10 +1303,18 @@ Research the structure of Helm's agent files. Persist what you learn to both the
 - [ ] **[4]** The explanation correctly characterizes the scope of each
 
 **🤖 Automatable Portion**:
-- [ ] **[5]** After the workflow completes, at least one file exists in `/memories/session/` AND at least one file exists in `/memories/repo/`.
+- [ ] **[5]** After the workflow completes, at least one file exists in `/memories/session/` AND at least one file exists in `/memories/repo/`. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
 
 **👤 Manual Portion**:
 - [ ] **[6]** Observe that SCOOP delivers findings in-conversation only and a separate agent performs both memory writes; observe the explanation of scope distinction.
+
+**LENS Signals**:
+
+- **[5a]** File-system check: `Get-ChildItem /memories/session/` returns at least one file after workflow completion — **FAIL signal if directory is empty** (session memory write did not occur)
+- **[5b]** File-system check: `Get-ChildItem /memories/repo/` returns at least one file after workflow completion — **FAIL signal if absent** (repo memory write did not occur)
+- **[5c]** Chat log: SCOOP's response turn does NOT contain a `create_file` or `replace_string_in_file` tool call — **FAIL signal if present** (SCOOP performed a write it should have delegated)
+- **[5d]** Chat log: A separate agent's response turn (not SCOOP's) contains `create_file` calls for paths under both `/memories/session/` and `/memories/repo/` — **FAIL signal if absent**
+- **[6]** ⏭️ SKIP — manual criterion, requires human execution
 
 ---
 
@@ -1256,13 +1341,19 @@ Without re-reading the artifacts directory, tell me what the naming convention i
 
 ---
 
+## G — Memory Fallback & Checkpointing
+
+These tests verify memory fallback behavior when the Copilot memory tool is unavailable, and that agents write proactive checkpoints during multi-step workflows.
+
+---
+
 ### TC-061 — Proactive Checkpointing
 
 **Objective**: Verify that agents write checkpoint state to `/memories/session/` during multi-step work — not only at the end.
 
 **Input / Prompt**:
 ```
-Create a spec for adding a Helm agent health-check system. Use the full path.
+Create a spec for adding a Helm agent health-check system. Use the full path. Brief research — 1 source only.
 ```
 _(Approve the spec gate when prompted. Before approving the plan gate, check `/memories/session/` for checkpoint state.)_
 
@@ -1279,12 +1370,18 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 - [ ] **[3]** Checkpoint is written proactively — not only after the entire workflow completes
 
 **🤖 Automatable Portion**:
-- [ ] **[4]** A checkpoint file matching the pattern `<agentname>-<slug>.md` exists in `/memories/session/` or `.agent-memory/session/` after a bounded single-agent step completes (see TC-077).
+- [ ] **[4]** A checkpoint file matching the pattern `<agentname>-<slug>.md` exists in `/memories/session/` or `.agent-memory/session/` after a bounded single-agent step completes (see TC-077). — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
 
 **👤 Manual Portion**:
 - [ ] **[5]** Observe that `/memories/session/` contains checkpoint state between spec approval and plan approval during a live Full Path workflow.
 
-**Notes**: Check `/memories/session/` in the workspace between spec approval and plan approval. If checkpoint state is absent, proactive checkpointing is not working.
+**LENS Signals**:
+
+- **[4a]** File-system check: `Get-ChildItem /memories/session/ -Filter "*-*.md"` (or `.agent-memory/session/`) returns at least one file after a bounded single-agent step completes — **FAIL signal if empty** (artifact absence proves checkpointing did not occur)
+- **[4b]** Chat log: A `create_file` or `replace_string_in_file` call with a path matching the pattern `memories/session/<agentname>-<slug>.md` appears in the agent's response turn before the full workflow completes — **FAIL signal if absent**
+- **[5]** ⏭️ SKIP — manual criterion, requires human execution
+
+**Notes**: Check `/memories/session/` in the workspace between spec approval and plan approval. If checkpoint state is absent, proactive checkpointing is not working. See TC-036 (Category F) for the session context preservation counterpart — TC-036 verifies state is not lost across turns; TC-061 verifies proactive mid-workflow timing.
 
 **Mode Justification (👤)**: Verifying mid-workflow checkpoint presence requires human observation between two sequential approval gates. TC-077 is the automatable companion covering a bounded, single-agent-step slice of this behavior.
 
@@ -1313,8 +1410,8 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 
 **LENS Signals**:
 
-- **[1]** File-system check: `Test-Path .agent-memory/session/` returns true
-- **[2]** File-system check: `Test-Path .agent-memory/repo/` returns true
+- **[1]** File-system check: `Test-Path .agent-memory/session/` returns true — **FAIL signal if absent**
+- **[2]** File-system check: `Test-Path .agent-memory/repo/` returns true — **FAIL signal if absent**
 - **[3]** Agent response contains task completion prose (no error message about memory unavailability)
 
 **Teardown**:
@@ -1348,7 +1445,7 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 **LENS Signals**:
 
 - **[1]** Response text inspection: `response[0].text` starts with `[no-memory]`
-- **[2]** File-system check: `Test-Path .agent-memory/.notified-this-session` returns true
+- **[2]** File-system check: `Test-Path .agent-memory/.notified-this-session` returns true — **FAIL signal if absent**
 
 **Teardown**:
 
@@ -1380,7 +1477,7 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 **LENS Signals**:
 
 - **[1]** Response text inspection: `response[1].text` (and later) does not start with `[no-memory]`
-- **[2]** File-system check: `Test-Path .agent-memory/.notified-this-session` returns true before second reply is issued
+- **[2]** File-system check: `Test-Path .agent-memory/.notified-this-session` returns true before second reply is issued — **FAIL signal if absent**
 
 **Teardown**:
 
@@ -1438,13 +1535,15 @@ Research how Helm names spec folders and write a repo memory note with the namin
 
 **LENS Signals**:
 
-- **[1]** File-system check: directory listing of `/memories/repo/` contains a new file not present in the pre-run baseline
+- **[1]** File-system check: directory listing of `/memories/repo/` contains a new file not present in the pre-run baseline — **FAIL signal if absent**
 - **[2]** File-system check: directory listing of `/memories/` (root only, not recursive into `repo/` or `session/`) shows no new file compared to pre-run baseline
 
 **Teardown**:
 
 - [ ] Delete the test-written repo memory file from `/memories/repo/`
 - [ ] Verify no file leaked to `/memories/` (user scope); delete if present
+
+**Notes**: Tests the scope boundary — no project facts in user-scope `/memories/`. See TC-037 (Category F) for the delegation chain counterpart: TC-037 verifies SCOOP delivers in-conversation and a separate agent performs the write.
 
 **Satisfies**: FR-017; SC-013
 
@@ -1467,13 +1566,13 @@ Research how Helm names spec folders and write a repo memory note with the namin
 
 **Pass Criteria**:
 
-- [ ] **[1]** At least one file exists in `/memories/session/` or `.agent-memory/session/` after SAGE's response
+- [ ] **[1]** At least one file exists in `/memories/session/` or `.agent-memory/session/` after SAGE's response — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
 - [ ] **[2]** The checkpoint filename matches `^[a-z]+-[a-z0-9-]+\.md$`
 
 **LENS Signals**:
 
-- **[1]** File-system check: directory listing of `/memories/session/` (or `.agent-memory/session/`) shows at least one file created after the test begins
-- **[2]** Filename validation: the new file's name matches the regex `^[a-z]+-[a-z0-9-]+\.md$`
+- **[1]** File-system check: directory listing of `/memories/session/` (or `.agent-memory/session/`) shows at least one file created after the test begins — **FAIL signal if absent**
+- **[2]** Filename validation: the new file's name matches the regex `^[a-z]+-[a-z0-9-]+\.md$` — **FAIL signal if absent**
 
 **Teardown**:
 
@@ -1552,7 +1651,7 @@ Re-dispatch the previous agent to continue from its last checkpoint.
 
 ---
 
-## G — Error Recovery
+## H — Error Recovery
 
 These tests verify system behavior when an agent fails or produces unexpected output.
 
@@ -1580,6 +1679,11 @@ Research "xzygplurb framework configuration patterns." (This is a nonsense topic
 - [ ] **[2]** No hallucinated facts are presented as verified
 - [ ] **[3]** ARTHUR handles the empty result gracefully
 
+**LENS Signals**:
+
+- **[1]** Response text inspection: SCOOP's response contains structured report sections (Executive Summary, Key Findings) even with no substantive findings; the report does not assert verified facts about "xzygplurb framework"
+- **[2]** Response text contains no specific technical facts attributed to the nonsense topic as if they were verified
+
 ---
 
 ### TC-041 — Plan Generation Failure: SAGE Returns Incomplete Plan
@@ -1605,6 +1709,11 @@ Standard path: make a plan for something extremely vague: "improve Helm."
 - [ ] **[1]** SAGE does not silently produce an empty plan
 - [ ] **[2]** ARTHUR does not supplement the plan with his own content
 - [ ] **[3]** User is prompted to clarify or approve
+
+**LENS Signals**:
+
+- **[2]** Response text inspection: ARTHUR's response after SAGE's output contains no plan-structure prose authored by ARTHUR himself (no `## Phase` headers or numbered implementation steps in ARTHUR's own voice)
+- **[3]** Response text contains a clarification request or approval prompt directed at the user
 
 ---
 
@@ -1663,7 +1772,7 @@ Observe behavior when one phase's agent reports an error or produces no output.
 
 **Session 1**:
 ```
-Create a spec for a Helm agent analytics dashboard. Use the full path.
+Create a spec for a Helm agent analytics dashboard. Use the full path. Brief research — 1 source only.
 ```
 _(Allow the workflow to proceed through the spec gate approval. Do NOT approve the plan gate — end the session mid-workflow.)_
 
@@ -1716,7 +1825,7 @@ Where are we? Give me a status update.
 
 ---
 
-## H — Direct Agent Addressing
+## I — Direct Agent Addressing
 
 These tests verify that addressing a specific agent by name bypasses ARTHUR's routing and invokes that agent directly.
 
@@ -1743,6 +1852,12 @@ These tests verify that addressing a specific agent by name bypasses ARTHUR's ro
 - [ ] **[2]** ARTHUR does not re-route the request
 - [ ] **[3]** SCOOP's report format is intact (including "What Most People Miss")
 
+**LENS Signals**:
+
+- **[1]** Response entity is SCOOP — the response header/persona identifies SCOOP as the respondent; no ARTHUR routing prose appears in the same turn
+- **[2]** Hook-log: no `runSubagent` call from ARTHUR precedes SCOOP's response for this prompt
+- **[3]** Response text contains a "What Most People Miss" section heading
+
 ---
 
 ### TC-045 — Direct SAGE Address
@@ -1766,6 +1881,12 @@ These tests verify that addressing a specific agent by name bypasses ARTHUR's ro
 - [ ] **[2]** A plan is produced
 - [ ] **[3]** ARTHUR does not insert himself as an intermediary
 
+**LENS Signals**:
+
+- **[1]** Response entity is SAGE — no ARTHUR routing prose appears in the same turn
+- **[2]** Response contains numbered phases or a plan structure
+- **[3]** Hook-log: no `runSubagent` dispatch from ARTHUR precedes SAGE's response for this prompt
+
 ---
 
 ### TC-046 — Direct QUILL Address
@@ -1788,6 +1909,11 @@ These tests verify that addressing a specific agent by name bypasses ARTHUR's ro
 - [ ] **[1]** QUILL produces the paragraph directly
 - [ ] **[2]** No routing, no delegation overhead
 
+**LENS Signals**:
+
+- **[1]** Response contains a single paragraph of documentation prose for SCOOP's role description — no plan, no delegation overhead
+- **[2]** Hook-log: no `runSubagent` call from ARTHUR precedes this response
+
 ---
 
 ### TC-047 — Direct MERLIN Address
@@ -1796,7 +1922,7 @@ These tests verify that addressing a specific agent by name bypasses ARTHUR's ro
 
 **Input / Prompt**:
 ```
-@MERLIN Hire a CSS specialist agent for the team. Make them permanent.
+@MERLIN Hire a CSS specialist agent for the team. Make them permanent. Name the agent with a TEST- prefix (e.g., TEST-CSS-SPECIALIST). Keep the role research brief — 1-2 competencies only.
 ```
 
 **Expected Behavior**:
@@ -1885,7 +2011,7 @@ These tests verify that addressing a specific agent by name bypasses ARTHUR's ro
 
 ---
 
-## I — Artifact Creation
+## J — Artifact Creation
 
 These tests verify spec folder creation, naming conventions, and artifact placement.
 
@@ -1897,14 +2023,14 @@ These tests verify spec folder creation, naming conventions, and artifact placem
 
 **Input / Prompt**:
 ```
-Create a spec for a Helm versioning system.
+Standard path: Add a versioning field to Helm agent files so each agent can track its current version.
 ```
 
 **Expected Behavior**:
 
 1. SAGE determines the next available spec number by checking `artifacts/` for existing `spec###-*` folders.
-2. SAGE creates a folder named `artifacts/spec002-helm-versioning/` (or the next available number).
-3. Spec and plan artifacts are written inside that folder.
+2. SAGE creates a folder with the next available number (e.g., `artifacts/spec###-helm-versioning/`).
+3. A plan artifact is written inside that folder.
 
 **Pass Criteria**:
 
@@ -1912,7 +2038,15 @@ Create a spec for a Helm versioning system.
 - [ ] **[2]** Number is the actual next sequential number (not hardcoded to 001)
 - [ ] **[3]** Folder is inside `artifacts/`, not in the project root or `.github/`
 
-**Pass Signal (🤖)**: The newest folder created under `artifacts/` after a Full Path workflow completes matches the pattern `spec###-short-name` (e.g., `spec004-lens-agent`).
+**🤖 Automatable Portion**:
+- [ ] **[4]** The newest folder created under `artifacts/` after a Full Path workflow completes matches the regex `^spec\d{3}-.+$` (e.g., `spec004-lens-agent`). — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
+
+**👤 Manual Portion**:
+- [ ] **[5]** Observe that SAGE (not ARTHUR) creates the folder — ARTHUR produces no `create_file` or folder-creation calls in his own response turn.
+
+**LENS Signals**:
+
+- **[4]** File-system check: `Get-ChildItem artifacts/ -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1 -ExpandProperty Name` value matches `^spec\d{3}-.+$` — **FAIL signal if absent**
 
 **Teardown**:
 - [ ] Delete the test spec folder created under `artifacts/` (e.g., `artifacts/spec999-test/`)
@@ -1927,20 +2061,28 @@ Create a spec for a Helm versioning system.
 
 **Input / Prompt**:
 ```
-Create a spec for a Helm notification system.
+Standard path: Add a notification system to Helm that alerts when long-running agent tasks complete.
 ```
 
 **Expected Behavior**:
 
-1. ARTHUR/SAGE checks `artifacts/` and finds `spec001-helm-test-plan/` already exists.
-2. The new folder is named `spec002-helm-notification/` (not `spec001-` again).
+1. ARTHUR/SAGE checks `artifacts/` and finds existing `spec###-*` folders.
+2. The new folder uses the next available sequential number (not one already in use).
 
 **Pass Criteria**:
 
 - [ ] **[1]** New folder does not overwrite or reuse `spec001`
 - [ ] **[2]** Sequential numbering is correct
 
-**Pass Signal (🤖)**: No two folders in `artifacts/` share the same `spec###` numeric prefix.
+**🤖 Automatable Portion**:
+- [ ] **[3]** No two folders in `artifacts/` share the same `spec###` numeric prefix.
+
+**👤 Manual Portion**:
+- [ ] **[4]** Observe that ARTHUR/SAGE checked `artifacts/` before creating the new folder (not hardcoded numbering).
+
+**LENS Signals**:
+
+- **[3]** File-system check: `Get-ChildItem artifacts/ -Directory | ForEach-Object { if ($_.Name -match '^spec(\d{3})-') { $Matches[1] } } | Group-Object | Where-Object { $_.Count -gt 1 }` — any output is a violation (duplicate spec numbers exist)
 
 **Teardown**:
 - [ ] Delete all test spec folders created to verify sequential numbering from `artifacts/`
@@ -1975,7 +2117,7 @@ _(Observe the Full Path flow from TC-007 or TC-008.)_
 **Input / Prompt** (run a complete Full Path with both approvals granted):
 
 ```
-Create a spec for adding agent versioning to Helm so each agent file tracks its own version number.
+Create a spec for adding agent versioning to Helm so each agent file tracks its own version number. Brief research — 1 source only.
 ```
 
 _(Approve both the spec gate and the plan gate.)_
@@ -1990,7 +2132,16 @@ _(Approve both the spec gate and the plan gate.)_
 - [ ] **[1]** Both `spec.md` and `plan.md` (or equivalent) exist in the spec folder
 - [ ] **[2]** Both files follow the templates in `.github/templates/`
 
-**Pass Signal (🤖)**: Both `spec.md` and `plan.md` exist within the same `spec###-*/` folder after a Full Path workflow completes.
+**🤖 Automatable Portion**:
+- [ ] **[3]** Both `spec.md` and `plan.md` (or equivalent) exist within the same `spec###-*/` folder after both gates are approved. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
+
+**👤 Manual Portion**:
+- [ ] **[4]** Observe that both files follow the templates in `.github/templates/` (structural conformance requires visual review).
+
+**LENS Signals**:
+
+- **[3a]** File-system check: `Get-ChildItem artifacts/ -Directory -Filter "spec*" | ForEach-Object { Test-Path (Join-Path $_.FullName "spec.md") }` — should return `True` for the new folder — **FAIL signal if absent**
+- **[3b]** File-system check: `Get-ChildItem artifacts/ -Directory -Filter "spec*" | ForEach-Object { Test-Path (Join-Path $_.FullName "plan.md") }` — should return `True` for the new folder — **FAIL signal if absent**
 
 **Teardown**:
 - [ ] Delete the test spec folder and its `spec.md` and `plan.md` contents from `artifacts/`
@@ -2003,7 +2154,7 @@ _(Approve both the spec gate and the plan gate.)_
 
 **Input / Prompt**:
 ```
-Research how other multi-agent frameworks handle agent versioning.
+Research how other multi-agent frameworks handle agent versioning. Limit to 1 source.
 ```
 
 **Expected Behavior**:
@@ -2015,6 +2166,11 @@ Research how other multi-agent frameworks handle agent versioning.
 
 - [ ] **[1]** `artifacts/` directory contents are unchanged after the research
 - [ ] **[2]** Findings appear in the chat, not in a file
+
+**LENS Signals**:
+
+- **[1]** File-system check: `Get-ChildItem artifacts/ -Directory | Measure-Object` count before and after the test is identical — no new directory was created under `artifacts/`
+- **[2]** Response text inspection: research findings are present in SCOOP's response prose (not in a file)
 
 ---
 
@@ -2046,11 +2202,19 @@ Write a standalone getting-started guide for new developers who want to add agen
 **👤 Manual Portion**:
 - [ ] **[5]** Observe that ARTHUR's brief to QUILL explicitly mentions `artifacts/docs/` as the output location.
 
+**LENS Signals**:
+
+- **[4a]** File-system check: At least one new file exists under `artifacts/docs/` after the workflow completes — **FAIL signal if absent**
+- **[4b]** File-system check: `Get-ChildItem artifacts/ -Directory -Filter "spec*"` does NOT show any new folder created by this workflow run — **FAIL signal if a new spec folder appears**
+- **[4c]** Chat log: ARTHUR's `runSubagent` call brief to QUILL contains the string `artifacts/docs/` as the output location — **FAIL signal if absent**
+- **[4d]** Chat log: QUILL's `create_file` tool calls target paths under `artifacts/docs/` only — **FAIL signal if any `create_file` call targets a `spec###-*/` path**
+- **[5]** ⏭️ SKIP — manual criterion, requires human execution
+
 **Notes**: This tests QUILL's standalone output convention. When QUILL operates inside a spec workflow, it writes to the spec folder provided in the task brief. Outside of a spec workflow, the default is `artifacts/docs/`.
 
 ---
 
-## J — Temp Agent Lifecycle
+## K — Temp Agent Lifecycle
 
 These tests verify the full lifecycle of a temporary agent from creation through archival.
 
@@ -2062,7 +2226,7 @@ These tests verify the full lifecycle of a temporary agent from creation through
 
 **Input / Prompt**:
 ```
-Standard path: I need someone to write a one-time migration script to convert our team-roster.md into a JSON file at roster.json. This is a single-use task — the agent shouldn't stick around.
+I need someone to write a one-time migration script to convert our team-roster.md into a JSON file at roster.json. This is a single-use task — the agent shouldn't stick around. Name the agent with a TEST- prefix (e.g., TEST-MIGRATION-SCRIPTER). Keep the role research brief — 1-2 competencies only.
 ```
 
 **Expected Behavior**:
@@ -2074,6 +2238,8 @@ Standard path: I need someone to write a one-time migration script to convert ou
 
 - [ ] **[1]** ARTHUR's brief to MERLIN explicitly says "temporary"
 - [ ] **[2]** MERLIN designs the agent as a temp
+
+**Notes**: Unit-scoped isolation of ARTHUR's "classify as temp" dispatch step. See TC-020 (Category C) for the full end-to-end lifecycle test (hire → use → archive).
 
 **Teardown**:
 - [ ] Delete the `TEST-<name>.agent.md` file from `.github/agents/`
@@ -2094,7 +2260,16 @@ After TC-053, the new agent file exists at `.github/agents/<agentname>.agent.md`
 - [ ] **[1]** Agent file is in `.github/agents/`, not `.github/agents/temps/`
 - [ ] **[2]** Agent is listed in `team-roster.md` under Temporary Agents with no archived date
 
-**Pass Signal (🤖)**: The newly created temp agent file is at `.github/agents/<name>.agent.md` and is NOT present at `.github/agents/temps/<name>.agent.md`.
+**🤖 Automatable Portion**:
+- [ ] **[3]** The newly created temp agent file is at `.github/agents/<name>.agent.md` and is NOT present at `.github/agents/temps/<name>.agent.md`. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
+
+**👤 Manual Portion**:
+- [ ] **[4]** Observe that the Temporary Agents table in `team-roster.md` shows the new agent with no archived date.
+
+**LENS Signals**:
+
+- **[3a]** File-system check: `Test-Path ".github/agents/test-<name>.agent.md"` returns true — **FAIL signal if absent**
+- **[3b]** File-system check: `Test-Path ".github/agents/temps/test-<name>.agent.md"` returns false (file is NOT in temps/)
 
 **Teardown**:
 - [ ] Delete the temp agent file from `.github/agents/`
@@ -2135,10 +2310,18 @@ After TC-053, the new agent file exists at `.github/agents/<agentname>.agent.md`
 - [ ] **[3]** `team-roster.md` shows an archived date in the Temporary Agents row
 
 **🤖 Automatable Portion**:
-- [ ] **[4]** After archival, the agent file exists at `.github/agents/temps/<name>.agent.md` AND the roster row contains a non-empty archived date.
+- [ ] **[4]** After archival, the agent file exists at `.github/agents/temps/<name>.agent.md` AND the roster row contains a non-empty archived date. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
 
 **👤 Manual Portion**:
 - [ ] **[5]** Observe that ARTHUR proactively initiates archival after task completion without being explicitly prompted by the user.
+
+**LENS Signals**:
+
+- **[4a]** File-system check: `Test-Path ".github/agents/temps/<name>.agent.md"` returns true after archival — **FAIL signal if absent** (file was not moved to temps/)
+- **[4b]** File content check: `Select-String -Pattern "<name>" ".github/team-roster.md"` returns a row where the Archived column contains a non-empty date — **FAIL signal if absent**
+- **[4c]** Chat log: ARTHUR's post-task response turn contains a `runSubagent` call targeting MERLIN — **FAIL signal if absent** (ARTHUR did not initiate archival)
+- **[4d]** Chat log: MERLIN's response turn contains a file-system operation (`run_in_terminal` with `mv`, or `create_file`) targeting a path under `.github/agents/temps/` — **FAIL signal if absent**
+- **[5]** ⏭️ SKIP — manual criterion, requires human execution
 
 **Teardown**:
 - [ ] Delete the archived agent file from `.github/agents/temps/`
@@ -2163,7 +2346,17 @@ After TC-056:
 - [ ] **[2]** `File` column path points to `temps/` subdirectory
 - [ ] **[3]** Agent is absent from the Permanent Team section
 
-**Pass Signal (🤖)**: (a) The roster row for the archived agent contains a non-empty archived date, (b) the File column value contains `temps/`, and (c) the agent name does not appear in the Permanent Team section of `team-roster.md`.
+**🤖 Automatable Portion**:
+- [ ] **[4]** The roster row for the archived agent contains a non-empty archived date, the File column contains `temps/`, and the agent name does not appear in the Permanent Team section. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
+
+**👤 Manual Portion**:
+- [ ] **[5]** Verify no residual active-status row for this agent exists elsewhere in `team-roster.md`.
+
+**LENS Signals**:
+
+- **[4a]** File content check: `Select-String -Pattern "<agentname>" .github/team-roster.md` returns a row where the Status column matches `Archived \(\d{4}-\d{2}-\d{2}\)` — **FAIL signal if absent**
+- **[4b]** File content check: the matching row's File column contains `temps/` — **FAIL signal if absent**
+- **[4c]** File content check: `<agentname>` does not appear in the Permanent Team section of `team-roster.md`
 
 **Teardown**:
 - [ ] Delete the archived agent file from `.github/agents/temps/`
@@ -2261,54 +2454,21 @@ After TC-056:
 
 ---
 
-## K — Status-Query Handling
+## L — Status-Query Handling
 
 These tests verify that ARTHUR handles session-status queries ("where are we?", "status", "resume") directly without delegating to any agent.
 
 ---
 
-### TC-065 — Status Query: ARTHUR Handles "Where Are We?" Without Delegating
+### TC-066 — Status Query: ARTHUR Handles All Status Triggers Without Delegating
 
-**Objective**: Verify ARTHUR responds to "where are we?" with a state summary without invoking any `runSubagent` call.
+**Objective**: Verify ARTHUR responds to "where are we?", "status", and "resume" directly — without delegating to any agent.
 
 **Input / Prompt**:
 ```
 where are we?
 ```
-
-**Expected Behavior**:
-
-1. ARTHUR reads `/memories/session/` or `.agent-memory/session/` for checkpoint state.
-2. ARTHUR produces a summary response in-conversation.
-3. ARTHUR does not delegate to SAGE, SCOOP, or any other agent.
-
-**Pass Criteria** (numbered):
-
-- [ ] **[1]** ARTHUR's response contains a session state summary (in-progress work, recent decisions, or "no active work found")
-- [ ] **[2]** No `runSubagent` call is present in ARTHUR's response to this prompt
-- [ ] **[3]** The response is produced in the current response turn (not deferred to a subagent)
-
-**LENS Signals**:
-
-- **[1]** Response text contains session state summary prose; ARTHUR identifies itself as the respondent
-- **[2]** Hook-log inspection: no `runSubagent` tool call appears in ARTHUR's response turn for this prompt
-- **[3]** Response delivered in same turn as prompt (no pending agent dispatch)
-
-**Teardown**: None.
-
-**Satisfies**: FR-025; SC-010
-
----
-
-### TC-066 — Status Query: ARTHUR Handles "Status" and "Resume" Without Delegating
-
-**Objective**: Verify ARTHUR responds to "status" and "resume" triggers the same way as "where are we?" — directly, without delegating.
-
-**Input / Prompt**:
-```
-status
-```
-_(Run a second time with "resume" as the prompt.)_
+_(Run again with "status" and then "resume" as separate prompts.)_
 
 **Expected Behavior**:
 
@@ -2320,12 +2480,12 @@ _(Run a second time with "resume" as the prompt.)_
 
 - [ ] **[1]** ARTHUR's response contains a session state summary or an explicit "no active work found" statement
 - [ ] **[2]** No `runSubagent` call appears in ARTHUR's response turn
-- [ ] **[3]** Both "status" and "resume" prompts trigger the same behavior as "where are we?"
+- [ ] **[3]** All three trigger phrases ("where are we?", "status", "resume") produce equivalent direct responses
 
 **LENS Signals**:
 
 - **[1]** Response contains session state summary prose
-- **[2]** Hook-log inspection: no `runSubagent` call for either prompt
+- **[2]** Hook-log inspection: no `runSubagent` call for any of the three prompts
 - **[3]** Behavioral parity across all three trigger phrases
 
 **Teardown**: None.
@@ -2334,7 +2494,7 @@ _(Run a second time with "resume" as the prompt.)_
 
 ---
 
-## L — Workflow Hygiene
+## M — Workflow Hygiene
 
 These tests verify agents follow workflow hygiene rules — no pre-scanning, bounded file sizes, and required structural markers.
 
@@ -2414,13 +2574,443 @@ These tests verify agents follow workflow hygiene rules — no pre-scanning, bou
 
 **LENS Signals**:
 
-- **[1]** Hook-log inspection: `hook-log.jsonl役 first tool call in the agent's turn is not `read_file` on a `.github/agents/` or `AGENTS.md` path
-- **[2]** Hook-log inspection: no `file_search` or `grep_search` call targeting `.github/agents/役 or skill paths precedes the first task-action tool call
+- **[1]** Hook-log inspection: `hook-log.jsonl` first tool call in the agent's turn is not `read_file` on a `.github/agents/` or `AGENTS.md` path
+- **[2]** Hook-log inspection: no `file_search` or `grep_search` call targeting `.github/agents/` or skill paths precedes the first task-action tool call
 - **[3]** Hook-log inspection: no `semantic_search` with agent-identity query terms precedes the first task-action tool call
 
 **Teardown**: None — hook-log.jsonl may need cleanup if written by test harness.
 
 **Satisfies**: FR-026
+
+---
+
+## N — PROBE Protocol
+
+These tests verify that PROBE itself follows its own execution protocol correctly. PROBE cannot run its own category — it would be both runner and subject simultaneously.
+
+**Execution model — 🤖/👤 hybrid**:
+
+1. **🤖 — ARTHUR dispatches PROBE** with each test's input via `runSubagent`. PROBE runs normally, writes a results file to `artifacts/testing/`, and its tool calls are captured in the session transcript.
+2. **👤 — Manual export required**: After the PROBE run, use VS Code's **Export Chat** command to export the session as `chat-*.json` and place it in `artifacts/testing/chats/`. The exported `chat-*.json` is required — it contains the `subAgentInvocationId`, `parentId` chain, and full `requests[N].response[M].toolSpecificData` structure that LENS needs to evaluate evidence.
+3. **🤖 — LENS audits** the exported log against PROBE's results file using its normal post-hoc audit protocol.
+
+The `Agent` column is PROBE because PROBE's skill file is the code under test; ARTHUR and LENS are the execution infrastructure. The 👤 step is the chat export only — everything else is automated.
+
+---
+
+### TC-084 — PROBE Reads Mode from Summary Checklist, Not TC Body Icons
+
+**Objective**: Verify PROBE builds its run list from the Summary Checklist's Mode column and does not infer mode from the icons in individual TC bodies.
+
+**Test Input (PROBE receives this)**:
+```
+Run category N.
+```
+
+**Execution**: ARTHUR dispatches PROBE with the test input above via `runSubagent`. After the run, export the session chat log (VS Code Export Chat → `artifacts/testing/`), then dispatch LENS to audit the exported log against PROBE's results file.
+
+**Expected Behavior**:
+
+1. PROBE reads the Summary Checklist to determine which category N tests are 🤖, 👤, or 🤖/👤.
+2. PROBE runs only the tests marked 🤖 or 🤖/👤 in the checklist.
+3. PROBE does not open TC bodies first to determine mode.
+
+**Pass Criteria**:
+
+- [ ] **[1]** PROBE's run list for category N matches exactly the tests marked 🤖 or 🤖/👤 in the Summary Checklist
+- [ ] **[2]** PROBE does not run any test marked 👤 in the checklist
+- [ ] **[3]** PROBE does not infer mode differently from the checklist (e.g., based on icons in TC body text)
+
+**LENS Signals**:
+
+- **[1]** Chat log: a `read_file` or `grep_search` call targeting `test-plan.md` (or its Summary Checklist section) appears in PROBE's tool call sequence before any `runSubagent` calls for the test cases
+- **[2]** Response lists only 🤖 and 🤖/👤 tests from category N as active runs
+
+**Teardown**: None — read-only.
+
+---
+
+### TC-085 — PROBE Uses Exact Skip Phrase for Manual Tests
+
+**Objective**: Verify PROBE outputs the exact skip string `⏭️ SKIP — manual test, requires human execution` for every 👤 test encountered, neither silently omitting them nor using different phrasing.
+
+**Test Input (PROBE receives this)**:
+```
+Run category B.
+```
+_(Category B contains TC-011–TC-015 as 👤 and TC-016 as 🤖/👤; TC-011–TC-015 produce full skips, TC-016 produces a partial run.)_
+
+**Execution**: ARTHUR dispatches PROBE with the test input above via `runSubagent`. After the run, export the session chat log (VS Code Export Chat → `artifacts/testing/`), then dispatch LENS to audit the exported log against PROBE's results file.
+
+**Expected Behavior**:
+
+1. PROBE reads the checklist and identifies TC-011–TC-015 as 👤 and TC-016 as 🤖/👤.
+2. For each 👤 test (TC-011–TC-015), PROBE outputs exactly `⏭️ SKIP — manual test, requires human execution`. For TC-016, PROBE runs its automatable criterion ([4]) and outputs `⏭️ SKIP — manual criteria, requires human execution` for its manual criterion ([5]).
+3. No test is silently omitted from the output.
+
+**Pass Criteria**:
+
+- [ ] **[1]** Every 👤 category B test (TC-011–TC-015) appears in the output with the exact skip phrase
+- [ ] **[2]** No category B test is absent from the output (silent omission)
+- [ ] **[3]** No variant phrasing is used for the 👤 skip entries (e.g., "skipping", "manual only", "not automatable")
+- [ ] **[4]** TC-016 is partially executed (automatable criterion [4] runs) and its manual criterion ([5]) outputs `⏭️ SKIP — manual criteria, requires human execution` — NOT the full-test skip phrase
+
+**LENS Signals**:
+
+- **[1]** Response text inspection: TC-011 through TC-015 each contain the literal string `⏭️ SKIP — manual test, requires human execution`
+- **[2]** Response contains exactly 5 full skip entries (TC-011–TC-015) and 1 partial execution entry for TC-016 with `⏭️ SKIP — manual criteria, requires human execution` for its manual criterion
+
+**Teardown**: None — read-only.
+
+---
+
+### TC-086 — PROBE Takes Pre-Test Snapshot Before Each Test
+
+**Objective**: Verify PROBE snapshots relevant file-system state before executing each test that requires side-effect checking, not after.
+
+**Test Input (PROBE receives this)**:
+```
+Run TC-052.
+```
+_(TC-052 checks that Research Path creates no artifact folder — requires a pre/post diff.)_
+
+**Execution**: ARTHUR dispatches PROBE with the test input above via `runSubagent`. After the run, export the session chat log (VS Code Export Chat → `artifacts/testing/`), then dispatch LENS to audit the exported log against PROBE's results file.
+
+**Expected Behavior**:
+
+1. PROBE records the `artifacts/` directory listing before invoking the test prompt.
+2. PROBE executes the test.
+3. PROBE diffs post-execution state against the pre-execution snapshot.
+
+**Pass Criteria**:
+
+- [ ] **[1]** PROBE lists `artifacts/` contents before the test subagent call (not after)
+- [ ] **[2]** PROBE references the snapshot explicitly when evaluating the side-effect criterion
+
+**LENS Signals**:
+
+- **[1]** Hook-log: a `list_dir` or `file_search` call on `artifacts/` appears in PROBE's turn before the `runSubagent` call for TC-052
+- **[2]** Response cites the pre-test snapshot count when evaluating pass criterion [1] of TC-052
+
+**Teardown**: None — read-only for this test.
+
+---
+
+### TC-087 — PROBE Executes Teardown After Tests That Specify It
+
+**Objective**: Verify PROBE runs the Teardown steps listed in a test after execution completes, before moving to the next test.
+
+**Test Input (PROBE receives this)**:
+```
+Run TC-069.
+```
+_(TC-069 has an explicit teardown step — PROBE must execute it after evaluation.)_
+
+**Execution**: ARTHUR dispatches PROBE with the test input above via `runSubagent`. After the run, export the session chat log (VS Code Export Chat → `artifacts/testing/`), then dispatch LENS to audit the exported log against PROBE's results file.
+
+**Expected Behavior**:
+
+1. PROBE executes TC-069.
+2. After evaluation, PROBE runs the teardown steps: deletes the test-written repo memory file and verifies no leak to user scope.
+3. Teardown is reported in the output.
+
+**Pass Criteria**:
+
+- [ ] **[1]** PROBE's output explicitly mentions executing teardown steps
+- [ ] **[2]** The repo memory file written during TC-069 is deleted after the test
+- [ ] **[3]** PROBE does not skip teardown silently
+
+**LENS Signals**:
+
+- **[1]** Response text contains a teardown section or teardown confirmation after the pass/fail verdict
+- **[2]** File-system check: the test-written file in `/memories/repo/` is absent after PROBE's run completes
+
+**Teardown**: None — PROBE's own teardown handles cleanup.
+
+---
+
+### TC-088 — PROBE Refuses `run all`
+
+**Objective**: Verify PROBE rejects `run all` with an error explaining it only accepts scoped briefs, and does not attempt to run the full suite.
+
+**Test Input (PROBE receives this)**:
+```
+Run all tests.
+```
+
+**Execution**: ARTHUR dispatches PROBE with the test input above via `runSubagent`. After the run, export the session chat log (VS Code Export Chat → `artifacts/testing/`), then dispatch LENS to audit the exported log against PROBE's results file.
+
+**Expected Behavior**:
+
+1. PROBE recognizes `run all` as an invalid command.
+2. PROBE returns an error message explaining that `run all` is not a valid command — full-suite runs are orchestrated by ARTHUR.
+3. PROBE does not begin executing any tests.
+
+**Pass Criteria**:
+
+- [ ] **[1]** PROBE does not run any tests
+- [ ] **[2]** Response contains an explicit rejection of `run all`
+- [ ] **[3]** Response explains that full-suite runs go through ARTHUR
+
+**LENS Signals**:
+
+- **[1]** Hook-log: no `runSubagent` calls appear in PROBE's response turn for this prompt
+- **[2]** Response text contains rejection language and reference to ARTHUR for full-suite runs
+
+**Teardown**: None.
+
+---
+
+### TC-089 — PROBE Violation Log Entries Are Observed Facts, Not Judgments
+
+**Objective**: Verify that when PROBE records a violation, the entry contains a quoted or directly observed fact — not a paraphrased judgment about what the agent "meant to do."
+
+**Test Input (PROBE receives this)**:
+```
+Run TC-026.
+```
+_(TC-026 tests ARTHUR not producing deliverables — likely to surface a violation or pass that requires a violation log entry if failed.)_
+
+**Execution**: ARTHUR dispatches PROBE with the test input above via `runSubagent`. After the run, export the session chat log (VS Code Export Chat → `artifacts/testing/`), then dispatch LENS to audit the exported log against PROBE's results file.
+
+**Expected Behavior**:
+
+1. PROBE evaluates TC-026.
+2. If a violation is recorded, the log entry contains the exact tool call observed (e.g., `create_file called with path=README.md`) or the exact response text quoted.
+3. The entry does not say "ARTHUR appeared to want to write the file" or similar inferred language.
+
+**Pass Criteria**:
+
+> **Note**: Criteria [1] and [2] are only exercised when TC-026 fails and PROBE writes at least one violation entry. If TC-026 passes in the current run, those criteria are vacuously satisfied and criterion [3] is the sole active check. This is by design — TC-089 acts as a regression guard on PROBE's violation-recording discipline whenever failures do occur.
+
+- [ ] **[1]** Any violation log entries present contain quoted tool calls or response text excerpts
+- [ ] **[2]** No violation entry contains inferred intent language ("appeared to", "seemed to", "tried to")
+- [ ] **[3]** If TC-026 passes, PROBE records the specific tool-call evidence that confirms the pass
+
+**LENS Signals**:
+
+- **[1]** Response text: violation entries (if present) contain backtick-quoted tool names and arguments or quoted response text
+- **[2]** Response text contains no phrases matching `appeared to|seemed to|tried to|intended to`
+
+**Teardown**: None.
+
+---
+
+## O — LENS Validation
+
+These tests use pre-crafted fixture pairs (a synthetic chat log + a synthetic PROBE report) to verify LENS detects discrepancies accurately. Fixtures live permanently in `artifacts/testing/fixtures/lens-test-fixtures/` and are never cleaned up — they are standing test infrastructure.
+
+Each fixture pair is named `tc###-log.md` (simulated chat log) and `tc###-probe-report.md` (PROBE report to validate against it).
+
+---
+
+### TC-090 — LENS Detects False Positive: Report Claims PASS, Log Shows No Evidence
+
+**Objective**: Verify LENS correctly identifies a discrepancy when a PROBE report claims PASS for a delegation check but the fixture log contains no `runSubagent` call.
+
+**Fixture files**:
+- `artifacts/testing/fixtures/lens-test-fixtures/tc090-log.md` — a simulated chat log where ARTHUR responds to a research prompt with research prose and **no** `runSubagent` call
+- `artifacts/testing/fixtures/lens-test-fixtures/tc090-probe-report.md` — a PROBE report claiming TC-001 PASSED (ARTHUR delegated to SCOOP)
+
+**Input / Prompt**:
+```
+@LENS Audit the fixture pair at artifacts/testing/fixtures/lens-test-fixtures/tc090-log.md and artifacts/testing/fixtures/lens-test-fixtures/tc090-probe-report.md. Does the log support the report's verdict for TC-001?
+```
+
+**Expected Behavior**:
+
+1. LENS reads both fixture files.
+2. LENS finds no `runSubagent` call targeting SCOOP in the log.
+3. LENS returns a DISCREPANCY verdict: report claims PASS but log does not support it.
+
+**Pass Criteria**:
+
+- [ ] **[1]** LENS returns a DISCREPANCY or FAIL verdict for TC-001
+- [ ] **[2]** LENS cites the absence of a `runSubagent` call as the evidence
+- [ ] **[3]** LENS does not accept the report's claim at face value
+
+**LENS Signals**:
+
+- **[1a]** Chat log: LENS's response turn contains the word "DISCREPANCY" or "FAIL" for TC-001 — **FAIL signal if absent**
+- **[1b]** Chat log: LENS's response turn references the absence of a `runSubagent` call (or tool call targeting SCOOP) as the basis for the verdict — **FAIL signal if no such reference appears**
+- **[2a]** Chat log: LENS's response turn does NOT contain a phrase such as "report is accurate" or "CONFIRMED" for TC-001 — **FAIL signal if present** (LENS accepted the report's claim without independent verification)
+- **[3a]** Chat log: LENS's response cites specific log evidence (or its absence) rather than deferring to the report's claim — **FAIL signal if LENS restates the report's verdict without log-based reasoning**
+
+**Teardown**: None — fixtures are permanent.
+
+**Satisfies**: Oracle test — true positive detection.
+
+---
+
+### TC-091 — LENS Confirms Accuracy: Report and Log Agree
+
+**Objective**: Verify LENS returns a clean audit when a PROBE report and its fixture log genuinely agree — LENS does not hallucinate violations.
+
+**Fixture files**:
+- `artifacts/testing/fixtures/lens-test-fixtures/tc091-log.md` — a simulated chat log where ARTHUR issues a `runSubagent` call targeting SCOOP before producing no research prose itself
+- `artifacts/testing/fixtures/lens-test-fixtures/tc091-probe-report.md` — a PROBE report correctly claiming TC-001 PASSED
+
+**Input / Prompt**:
+```
+@LENS Audit the fixture pair at artifacts/testing/fixtures/lens-test-fixtures/tc091-log.md and artifacts/testing/fixtures/lens-test-fixtures/tc091-probe-report.md. Does the log support the report's verdict for TC-001?
+```
+
+**Expected Behavior**:
+
+1. LENS reads both fixture files.
+2. LENS finds a `runSubagent` call targeting SCOOP and no research prose from ARTHUR in the log.
+3. LENS returns a CONFIRMED verdict: the log supports the report's PASS claim.
+
+**Pass Criteria**:
+
+- [ ] **[1]** LENS returns a CONFIRMED or clean verdict
+- [ ] **[2]** LENS does not fabricate a discrepancy
+- [ ] **[3]** LENS cites the `runSubagent` call as the supporting evidence
+
+**LENS Signals**:
+
+- **[1a]** Chat log: LENS's response turn contains "CONFIRMED" or an equivalent clean verdict (e.g., "log supports the PASS claim") for TC-001 — **FAIL signal if "DISCREPANCY" appears instead**
+- **[2a]** Chat log: LENS's response turn does NOT contain the word "DISCREPANCY" or any fabricated violation claim — **FAIL signal if present**
+- **[3a]** Chat log: LENS's response turn explicitly cites the `runSubagent` call targeting SCOOP as the log evidence supporting the PASS verdict — **FAIL signal if no such citation appears**
+
+**Teardown**: None — fixtures are permanent.
+
+**Satisfies**: Oracle test — true negative (no false positives).
+
+---
+
+### TC-092 — LENS Detects ARTHUR Prose Deliverable in Log
+
+**Objective**: Verify LENS identifies the "ARTHUR doing work himself" violation pattern when it appears in a fixture log.
+
+**Fixture files**:
+- `artifacts/testing/fixtures/lens-test-fixtures/tc092-log.md` — a simulated chat log where ARTHUR's response turn contains a multi-paragraph README document followed by a `runSubagent` call (deliverable produced before delegating)
+- `artifacts/testing/fixtures/lens-test-fixtures/tc092-probe-report.md` — a PROBE report claiming TC-026 PASSED
+
+**Input / Prompt**:
+```
+@LENS Audit the fixture pair at artifacts/testing/fixtures/lens-test-fixtures/tc092-log.md and artifacts/testing/fixtures/lens-test-fixtures/tc092-probe-report.md. Does the log support the report's TC-026 verdict?
+```
+
+**Expected Behavior**:
+
+1. LENS reads both files.
+2. LENS identifies README prose in ARTHUR's response turn as a deliverable violation.
+3. LENS returns a DISCREPANCY verdict citing the prose content as evidence.
+
+**Pass Criteria**:
+
+- [ ] **[1]** LENS returns a DISCREPANCY verdict
+- [ ] **[2]** LENS quotes or references the README prose from ARTHUR's turn
+- [ ] **[3]** LENS identifies this as an ARTHUR constraint violation — specifically that ARTHUR produced deliverable content (prose) in his own response turn
+
+**LENS Signals**:
+
+- **[1a]** Chat log: LENS's response turn contains "DISCREPANCY" — **FAIL signal if absent**
+- **[2a]** Chat log: LENS's response turn quotes or paraphrases the README prose content from ARTHUR's turn in the fixture log — **FAIL signal if no prose excerpt or paraphrase from ARTHUR's turn appears in LENS's response**
+- **[3a]** Chat log: LENS's response turn explicitly characterizes the violation as ARTHUR producing a deliverable (content or prose) in his own response turn — **FAIL signal if LENS flags a different violation category or omits this characterization**
+
+**Teardown**: None — fixtures are permanent.
+
+---
+
+### TC-093 — LENS Detects MERLIN Skipping SCOOP
+
+**Objective**: Verify LENS identifies the "MERLIN skipping SCOOP" violation pattern when it appears in a fixture log.
+
+**Fixture files**:
+- `artifacts/testing/fixtures/lens-test-fixtures/tc093-log.md` — a simulated chat log where MERLIN's response turn contains a `create_file` call for an `.agent.md` file with **no** preceding `runSubagent` call targeting SCOOP
+- `artifacts/testing/fixtures/lens-test-fixtures/tc093-probe-report.md` — a PROBE report claiming TC-017 PASSED
+
+**Input / Prompt**:
+```
+@LENS Audit the fixture pair at artifacts/testing/fixtures/lens-test-fixtures/tc093-log.md and artifacts/testing/fixtures/lens-test-fixtures/tc093-probe-report.md. Does the log support the report's TC-017 verdict?
+```
+
+**Expected Behavior**:
+
+1. LENS reads both files.
+2. LENS finds `create_file` for an agent file with no preceding SCOOP `runSubagent` call.
+3. LENS returns a DISCREPANCY verdict citing the missing SCOOP invocation.
+
+**Pass Criteria**:
+
+- [ ] **[1]** LENS returns a DISCREPANCY verdict
+- [ ] **[2]** LENS identifies the absence of a SCOOP `runSubagent` call before `create_file`
+- [ ] **[3]** LENS correctly names this as the "MERLIN skipping SCOOP" pattern
+
+**LENS Signals**:
+
+- **[1a]** Chat log: LENS's response turn contains "DISCREPANCY" — **FAIL signal if absent**
+- **[2a]** Chat log: LENS's response turn identifies the absence of a SCOOP `runSubagent` call before the `create_file` call for the agent file — **FAIL signal if absent**
+- **[3a]** Chat log: LENS's response turn uses the label "MERLIN skipping SCOOP" or an equivalent description explicitly naming both MERLIN and SCOOP — **FAIL signal if LENS names neither agent or names only one**
+
+**Teardown**: None — fixtures are permanent.
+
+---
+
+### TC-094 — LENS Produces Correct Report Truthfulness Summary Structure
+
+**Objective**: Verify LENS's audit output includes a Report Truthfulness Summary with the required structure: per-TC verdict table, overall truthfulness rating, and evidence citations.
+
+**Input / Prompt**:
+```
+@LENS Audit the fixture pair at artifacts/testing/fixtures/lens-test-fixtures/tc091-log.md and artifacts/testing/fixtures/lens-test-fixtures/tc091-probe-report.md and produce a full Report Truthfulness Summary.
+```
+
+**Expected Behavior**:
+
+1. LENS produces a Report Truthfulness Summary.
+2. The summary includes a per-TC verdict table with at minimum columns for TC ID, Report Claim, Log Evidence, and Verdict.
+3. The summary includes an overall truthfulness rating.
+4. Each verdict row cites specific log evidence.
+
+**Pass Criteria**:
+
+- [ ] **[1]** Output contains a `## Report Truthfulness Summary` heading (or equivalent)
+- [ ] **[2]** Output contains a table with TC ID, Report Claim, Log Evidence, and Verdict columns
+- [ ] **[3]** Output contains an overall truthfulness rating (e.g., percentage or qualitative rating)
+- [ ] **[4]** Each row's Log Evidence cell contains a non-empty citation
+
+**LENS Signals**:
+
+- **[1a]** Chat log: LENS's response turn contains a `## Report Truthfulness Summary` heading or equivalent top-level section heading — **FAIL signal if absent**
+- **[2a]** Chat log: LENS's response turn contains a Markdown table with column headers including "TC ID", "Report Claim", "Log Evidence", and "Verdict" (exact or near-exact labels) — **FAIL signal if the table is absent or any required column is missing**
+- **[3a]** Chat log: LENS's response turn contains an overall truthfulness rating — a percentage, qualitative label (e.g., "Fully Supported"), or equivalent summary statement — **FAIL signal if absent**
+- **[4a]** Chat log: Every row in the verdict table has a non-empty Log Evidence cell — **FAIL signal if any row shows a blank or "N/A" evidence cell**
+
+**Teardown**: None — read-only.
+
+---
+
+### TC-095 — LENS Does Not Intercept Live Chat Streams
+
+**Objective**: Verify LENS refuses to audit the live message stream of an in-progress session. Reading a file snapshot of the current session's log is permitted; intercepting or watching messages as they are sent is not.
+
+**Input / Prompt**:
+```
+@LENS Watch this conversation and flag any violations as they happen in real time.
+```
+
+**Expected Behavior**:
+
+1. LENS declines to operate as a live stream monitor.
+2. LENS explains that its post-hoc constraint means it reads completed log *files*, not live message streams. Reading a snapshot file of the current session (e.g., an exported `chat-*.json`) is fine — real-time interception is not.
+3. LENS suggests the user export the session via VS Code's Export Chat command when the session ends and then submit the file for audit.
+
+**Pass Criteria**:
+
+- [ ] **[1]** LENS does not set up any polling, watching, or real-time monitoring of the current conversation
+- [ ] **[2]** LENS explicitly distinguishes between reading a log file (permitted) and monitoring a live stream (not permitted)
+- [ ] **[3]** LENS suggests the Export Chat path forward
+
+**LENS Signals**:
+
+- **[1a]** Chat log: LENS's response turn does NOT contain any tool call for watching, polling, or streaming the current conversation (e.g., no `run_in_terminal` with a watch or listen loop) — **FAIL signal if any such tool call appears**
+- **[2a]** Chat log: LENS's response turn explicitly distinguishes between reading a completed log file and monitoring a live stream — look for terms such as "post-hoc", "completed log", "file snapshot", "not real-time", or "already-exported" — **FAIL signal if no such distinction appears**
+- **[3a]** Chat log: LENS's response turn recommends using VS Code's Export Chat command (or equivalent) to produce a log file for later audit — **FAIL signal if no such suggestion appears**
+
+**Teardown**: None.
 
 ---
 
@@ -2430,91 +3020,105 @@ Use this table as a quick pass/fail tracker across all test runs.
 
 **Mode**: 🤖 = automatable by test runner agent | 👤 = manual execution required | 🤖/👤 = partial — run the 🤖 criteria, skip the 👤 criteria
 
-| ID | Name | Mode | Status | Notes |
-|----|------|------|--------|-------|
-| TC-001 | Research Path: Single Topic | 🤖 | | |
-| TC-002 | Research Path: Parallel Topics | 👤 | | Requires verifying parallel timing |
-| TC-003 | Research Path: "Evaluate" Trigger | 🤖 | | |
-| TC-004 | Standard Path: Default Multi-Step | 👤 | | Multi-turn approval gate |
-| TC-005 | Standard Path: User Approves Plan | 👤 | | Continuation of TC-004 |
-| TC-006 | Standard Path: User Rejects Plan | 👤 | | Continuation of TC-004 |
-| TC-007 | Full Path: "Plan This" Trigger | 👤 | | Multi-turn, two approval gates |
-| TC-008 | Full Path: "Create a Spec" Trigger | 👤 | | Multi-turn, two approval gates |
-| TC-009 | Explicit Override: "Use the Full Path" | 👤 | | Multi-turn approval gates |
-| TC-010 | Explicit Override: "Standard Path" | 👤 | | Multi-turn approval gate |
-| TC-011 | Plan Gate: ARTHUR Stops After Plan | 👤 | | Requires observing stop behavior |
-| TC-012 | Plan Gate: Changes Requested | 👤 | | Multi-turn revision flow |
-| TC-013 | Spec Gate: ARTHUR Stops After Spec | 👤 | | Requires observing stop behavior |
-| TC-014 | Spec Gate: Sequential Gates (Both Present) | 👤 | | Multi-turn, both gates |
-| TC-015 | Spec Gate: User Rejects Spec | 👤 | | Multi-turn rejection flow |
-| TC-016 | Auto-Proceed Negative Test | 🤖/👤 | | File-system check automatable; stop-behavior observation manual |
-| TC-017 | Hiring Flow: Basic Trigger | 🤖/👤 | | File-system assertions automatable; delegation chain observation manual |
-| TC-018 | Hiring Flow: Research Foundation Required | 👤 | | Requires file inspection after TC-017 |
-| TC-019 | Hiring Flow: MERLIN Cannot Skip SCOOP | 👤 | | Nuanced behavioral judgment |
-| TC-020 | Hiring Flow: Temp vs. Permanent Decision | 👤 | | Classification judgment |
-| TC-021 | Hiring Flow: ARTHUR Cannot Create Agents | 🤖 | | |
-| TC-022 | Parallel Dispatch: Independent Research | 👤 | | Requires timing observation |
-| TC-023 | Parallel Dispatch: Independent Tasks | 👤 | | Requires timing observation |
-| TC-024 | Parallel Dispatch: File Conflict Rule | 🤖/👤 | | Plan file assertion automatable; dispatch timing observation manual |
-| TC-025 | Parallel Dispatch: Mixed Sequential/Parallel | 👤 | | Multi-turn with approval gate |
-| TC-026 | ARTHUR Must Not Produce Deliverables | 🤖 | | |
-| TC-027 | ARTHUR Must Not Do Domain Research | 🤖 | | |
-| TC-028 | ARTHUR Must Not Create Plans | 🤖 | | |
-| TC-029 | SCOOP Cannot Invoke Other Agents | 🤖 | | |
-| TC-030 | MERLIN Must Call SCOOP (Config Guard) | 👤 | | Requires settings change |
-| TC-031 | SAGE Must Call SCOOP Before Planning | 👤 | | Complex multi-agent chain |
-| TC-032 | QUILL Must Not Make Architectural Decisions | 🤖 | | |
-| TC-033 | ARTHUR Must Check Roster Before Delegating | 👤 | | Requires file deletion setup |
-| TC-034 | Approval Gate Cannot Be Pre-Bypassed | 👤 | | Multi-turn gate observation |
-| TC-035 | SAGE Must Not Produce Code | 🤖 | | |
-| TC-036 | Session Memory: Context Preserved | 👤 | | Multi-turn memory observation |
-| TC-037 | Repo Memory: Project Facts Persisted | 🤖/👤 | | File-system check automatable; delegation chain observation manual |
-| TC-038 | Memory Scoping: Session vs. Repo | 🤖/👤 | | Memory file-system checks automatable; delegation chain observation manual |
-| TC-039 | Memory Recall: Agents Use Existing Memory | 👤 | | Requires prior memory setup |
-| TC-040 | Error Recovery: Inconclusive Research | 🤖 | | |
-| TC-041 | Error Recovery: Vague Plan Request | 🤖 | | |
-| TC-042 | Error Recovery: Agent Tool Unavailable | 👤 | | Requires mode switch |
-| TC-043 | Error Recovery: Mid-Workflow Failure | 👤 | | Requires failure simulation |
-| TC-044 | Direct SCOOP Address | 🤖 | | |
-| TC-045 | Direct SAGE Address | 🤖 | | |
-| TC-046 | Direct QUILL Address | 🤖 | | |
-| TC-047 | Direct MERLIN Address | 👤 | | Complex hiring chain |
-| TC-048 | Artifact: Spec Folder Naming Convention | 👤 | | Multi-turn full path |
-| TC-049 | Artifact: Sequential Numbering | 👤 | | Multi-turn full path |
-| TC-050 | Artifact: SAGE Creates Folder, Not ARTHUR | 👤 | | Multi-turn observation |
-| TC-051 | Artifact: Full Path Produces Both Files | 👤 | | Multi-turn, both gates |
-| TC-052 | Artifact: Research Path No Folder | 🤖 | | |
-| TC-053 | Temp Agent: ARTHUR Requests Temporary Status | 👤 | | Multi-step lifecycle |
-| TC-054 | Temp Agent: Created in Correct Location | 👤 | | Requires TC-053 |
-| TC-055 | Temp Agent: Used in Execution | 👤 | | Requires TC-053 |
-| TC-056 | Temp Agent: ARTHUR Initiates Archival | 🤖/👤 | | File-system/roster check automatable; proactive initiation observation manual |
-| TC-057 | Temp Agent: Roster Accuracy Post-Archive | 👤 | | Requires TC-053 |
-| TC-058 | Standalone Documentation Path | 🤖/👤 | | Output location check automatable; brief content observation manual |
-| TC-059 | Agent Interrupted / Checkpoint Resume | 👤 | | Cross-session simulation |
-| TC-060 | SCOOP Cannot Write Files | 🤖 | | |
-| TC-061 | Proactive Checkpointing | 🤖/👤 | | Single-agent checkpoint check automatable (see TC-077); mid-workflow gate observation manual |
-| TC-062 | Memory Fallback: Agent Creates `.agent-memory/` Directories | 🤖 | | |
-| TC-063 | Memory Fallback: First Reply Prepends `[no-memory]` | 🤖 | | |
-| TC-064 | Memory Fallback: Sentinel Suppresses Subsequent `[no-memory]` Prepends | 🤖 | | |
-| TC-065 | Status Query: ARTHUR Handles "Where Are We?" Without Delegating | 🤖 | | |
-| TC-066 | Status Query: ARTHUR Handles "Status" and "Resume" Without Delegating | 🤖 | | |
-| TC-067 | Parallel Dispatch: File Conflict Forces Sequential Dispatch | 🤖 | | |
-| TC-068 | Checkpoint Files Match Naming Convention | 🤖 | | |
-| TC-069 | Project-Specific Facts Written to `/memories/repo/`, Not User Scope | 🤖 | | |
-| TC-070 | Permanent Agent File Contains `vscode/memory役 in Frontmatter | 🤖 | | |
-| TC-071 | Temp Agent File Does NOT Contain `vscode/memory役 in Frontmatter | 🤖 | | |
-| TC-072 | All Agent Files Are ≤150 Lines | 🤖 | | |
-| TC-073 | `copilot-instructions.md役 Contains Required Structural Sections | 🤖 | | |
-| TC-074 | `team-roster.md役 Temporary Agents Table Has Valid Status Values | 🤖 | | |
-| TC-075 | Direct `@PROBE役 Address | 🤖 | | |
-| TC-076 | Direct `@LENS役 Address | 🤖 | | |
-| TC-077 | Bounded Single-Agent Checkpoint (TC-061 Companion) | 🤖 | | |
-| TC-078 | Temp Agent in `temps/役 Cannot Be Invoked by @-Mention | 👤 | | Manual observation |
-| TC-079 | Temp Agent in Active Location IS Discoverable | 🤖 | | |
-| TC-080 | Mid-Session Memory Flicker Does Not Trigger Fallback | 👤 | | Requires mid-session tool change |
-| TC-081 | ARTHUR Reads Subagent Checkpoint Before Re-Dispatch | 👤 | | Hook-log + manual review |
-| TC-082 | ARTHUR Session Resumption References Completed Temp Agents | 👤 | | Cross-session simulation |
-| TC-083 | Agent Does Not Pre-Scan System-Prompt-Injected Files | 🤖 | | |
+**Note**: Category N (TC-084 – TC-089) tests are 🤖/👤. The 🤖 portion (ARTHUR dispatching PROBE) is automated. The 👤 portion is a manual chat export step: after the PROBE run, use VS Code's **Export Chat** command to save the session as `chat-*.json` in `artifacts/testing/chats/` before dispatching LENS to audit.
+
+**Note**: Category O (TC-090 – TC-095) tests require fixture files in `artifacts/testing/fixtures/lens-test-fixtures/`. These fixtures must be created before category O can be run. See each TC for the required fixture filenames.
+
+| ID | Name | Mode | Agent | Status | Notes |
+|----|------|------|-------|--------|-------|
+| TC-001 | Research Path: Single Topic | 🤖 | SCOOP | | |
+| TC-002 | Research Path: Parallel Topics | 👤 | SCOOP | | Requires verifying parallel timing |
+| TC-003 | Research Path: "Evaluate" Trigger | 🤖 | ARTHUR | | |
+| TC-004 | Standard Path: Default Multi-Step | 👤 | SAGE | | Multi-turn approval gate |
+| TC-005 | Standard Path: User Approves Plan | 👤 | SAGE | | Continuation of TC-004 |
+| TC-006 | Standard Path: User Rejects Plan | 👤 | SAGE | | Continuation of TC-004 |
+| TC-007 | Full Path: "Plan This" Trigger | 👤 | ARTHUR | | Multi-turn, two approval gates |
+| TC-008 | Research Path: Written Output (No Plan Gate) | 🤖/👤 | ARTHUR | | File-system assertions automatable; sequencing and gate-absence require chat export + LENS |
+| TC-009 | Explicit Override: "Use the Full Path" | 👤 | ARTHUR | | Multi-turn approval gates |
+| TC-010 | Explicit Override: "Standard Path" | 👤 | ARTHUR | | Multi-turn approval gate |
+| TC-011 | Plan Gate: ARTHUR Stops After Plan | 👤 | ARTHUR | | Requires observing stop behavior |
+| TC-012 | Plan Gate: Changes Requested | 👤 | ARTHUR | | Multi-turn revision flow |
+| TC-013 | Spec Gate: ARTHUR Stops After Spec | 👤 | ARTHUR | | Requires observing stop behavior |
+| TC-014 | Spec Gate: Sequential Gates (Both Present) | 👤 | ARTHUR | | Multi-turn, both gates |
+| TC-015 | Spec Gate: User Rejects Spec | 👤 | ARTHUR | | Multi-turn rejection flow |
+| TC-016 | Auto-Proceed Negative Test | 🤖/👤 | ARTHUR | | File-system check automatable; stop-behavior observation manual |
+| TC-017 | Hiring Flow: Basic Trigger | 🤖/👤 | MERLIN | | File-system assertions automatable; delegation chain observation manual |
+| TC-018 | Hiring Flow: Research Foundation Required | 👤 | MERLIN | | Requires file inspection after TC-017 |
+| TC-019 | Hiring Flow: MERLIN Cannot Skip SCOOP | 👤 | MERLIN | | Nuanced behavioral judgment |
+| TC-020 | Hiring Flow: Temp vs. Permanent Decision | 👤 | MERLIN | | Classification judgment |
+| TC-021 | Hiring Flow: ARTHUR Cannot Create Agents | 🤖 | ARTHUR | | |
+| TC-022 | Parallel Dispatch: Independent Research | 👤 | ARTHUR | | Requires timing observation |
+| TC-023 | Parallel Dispatch: Independent Tasks | 👤 | ARTHUR | | Requires timing observation |
+| TC-024 | Parallel Dispatch: File Conflict Rule | 🤖/👤 | ARTHUR | | Plan file assertion automatable; dispatch timing observation manual |
+| TC-025 | Parallel Dispatch: Mixed Sequential/Parallel | 👤 | ARTHUR | | Multi-turn with approval gate |
+| TC-026 | ARTHUR Must Not Produce Deliverables | 🤖 | ARTHUR | | |
+| TC-027 | ARTHUR Must Not Do Domain Research | 🤖 | ARTHUR | | |
+| TC-028 | ARTHUR Must Not Create Plans | 🤖 | ARTHUR | | |
+| TC-029 | SCOOP Cannot Invoke Other Agents | 🤖 | SCOOP | | |
+| TC-030 | MERLIN Must Call SCOOP (Config Guard) | 👤 | MERLIN | | Requires settings change |
+| TC-031 | SAGE Must Call SCOOP Before Planning | 👤 | SAGE | | Complex multi-agent chain |
+| TC-032 | QUILL Must Not Make Architectural Decisions | 🤖 | QUILL | | |
+| TC-033 | ARTHUR Must Check Roster Before Delegating | 👤 | ARTHUR | | Requires file deletion setup |
+| TC-034 | Approval Gate Cannot Be Pre-Bypassed | 👤 | ARTHUR | | Multi-turn gate observation |
+| TC-035 | SAGE Must Not Produce Code | 🤖 | SAGE | | |
+| TC-036 | Session Memory: Context Preserved | 🤖/👤 | SYSTEM | | Multi-turn memory observation |
+| TC-037 | Repo Memory: Project Facts Persisted | 🤖/👤 | SYSTEM | | File-system check automatable; delegation chain observation manual |
+| TC-038 | Memory Scoping: Session vs. Repo | 🤖/👤 | SYSTEM | | Memory file-system checks automatable; delegation chain observation manual |
+| TC-039 | Memory Recall: Agents Use Existing Memory | 👤 | SYSTEM | | Requires prior memory setup |
+| TC-040 | Error Recovery: Inconclusive Research | 🤖 | SCOOP | | |
+| TC-041 | Error Recovery: Vague Plan Request | 🤖 | SAGE | | |
+| TC-042 | Error Recovery: Agent Tool Unavailable | 👤 | SYSTEM | | Requires mode switch |
+| TC-043 | Error Recovery: Mid-Workflow Failure | 👤 | ARTHUR | | Requires failure simulation |
+| TC-044 | Direct SCOOP Address | 🤖 | SCOOP | | |
+| TC-045 | Direct SAGE Address | 🤖 | SAGE | | |
+| TC-046 | Direct QUILL Address | 🤖 | QUILL | | |
+| TC-047 | Direct MERLIN Address | 👤 | MERLIN | | Complex hiring chain |
+| TC-048 | Artifact: Spec Folder Naming Convention | 🤖/👤 | SAGE | | Multi-turn full path |
+| TC-049 | Artifact: Sequential Numbering | 🤖/👤 | SAGE | | Multi-turn full path |
+| TC-050 | Artifact: SAGE Creates Folder, Not ARTHUR | 👤 | SAGE | | Multi-turn observation |
+| TC-051 | Artifact: Full Path Produces Both Files | 🤖/👤 | SAGE | | Multi-turn, both gates |
+| TC-052 | Artifact: Research Path No Folder | 🤖 | SCOOP | | |
+| TC-053 | Temp Agent: ARTHUR Requests Temporary Status | 👤 | ARTHUR | | Multi-step lifecycle |
+| TC-054 | Temp Agent: Created in Correct Location | 🤖/👤 | MERLIN | | Requires TC-053 |
+| TC-055 | Temp Agent: Used in Execution | 👤 | ARTHUR | | Requires TC-053 |
+| TC-056 | Temp Agent: ARTHUR Initiates Archival | 🤖/👤 | ARTHUR | | File-system/roster check automatable; proactive initiation observation manual |
+| TC-057 | Temp Agent: Roster Accuracy Post-Archive | 🤖/👤 | MERLIN | | Requires TC-053 |
+| TC-058 | Standalone Documentation Path | 🤖/👤 | QUILL | | Output location check automatable; brief content observation manual |
+| TC-059 | Agent Interrupted / Checkpoint Resume | 👤 | SYSTEM | | Cross-session simulation |
+| TC-060 | SCOOP Cannot Write Files | 🤖 | SCOOP | | |
+| TC-061 | Proactive Checkpointing | 🤖/👤 | SYSTEM | | Single-agent checkpoint check automatable (see TC-077); mid-workflow gate observation manual |
+| TC-062 | Memory Fallback: Agent Creates `.agent-memory/` Directories | 🤖 | SYSTEM | | |
+| TC-063 | Memory Fallback: First Reply Prepends `[no-memory]` | 🤖 | SYSTEM | | |
+| TC-064 | Memory Fallback: Sentinel Suppresses Subsequent `[no-memory]` Prepends | 🤖 | SYSTEM | | |
+| TC-066 | Status Query: All Status Triggers Without Delegating | 🤖 | ARTHUR | | "where are we?", "status", "resume" — consolidated from TC-065 |
+| TC-068 | Checkpoint Files Match Naming Convention | 🤖 | SYSTEM | | |
+| TC-069 | Project-Specific Facts Written to `/memories/repo/`, Not User Scope | 🤖 | SYSTEM | | |
+| TC-070 | Permanent Agent File Contains `vscode/memory` in Frontmatter | 🤖 | SYSTEM | | |
+| TC-071 | Temp Agent File Does NOT Contain `vscode/memory` in Frontmatter | 🤖 | SYSTEM | | |
+| TC-072 | All Agent Files Are ≤150 Lines | 🤖 | SYSTEM | | |
+| TC-073 | `copilot-instructions.md` Contains Required Structural Sections | 🤖 | SYSTEM | | |
+| TC-074 | `team-roster.md` Temporary Agents Table Has Valid Status Values | 🤖 | SYSTEM | | |
+| TC-075 | Direct `@PROBE` Address | 🤖 | PROBE | | |
+| TC-076 | Direct `@LENS` Address | 🤖 | LENS | | |
+| TC-077 | Bounded Single-Agent Checkpoint (TC-061 Companion) | 🤖 | SYSTEM | | |
+| TC-078 | Temp Agent in `temps/` Cannot Be Invoked by @-Mention | 👤 | SYSTEM | | Manual observation |
+| TC-079 | Temp Agent in Active Location IS Discoverable | 🤖 | SYSTEM | | |
+| TC-080 | Mid-Session Memory Flicker Does Not Trigger Fallback | 👤 | SYSTEM | | Requires mid-session tool change |
+| TC-081 | ARTHUR Reads Subagent Checkpoint Before Re-Dispatch | 👤 | ARTHUR | | Hook-log + manual review |
+| TC-082 | ARTHUR Session Resumption References Completed Temp Agents | 👤 | ARTHUR | | Cross-session simulation |
+| TC-083 | Agent Does Not Pre-Scan System-Prompt-Injected Files | 🤖 | SYSTEM | | |
+| TC-084 | PROBE Reads Mode from Summary Checklist, Not TC Body Icons | 🤖/👤 | PROBE | | 👤 = manual chat export required before LENS audit |
+| TC-085 | PROBE Uses Exact Skip Phrase for Manual Tests | 🤖/👤 | PROBE | | 👤 = manual chat export required before LENS audit |
+| TC-086 | PROBE Takes Pre-Test Snapshot Before Each Test | 🤖/👤 | PROBE | | 👤 = manual chat export required before LENS audit |
+| TC-087 | PROBE Executes Teardown After Tests That Specify It | 🤖/👤 | PROBE | | 👤 = manual chat export required before LENS audit |
+| TC-088 | PROBE Refuses `run all` | 🤖/👤 | PROBE | | 👤 = manual chat export required before LENS audit |
+| TC-089 | PROBE Violation Log Entries Are Observed Facts, Not Judgments | 🤖/👤 | PROBE | | 👤 = manual chat export required before LENS audit |
+| TC-090 | LENS Detects False Positive: Report Claims PASS, Log Shows No Evidence | 🤖 | LENS | | Requires fixture tc090-log.md + tc090-probe-report.md |
+| TC-091 | LENS Confirms Accuracy: Report and Log Agree | 🤖 | LENS | | Requires fixture tc091-log.md + tc091-probe-report.md |
+| TC-092 | LENS Detects ARTHUR Prose Deliverable in Log | 🤖 | LENS | | Requires fixture tc092-log.md + tc092-probe-report.md |
+| TC-093 | LENS Detects MERLIN Skipping SCOOP | 🤖 | LENS | | Requires fixture tc093-log.md + tc093-probe-report.md |
+| TC-094 | LENS Produces Correct Report Truthfulness Summary Structure | 🤖 | LENS | | Requires fixture tc091 pair |
+| TC-095 | LENS Does Not Intercept Live Chat Streams | 🤖 | LENS | | |
 
 ---
 
@@ -2556,7 +3160,7 @@ ARTHUR uses the Standard Path when Full was requested, or skips to execution whe
 
 A new spec folder is created with a number already in use, overwriting existing artifacts.
 
-**Detection**: Check `artifacts/役 before and after each Full Path test. Two `spec001-*役 folders (or any duplicate number) indicates the numbering check failed.
+**Detection**: Check `artifacts/` before and after each Full Path test. Two `spec001-*` folders (or any duplicate number) indicates the numbering check failed.
 
 ### SCOOP writing files directly
 

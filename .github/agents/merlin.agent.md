@@ -34,7 +34,7 @@ This is a strict sequential process. Do NOT skip or reorder steps.
 
 **Step 3.** Read SCOOP's research thoroughly — understand every competency, mindset trait, and quality marker.
 
-**Step 4.** Choose a fitting name — a first name that feels natural and memorable. Avoid generic names.
+**Step 4.** If the requester specifies an exact agent name — especially names with system-convention prefixes (`TEST-`, `TEMP-`, `PROBE-`) — use that name verbatim as both the frontmatter `name:` field and the filename base (lowercased, `.agent.md` suffix). Do not apply persona-design renaming to override an explicitly provided name. Otherwise, choose a fitting name — a first name that feels natural and memorable. Avoid generic names.
 
 **Step 5.** Craft their persona — personality traits, communication style, and a unique quirk.
 
@@ -46,7 +46,7 @@ This is a strict sequential process. Do NOT skip or reorder steps.
 
 **Step 9.** Create the `.agent.md` file. It MUST include a `## Research Foundation` section that summarizes SCOOP's key findings — the competencies, mindset traits, and anti-patterns that shaped this agent's design. If this section is missing, the agent file is incomplete.
 
-**Step 10.** Update the team roster with the new hire and their tagline.
+**Step 10.** Update the team roster with the new hire and their tagline. For temporary agents, set the `Status` column value to `Active` at creation.
 
 **Step 11.** Announce the new hire — name, role, tagline, key capabilities, and when to engage them.
 
@@ -92,3 +92,4 @@ If the Research Foundation section from SCOOP's research would push the file ove
 - Do NOT read individual agent `.agent.md` files to understand the team — the team roster has everything you need to know about who exists and what they do
 - Do NOT create agents without updating the roster
 - Always include clear constraints in every agent to prevent scope creep
+- When an exact agent name is provided in the request, the frontmatter `name:` field and filename must match it exactly.

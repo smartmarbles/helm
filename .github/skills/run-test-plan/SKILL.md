@@ -1,6 +1,6 @@
 ---
 name: run-test-plan
-description: Test-execution playbook for PROBE — how to run automatable test cases from a Helm test plan against target agents, capture stdout/stderr streams, check file-system assertions, record violations, populate the scorecard, clean up, and produce a pass/fail report. Use this skill whenever PROBE is asked to `run all`, `run TC-XXX`, `run category X`, `run smoke`, execute test cases against an agent, capture command streams with `Start-Process -RedirectStandardOutput/-RedirectStandardError`, verify file-system side effects, append test logs to an artifact, or populate a scorecard with observed results. NOT for: designing or weighting the scoring categories (use the design-test-rubric skill), defining the severity taxonomy (critical/major/minor), authoring the scorecard schema, model-verification protocol (self-ID, behavioural fingerprint, UI confirm), authoring new test cases, or editing agent definition files.
+description: Test-execution playbook for PROBE — how to run automatable test cases from a Helm test plan against target agents, check file-system assertions, record violations, populate the scorecard, clean up, and produce a pass/fail report. Use this skill whenever PROBE is asked to `run TC-XXX`, `run category X`, `run agent AGENT`, `run smoke`, execute test cases, verify file-system side effects, or populate a scorecard with results. REFUSE: `run category N` and `run agent PROBE` (PROBE cannot test itself — route to ARTHUR); `run all` (full-suite runs are orchestrated by ARTHUR). NOT for: designing scoring categories (use design-test-rubric), severity taxonomy, scorecard schema, model-verification protocol, authoring test cases, or editing agent files.
 ---
 
 # Run Test Plan
@@ -11,12 +11,30 @@ Read this skill whenever a request asks PROBE to execute tests, run a smoke pass
 
 ## How to use this skill
 
-1. **Accept the command** (`run all`, `run TC-XXX`, `run category X`, `run smoke`) — parse scope.
+0. **Complete model verification first** — read the `design-test-rubric` skill's three-layer model-verification protocol and record all three layers in the run report's `## Verification` section before making any other tool call. Layer 3 is non-interactive: record the model slug from the brief (or `unknown` if omitted) — no handoff prompt, no user confirmation. No test-plan reads, no file listings, no snapshots, no subagent dispatches until all three layers are recorded. This is a hard ordering constraint.
+
+   **Permitted before Layer 1 (setup reads only)**: reading this skill file and `artifacts/testing/probe-report-template.md`. These are structural setup reads, not investigative tool calls, and do not trigger an ordering violation. All other reads (test plan, rubric, agent files, workspace listings) must follow all three layers.
+
+   > **Ordering violation self-report:** If model verification was skipped or partially completed before proceeding, record it explicitly in the run report's Verification section and note which test cases were affected. Do not silently proceed.
+1. **Accept the command** (`run TC-XXX`, `run category X`, `run agent AGENT`, `run smoke`) — parse scope.
 2. **Load the test plan** at `artifacts/testing/test-plan.md` and the pre-existing scorecard (if the run targets one).
-3. **Read the Summary Checklist** — located near the bottom of the test plan under the heading `## Summary Checklist`. This is the authoritative source for each test's mode. Build your run list from it before reading individual test bodies. Never infer mode from icons in the test body.
+3. **Read the Summary Checklist** — located near the bottom of the test plan under the heading `## Summary Checklist`. This is the authoritative source for each test's mode and category membership. Build your run list from it before reading individual test bodies. Never infer mode from icons in the test body.
+
+   **For `run category X` commands**: find the category X sub-section in the Summary Checklist (e.g., `### X — ...` or the rows grouped under the `X` category label). Collect only the TC rows explicitly listed under that sub-section. Do NOT infer membership by TC-number proximity or contiguous range — a category's TCs may be non-contiguous. The checklist rows are the definitive membership list.
+
    - **🤖** — fully automatable. Run all pass criteria.
    - **👤** — skip the entire test: `⏭️ SKIP — manual test, requires human execution`.
    - **🤖/👤** — partial. Run ONLY the `**🤖 Automatable Portion**` criteria. Skip `**👤 Manual Portion**` criteria: `⏭️ SKIP — manual criteria, requires human execution`.
+
+   > **Exact phrase required**: The skip phrases above must appear verbatim in your output for each skipped test or criterion — do not abbreviate (e.g. `⏭️ SKIP | 👤 manual` is invalid). For 🤖/👤 tests, each 👤 criterion must individually carry `⏭️ SKIP — manual criteria, requires human execution`. Do not collapse these into table notation or omit them from table cells.
+   >
+   > **Per-criterion rows required for 🤖/👤 tests**: The result table must have one row per criterion — even when an automatable criterion fails. A FAIL row for criterion [4] and a SKIP row for criterion [5] are both required and must appear as separate table entries. Do **not** collapse both into a single row. Example of correct output for a mixed test where criterion [4] fails and criterion [5] is manual:
+   >
+   > | Criterion | Result | Evidence |
+   > |-----------|--------|----------|
+   > | **[4]** automatable criterion | ❌ FAIL \| V-001 (critical) | … |
+   > | **[5]** manual criterion | ⏭️ SKIP — manual criteria, requires human execution | 👤 manual |
+
 4. **Execute each test** via the Execution Protocol — snapshot → run → evaluate → check side effects → record → clean up.
 5. **Capture streams** for any shell or tool command using the Stream Capture rules.
 6. **Record violations** into the Violation Log using the schema below — observed, not inferred.
@@ -37,7 +55,7 @@ Every automatable test follows these seven steps. Do not reorder. Do not skip a 
    - Use the `memory` tool to view `/memories/session/` and `/memories/repo/` for memory tests.
    - `/memories/` paths are VS Code virtual paths accessed via the `memory` tool — they are NOT physical folders. A `memories/` folder appearing in the workspace filesystem is contamination.
 4. **Execute** — invoke the target agent as a subagent with the *exact* input prompt from the test plan. For shell/tool tests, run the command and capture streams (see Stream Capture below).
-5. **Evaluate** the response against each pass criterion. For each criterion, determine PASS or FAIL (see Evaluation Rules).
+5. **Evaluate** the response against each pass criterion. For each criterion, determine PASS or FAIL and record the specific evidence observed — quote the relevant response excerpt, tool call name, or file content. Evidence is required for every criterion regardless of pass or fail. A criterion row with no evidence is invalid and must be treated as UNVERIFIABLE.
 6. **Check side effects** on the file system when the test requires it.
 7. **Clean up** (see Cleanup Protocol) and **record** the result.
 
@@ -57,10 +75,15 @@ PROBE records observations, not judgments. If an agent's output is ambiguous, re
 |---------|-------|
 | `run TC-XXX` | One test by ID |
 | `run category X` | All 🤖 and 🤖/👤 tests in a category (e.g., `run category E`) |
+| `run agent AGENT` | All 🤖 and 🤖/👤 tests whose Agent column matches AGENT (e.g., `run agent SCOOP`, `run agent SYSTEM`) |
 | `run smoke` | Only the 🤖 and 🤖/👤 tests in the Smoke Test set |
 | `Finalize <report_file>` | Tally and append final summary to an in-progress report |
 
 > **Note:** `run all` is no longer a valid PROBE command. Full-suite runs are orchestrated by ARTHUR, which dispatches PROBE once per category. PROBE always receives a scoped brief — never `run all`.
+
+> **Self-referential exception:** `run category N` and `run agent PROBE` cannot be handled by PROBE — PROBE cannot be both runner and subject. These commands must be routed to ARTHUR, who dispatches PROBE with each test's input and then dispatches LENS to evaluate the output. If PROBE receives either command directly, it must refuse and explain that ARTHUR is the required runner for category N.
+
+> **Category batch limit (for orchestrators):** Before dispatching `run category X`, check the Summary Checklist for that category's automatable test count. If the count exceeds 8, split into sequential sub-dispatches of ≤8 automatable tests each. Supply the same `Report file:` path to each sub-dispatch (append mode after the first). Label each sub-dispatch clearly in the brief (e.g., "run category X tests TC-nnn–TC-mmm", then "run category X tests TC-nnn–TC-mmm").
 
 👤 (manual) tests are NEVER run. Report them as `⏭️ SKIP — manual test, requires human execution` and move on.
 
@@ -77,6 +100,7 @@ When evaluating an agent's response against pass criteria:
 - **Structure checks** — does the response follow the expected format? (e.g., expected headings all present and in order).
 - **Exit-code checks** — for tool/CLI tests, the captured exit code matches the expected value.
 - **Stream-content checks** — captured stdout / stderr contains or does not contain expected patterns.
+- **Delegation chain rule**: When a pass criterion names a specific agent's output (e.g., "SCOOP's report includes X", "MERLIN's file contains Y"), evaluate that agent's raw subagent result — not any orchestrator's relay or summary of it. In a `runSubagent` execution chain, the subagent's `result` field is the authoritative evidence source for criteria that name that agent.
 
 ---
 
@@ -161,7 +185,12 @@ The scorecard *schema* is defined by the rubric (see the `design-test-rubric` sk
 
 > **Required format:** All PROBE report files MUST follow the canonical template at `artifacts/testing/probe-report-template.md`. Read that file before authoring any new report. LENS validates that the `run_type` and `chat_log` frontmatter fields are present — reports missing these fields will be rejected by LENS and treated as pre-template artifacts.
 
-1. Copy the canonical template from `artifacts/testing/probe-report-template.md` for the new run. Name the output file `artifacts/testing/probe-<run_type>-<model>_<YYYY-MM-DD>.md` (e.g., `probe-baseline-gpt41_2026-04-22.md`). Replace all `{{PLACEHOLDER}}` values with run-specific data.
+> For `chat_log`: record the filename as provided in the dispatch brief (e.g., `chat-sonnet46-20260502.json`). If the filename was not supplied in the brief, write `"unknown — provide before LENS audit"`. Do NOT substitute the session UUID — LENS cannot locate a file by UUID.
+
+1. Copy the canonical template from `artifacts/testing/probe-report-template.md` for the new run. Name the output file `artifacts/testing/reports/probe-<run_type>-<model>_<YYYY-MM-DD>-<seq>.md` where `<seq>` is a two-digit sequence number starting at `01` (e.g., `probe-baseline-gpt41_2026-04-22-01.md`). To determine `<seq>`, list `artifacts/testing/reports/` and find the highest existing sequence number for files matching `probe-<run_type>-<model>_<YYYY-MM-DD>-*.md` on that date, then increment by 1. If no matching files exist, use `01`. Replace all `{{PLACEHOLDER}}` values with run-specific data.
+
+   > For time fields (`run_start`, `run_end`, `run_duration`): write the actual observed value if available. If the actual time cannot be observed (e.g., running as a subagent with no access to wall-clock time), write `"n/a"` — never write a fabricated, estimated, or midnight-placeholder timestamp.
+
 2. For each scoring category in the scorecard, tally the pass/fail tests and violations whose `category` field targets it.
 3. Copy each violation's `expected`/`actual`/`evidence` into the scorecard row for its test. Do not paraphrase.
 4. Leave subjective / narrative cells empty if the observation doesn't speak to them — do NOT fabricate commentary.
@@ -173,12 +202,20 @@ The scorecard *schema* is defined by the rubric (see the `design-test-rubric` sk
 
 When PROBE is dispatched as one category in a batched `all` run (orchestrated by ARTHUR), the brief will include a `Report file: <path>` field and one of two modes:
 
-- **Create mode** (category A, or when the file does not exist): Copy the canonical template from `artifacts/testing/probe-report-template.md`, replace all `{{PLACEHOLDER}}` values with run-specific data, and write it to the named path. Then append this category's results.
-- **Append mode** (categories B–L): Open the existing file. Append this category's result rows to the Results Table and any new violations to the Violation Log. Do NOT overwrite or re-create the header, frontmatter, or sections already written.
+- **Create mode** (category A, or when the file does not exist): Copy the canonical template from `artifacts/testing/probe-report-template.md`, replace all `{{PLACEHOLDER}}` values with run-specific data, and write it to `artifacts/testing/reports/` at the named path. Then append this category's results.
+- **Append mode** (categories B–O): Open the existing file. Append this category's result rows to the Results Table and any new violations to the Violation Log. Do NOT overwrite or re-create the header, frontmatter, or sections already written.
 
 When you receive a `Finalize <report_file>` brief: read the full report file, tally pass/fail counts across all result rows, and append the consolidated scorecard totals and the one-line sign-off (`X/Y passed. Z failures.`) to the report.
 
 **Rule: never re-create an existing report file.** If the file already exists and the brief says append, append only. Overwriting destroys prior categories' results.
+
+**Rule: update scope and timestamps on every append.** When appending to an in-progress report:
+- Update the `scope` frontmatter field to include the newly completed TC IDs (accumulate across all dispatches — do not overwrite with only the current category's TCs).
+- Update the Run Context section's end-time field to the current timestamp.
+- Set `run_start`, `run_end`, and `run_duration` only to directly observed values. If the actual time cannot be observed (e.g., in a subagent dispatch context), write `"n/a"` — never estimate or fabricate plausible-looking timestamps.
+- Never leave `{{PLACEHOLDER}}` values in the report after your dispatch — replace all of them with actual values on create, and update any that remain stale on append.
+
+**Rule: never update a past run's report file.** Each new test run produces a new file (with an incremented sequence number). Do not append results from a new run to a report file from a previous run, even if the run type, model, and date match. If the file already exists and this is a new run (not a multi-dispatch continuation), increment the sequence number and create a new file.
 
 ---
 

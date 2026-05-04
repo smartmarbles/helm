@@ -261,7 +261,8 @@ def validate_skill(skill_dir: str) -> dict:
                 continue
             seen_refs.add(ref)
         for ref in sorted(seen_refs):
-            if not os.path.exists(os.path.join(skill_dir, ref)):
+            file_ref = ref.split("#")[0]  # strip fragment before path check
+            if not os.path.exists(os.path.join(skill_dir, file_ref)):
                 warnings.append(f"W-MISSING-FILE: body references '{ref}' but it does not exist in the skill directory")
 
     return {

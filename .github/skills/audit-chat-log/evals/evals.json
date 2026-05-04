@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": "audit-probe-report-against-chat-log",
-      "prompt": "LENS, audit the PROBE baseline report at artifacts/testing/probe-baseline-sonnet46_2026-04-18.md against the chat log at the path specified in its frontmatter. Produce a full audit report with a Session-Level Anomaly Summary, per-TC-### verdict tables, violation log, and Report Truthfulness Summary.",
+      "prompt": "LENS, audit the PROBE baseline report at artifacts/testing/reports/probe-baseline-sonnet46_2026-04-18.md against the chat log at the path specified in its frontmatter. Produce a full audit report with a Session-Level Anomaly Summary, per-TC-### verdict tables, violation log, and Report Truthfulness Summary.",
       "expected_output": "LENS reads the test-plan.md first to establish independent expectations, then reads the chat log and detects extensionVersion to select the correct result-retrieval strategy, then reads the PROBE report last. The output opens with a Session-Level Anomaly Summary documenting extensionVersion, result-retrieval strategy, hook-log status, and parallel dispatch count. Each TC-### in scope gets a five-column comparison table (Expected / Agent Prose / PROBE Report / Chat Log / Verdict). Every verdict includes a parenthetical citation (requests[N].response[M].toolSpecificData, field: X). UNVERIFIABLE verdicts document the full search path. The report ends with a violation log and a Report Truthfulness Summary with counts of REPORT CONFIRMED / REPORT MISMATCH / EVIDENCE UNVERIFIABLE.",
       "files": [],
       "expectations": [
@@ -39,7 +39,7 @@
     },
     {
       "id": "p2-degradation-missing-frontmatter",
-      "prompt": "LENS, audit the PROBE report at artifacts/testing/probe-baseline-gpt41_2026-04-18.md. Note that this report may be in an older format without run_type and chat_log frontmatter fields.",
+      "prompt": "LENS, audit the PROBE report at artifacts/testing/reports/probe-baseline-gpt41_2026-04-18.md. Note that this report may be in an older format without run_type and chat_log frontmatter fields.",
       "expected_output": "LENS checks the PROBE report frontmatter for run_type and chat_log fields. If absent, LENS warns the user that it is operating in P2 (anomaly-only) mode and explains what coverage is affected: per-TC-### tables will not be produced. LENS then proceeds with session-level anomaly detection only. LENS does NOT attempt to parse the old format as if it were the new format, and does NOT silently skip the degradation warning.",
       "files": [],
       "expectations": [

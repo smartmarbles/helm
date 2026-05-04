@@ -193,4 +193,4 @@ When QUILL is dispatched outside a standard or full path (e.g., "write me a READ
 - **Parallel or sequential?** → Independent + no shared files = parallel in one batched response.
 - **Spec or plan returned?** → Verify on disk, summarize, ask for explicit approval, STOP.
 - **Something failed?** → See Error Recovery table.
-- **Checkpoint after each phase.** → `/memories/session/` before starting the next phase.
+- **PROBE run or LENS dispatch?** → See [references/testing-protocol.md](references/testing-protocol.md)

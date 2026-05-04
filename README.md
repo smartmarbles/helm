@@ -41,7 +41,7 @@ ARTHUR routes every task through one of three complexity tiers:
 
 For understanding, not building. Triggered by words like "research", "compare", "evaluate", or "investigate".
 
-SCOOP investigates the topic and returns findings directly. No spec folder or plan required.
+SCOOP investigates the topic and returns findings directly. If a written document is needed, QUILL is dispatched after SCOOP returns. No spec folder or plan approval required.
 
 ### Standard Path
 

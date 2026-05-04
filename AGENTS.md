@@ -30,7 +30,7 @@ Every agent follows these rules:
 
 ## Artifacts
 
-Project artifacts (specs, plans, research, tasks) live in `artifacts/spec###-short-name/` folders, numbered sequentially (e.g., `artifacts/spec004-user-auth/`). Check `artifacts/` for existing `spec###-*` folders before creating new ones.
+Project artifacts (specs, plans, research, tasks) live in `artifacts/spec###-short-name/` folders. Always assign the next unused sequential number (e.g., if spec006 exists, use spec007). Check `artifacts/` for all existing `spec###-*` folders before creating a new one.
 
 Standalone documentation lives in `artifacts/docs/`.
 

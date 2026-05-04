@@ -87,7 +87,6 @@ MERLIN hires. MERLIN does not operate the hire. Once the agent file is written a
 | Active-file location | `.github/agents/<name>.agent.md` | `.github/agents/<name>.agent.md` (while active) |
 | Archive-file location | N/A (agent stays active) | `.github/agents/temps/<name>.agent.md` (after task) |
 | Hired date | Date of creation | Date of creation |
-| Archived date | Blank | Filled in when moved to `temps/` |
 
 > **Discovery rule:** `.agent.md` files are only discovered in `.github/agents/` (no subdirectory recursion). New temps must be created at `.github/agents/<name>.agent.md` while active. The move to `temps/` happens only at archival.
 
@@ -128,7 +127,7 @@ Every agent file you author must contain these components in this order.
 
 ### Tagline
 
-Every agent gets a memorable one-liner that captures their essence. The tagline appears in the roster next to the agent's row (Permanent) or below the table (Temporary). Examples: *"The cascade is a feature, not a bug."* (PRISM), *"The diff is the deliverable."* (SPLICE).
+Every agent gets a memorable one-liner that captures their essence. The tagline appears in the `Tagline` column of the roster row — identical format for both permanent and temporary agents. Examples: *"The cascade is a feature, not a bug."* (PRISM), *"The diff is the deliverable."* (SPLICE).
 
 ---
 
@@ -142,7 +141,7 @@ Append a row to the **Permanent Team** table with columns: `Agent | Role | Use W
 
 ### Temporary hire
 
-Append a row to the **Temporary Agents** table with columns: `Agent | Role | Task | Hired | Archived | File`. Use today's date for Hired. `Archived` is `*(active)*` while the agent is in use; the `File` column holds the path (`.github/agents/<name>.agent.md` while active, `.github/agents/temps/<name>.agent.md` after archival). Record the tagline in the callout below the table.
+Append a row to the **Temporary Agents** table using the same format as the **Permanent Team** table: `Agent | Role | Use When | Hired | Tagline`. Use today's date for Hired. Place the tagline directly in the `Tagline` column — do not add a callout below the table.
 
 ### Retained temp
 
@@ -189,14 +188,14 @@ Add a **Re-archival trigger** callout under the Temporary Agents table stating t
 > 3. Reads SCOOP's findings (minimal-diff discipline, stdlib-first preference, test-adjacent editing, anti-patterns like over-refactoring during bug fixes).
 > 4. Drafts `.github/agents/splice.agent.md` with a `## Research Foundation` section.
 > 5. Temporary placement — one-shot task; file lives in `.github/agents/` while active.
-> 6. Appends a row to the **Temporary Agents** table: task = "spec002 P9a-T3", Hired = 2026-04-18, Archived = `*(active)*`, File = `.github/agents/splice.agent.md`. Records tagline *"The diff is the deliverable."* in the callout below the table.
-> 7. Later: ARTHUR reports SPLICE is needed across all Python work through Phase 9b. MERLIN updates the Task column to reflect the extended scope and adds a **Re-archival trigger** callout: "Re-archive SPLICE before spec002 completion, once the final Python development task lands." File stays in `.github/agents/` during the retention window.
+> 6. Appends a row to the **Temporary Agents** table using the permanent format: `Use When` = "spec002 P9a-T3 surgical Python edits", Hired = 2026-04-18, Tagline = *"The diff is the deliverable."* — identical structure to a permanent row.
+> 7. Later: ARTHUR reports SPLICE is needed across all Python work through Phase 9b. MERLIN updates the `Use When` column to reflect the extended scope and adds a **Re-archival trigger** callout: "Re-archive SPLICE before spec002 completion, once the final Python development task lands."
 
 **DON'T:**
 
 > MERLIN: "SPLICE did useful work, I'll promote them to the Permanent Team table."
 >
-> Wrong. Retention ≠ promotion. A retained temp stays in the **Temporary Agents** table with `*(active)*` in the Archived column and a re-archival trigger stating the end condition. Promoting a temp to permanent requires a separate, explicit decision based on recurring-capability evidence, not task retention.
+> Wrong. Retention ≠ promotion. A retained temp stays in the **Temporary Agents** table (same row format as permanent) with a re-archival trigger callout stating the end condition. Promoting a temp to permanent requires a separate, explicit decision based on recurring-capability evidence, not task retention.
 
 ---
 
@@ -236,7 +235,7 @@ Add a **Re-archival trigger** callout under the Temporary Agents table stating t
 - **Second step:** invoke SCOOP. Always. Only the user waives this.
 - **Required body section:** `## Research Foundation`. No exceptions.
 - **Permanent vs temp:** recurring capability → permanent. One-shot or spec-phase scope → temporary.
-- **Retained temp:** stays in the Temporary table with `*(active)*` and a re-archival trigger callout. Not a promotion.
-- **File placement:** `.github/agents/<name>.agent.md` while active. Archival to `temps/` is handled by the `archive-agent` skill, not here.
+- **Retained temp:** stays in the Temporary table (same format as permanent) with a re-archival trigger callout below the table. Not a promotion.
+- **File placement:** `.github/agents/<name>.agent.md` while active. Archival is handled by the `archive-agent` skill, not here.
 - **Roster update:** same turn as the agent file. Never ship a hire without a roster row.
 - **After hire:** announce, then hand back to ARTHUR. MERLIN does not dispatch the new hire.

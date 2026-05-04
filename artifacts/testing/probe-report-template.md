@@ -2,9 +2,16 @@
 run_id: "{{RUN_ID}}"
 model: "{{MODEL_ID}}"
 run_date: "{{YYYY-MM-DD}}"
+run_start: "{{YYYY-MM-DDTHH:MM:SS}}"
+run_end: "{{YYYY-MM-DDTHH:MM:SS}}"
+run_duration: "{{Xh Ym}}"
 run_type: "{{RUN_TYPE}}"
+scope: "{{SCOPE}}"
 test_corpus: "{{TEST_CORPUS_PATH}}"
 test_cases_run: [{{TC_LIST}}]
+pass_count: {{PASS_COUNT}}
+fail_count: {{FAIL_COUNT}}
+skip_count: {{SKIP_COUNT}}
 rubric_version: "{{RUBRIC_VERSION}}"
 chat_log: "{{CHAT_LOG_FILENAME}}"
 ---
@@ -42,22 +49,47 @@ model          Exact model slug used by Copilot.
 
 run_date       ISO-8601 date of the run. Example: 2026-04-18
 
+run_start      ISO-8601 datetime when the run began (local time, no timezone required).
+               Example: 2026-04-18T14:23:05
+               Record the time PROBE issued its first test-case subagent dispatch. Use actual current date/time.
+               If actual time is not observable at dispatch (e.g., running as a subagent), write `n/a` rather than an estimated or placeholder timestamp.
+
+run_end        ISO-8601 datetime when the run completed.
+               Example: 2026-04-18T15:47:33
+               Record the time the final cleanup step finished. Use actual current date/time.
+               If actual time is not observable at dispatch (e.g., running as a subagent), write `n/a` rather than an estimated or placeholder timestamp.
+
+run_duration   Human-readable elapsed time between run_start and run_end.
+               Format: {Xh Ym Zs} or {Ym Zs} if under one hour.
+               Examples: 1h 24m 05s  |  47m 12s
+
 run_type       One of: baseline | regression | or a custom label.
                Must match the {run-type} segment of the chat_log filename.
                Examples: baseline | regression | regression-weekly
 
+scope          What was run: all | smoke | category <X> | TC-### | agent <NAME>.
+               Examples: category N  |  smoke  |  TC-026  |  all
+
 test_corpus    Workspace-relative path to the test plan used.
-               Example: artifacts/spec001-helm-test-plan/test-plan.md
+               Example: artifacts/testing/test-plan.md
 
 test_cases_run JSON array of all TC-### IDs executed. No spaces inside IDs.
                Example: [TC-001, TC-003, TC-021, TC-026]
 
+pass_count     Integer count of tests that passed. Example: 4
+
+fail_count     Integer count of tests that failed. Example: 2
+
+skip_count     Integer count of tests skipped (manual / 👤 only). Example: 3
+
 rubric_version Semver of the rubric in use. Example: 1.1.0
 
-chat_log       Exact filename of the paired chat log for this run.
-               Naming convention: chat-{run_type}-{model_slug}_{YYYY-MM-DD}.json
-               Example: chat-baseline-gpt41_2026-04-18.json
-               LENS uses this field to auto-pair the report with its chat log.
+chat_log       Filename of the paired chat log for this run.
+               Convention: chat-*.json — the operator names this file freely when exporting
+               from VS Code (Export Chat command) or saving the session log.
+               Record the actual filename as named by the operator, not a constructed name.
+               Example: chat-sonnet46-20260501.json
+               LENS uses this field to locate the source log for auditing.
 -->
 
 # PROBE Scorecard — {{MODEL_DISPLAY_NAME}} — {{YYYY-MM-DD}} ({{RUN_LABEL}})

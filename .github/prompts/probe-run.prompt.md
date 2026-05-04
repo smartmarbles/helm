@@ -35,22 +35,26 @@ Do not proceed until a run type is confirmed.
 
 **If scope is `all` (or no scope was given):**
 
+> **Note:** Category N (TC-084–TC-089) is excluded from `all` runs — PROBE cannot run its own protocol tests. Category N must be run separately through ARTHUR using the testing protocol at `.github/skills/orchestrate-delegation/references/testing-protocol.md`.
+
 Do NOT dispatch PROBE once for the full suite — that will truncate. Instead:
 
-1. Determine the report filename now: `artifacts/testing/probe-{run_type}-{model}_{YYYY-MM-DD}.md` (e.g., `probe-baseline-gpt41_2026-04-26.md`). Pass this filename to every PROBE dispatch below.
+1. Determine the report filename now: `artifacts/testing/reports/probe-{run_type}-{model}_{YYYY-MM-DD}-{seq}.md` where `{seq}` is a two-digit sequence number starting at `01` (e.g., `probe-baseline-gpt41_2026-04-26-01.md`). To determine `{seq}`, list `artifacts/testing/reports/` and find the highest existing sequence for files matching `probe-{run_type}-{model}_{YYYY-MM-DD}-*.md` on that date, then increment by 1. If none exist, use `01`. Pass this filename to every PROBE dispatch below.
 2. Dispatch PROBE **sequentially**, once per category, using the brief template below. Do not start the next category until the previous one completes.
-3. After category L completes, dispatch PROBE one final time with the brief: _"Finalize `{report_file}`."_
+3. After category N completes, dispatch PROBE one final time with the brief: _"Finalize `{report_file}`."\_
 
 **Per-category brief template** (substitute `{X}`, `{run_type}`, `{model}`, `{report_file}` before sending):
-> Run category {X} of the test plan (`artifacts/testing/test-plan.md`). Run type: `{run_type}`. Model: `{model}`. Rubric: `v1.1.0`.
+> Run category {X} of the test plan (`artifacts/testing/test-plan.md`). Run type: `{run_type}`. Model: `{model}`. Rubric: `v1.1.1`.
 > Report file: `{report_file}`.
-> - If the report file does not exist yet (category A), create it from the template at `artifacts/testing/probe-report-template.md` and replace all `{{PLACEHOLDER}}` values.
-> - If the report file already exists (categories B–L), append this category's results to the existing Results Table and Violation Log sections — do NOT overwrite or recreate the file.
+> - If the report file does not exist yet (category A), create it from the template at `artifacts/testing/probe-report-template.md` and write it to `artifacts/testing/reports/`. Replace all `{{PLACEHOLDER}}` values.
+> - If the report file already exists (categories B–M, excluding N), append this category's results to the existing Results Table and Violation Log sections — do NOT overwrite or recreate the file.
 > Follow the run-test-plan skill throughout. Clean up after every test.
 
-Dispatch for categories: A, B, C, D, E, F, G, H, I, J, K, L — in that order. PROBE reads the test plan to determine which tests belong to each category; ARTHUR does not need to read the test plan.
+Dispatch for categories: A, B, C, D, E, F, G, H, I, J, K, L, M — in that order. Skip N entirely. PROBE reads the test plan to determine which tests belong to each category; ARTHUR does not need to read the test plan.
 
 **If scope is `smoke`, `TC-###`, or `category <X>`:** dispatch PROBE once for that scope (standard single-dispatch brief — no append behavior needed).
+
+> **If scope is `category N`:** do NOT dispatch PROBE. Category N cannot be run by PROBE — it is self-referential. Redirect the user: _"Category N must be run through ARTHUR using the testing protocol at `.github/skills/orchestrate-delegation/references/testing-protocol.md`. Start a new session and ask ARTHUR to run category N."_
 
 Tag every dispatch with the confirmed `run_type`. Read the current rubric version from the latest entry in §8 of `artifacts/testing/probe-scoring-rubric.md` and use it as the `rubric_version` value in the scorecard frontmatter.
 
