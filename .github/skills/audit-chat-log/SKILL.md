@@ -7,7 +7,7 @@ description: Audit-execution playbook for LENS — how to read raw VS Code Copil
 
 Execution detail for LENS. The agent file defines *who LENS is* and the epistemic stance (PROBE report is a claim, not ground truth); this skill defines *how LENS runs an audit* — the intake sequence, log parsing strategy, TC-### anchoring, four-way comparison, violation detection, degradation modes, and report format.
 
-Read this skill whenever a request asks LENS to audit a session, verify a PROBE report, detect behavioral violations, or produce an audit report. If you are LENS and you are about to read a log, you should already be inside this skill.
+Read this skill whenever a request asks LENS to audit a session, verify a PROBE report, detect behavioral violations, or produce an audit report. If you are LENS and you are about to read a log, you must already be inside this skill.
 
 ## How to use this skill
 

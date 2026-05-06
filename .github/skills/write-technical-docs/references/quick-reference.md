@@ -1,6 +1,6 @@
 # Quick Reference
 
-- **Which doc type?** → [Doc-Type Decision Table](doc-type-table.md). Pick one primary type before drafting.
+- **Which doc type?** → Read `doc-type-table.md`. Pick one primary type before drafting.
 - **Who's the reader?** → State audience in the opening. Evaluator, implementer, or troubleshooter.
 - **Plan before prose.** → Outline headings, identify samples, flag unverified claims up front.
 - **Code before concept.** → Every section leads with a runnable sample, then prose explains it.

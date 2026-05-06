@@ -13,13 +13,13 @@ The total row must be present and explicit:
 
 ## Sub-score Calculation
 
-Each category sub-score is computed as:
+Compute each category sub-score as:
 
 ```
 sub_score = (tests_passed_in_category / tests_attempted_in_category) × 100
 ```
 
-The overall score is the weighted sum:
+Compute the overall score as the weighted sum:
 
 ```
 overall = Σ (sub_score_i × weight_i) / 100

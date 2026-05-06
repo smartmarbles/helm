@@ -7,7 +7,7 @@ description: Orchestration playbook for ARTHUR — the how-to for delegating wor
 
 Process detail for ARTHUR. The agent file defines *who ARTHUR is* and the non-negotiable core principles; this skill defines *how ARTHUR runs the team* — the protocols, routing decisions, dispatch mechanics, and checkpoint behaviour.
 
-Read this skill whenever a user request arrives that needs delegation, routing, or multi-agent coordination. If you are ARTHUR and you are about to dispatch anything, you should already be inside this skill.
+Read this skill whenever a user request arrives that needs delegation, routing, or multi-agent coordination. If you are ARTHUR and you are about to dispatch anything, you must already be inside this skill.
 
 ## How to use this skill
 
@@ -31,9 +31,7 @@ Every delegation follows these seven steps. Do not reorder. Do not merge steps t
 6. **Track** — Use the todo tool to maintain visibility on multi-step workflows.
 7. **Report** — Summarize results clearly when agents return.
 
-### Rule: narration is not dispatch
-
-Every delegation must include an actual `runSubagent` tool call *in the same response* that narrates the delegation. Writing "I'm sending SAGE now" or "I'll report back when SCOOP finishes" without a tool call in the same response is a protocol violation. If you catch yourself describing a delegation in prose with no tool call alongside it, stop and emit the tool call immediately. A delegation that exists only in prose did not happen.
+> For the narration-is-not-dispatch rule, see `.github/agents/arthur.agent.md` § Constraints.
 
 ---
 
@@ -49,9 +47,7 @@ Three paths. Pick one. If the user names a path explicitly, use that one — nev
 
 The research path needs no spec folder — SCOOP returns findings in-conversation.
 
-### Rule: explicit path requests are binding
-
-If the user says "use the standard path" or "full path, please", follow that path exactly. Do not shortcut, downgrade, or skip steps because the task seems simple. The user chose the process for a reason.
+> For the explicit-path-requests-are-binding rule, see `.github/agents/arthur.agent.md` § Core Principles.
 
 ---
 
@@ -132,15 +128,11 @@ When no existing agent fits a task:
 3. Decide: **permanent hire** (reusable expertise across projects) or **temporary** (one-time task).
 4. After the temp agent's work is done, MERLIN moves its file to `.github/agents/temps/` and updates the roster.
 
-### Rule: never authorize agents to skip their required processes
-
-If MERLIN asks to skip SCOOP's research phase, the answer is **no**. Only the user grants that exception. ARTHUR's job is to enforce the team's protocols, not waive them.
+> For the rule on not authorizing agents to skip required processes, see `.github/agents/arthur.agent.md` § Constraints.
 
 ---
 
 ## Artifact Location
-
-Standard and full path work lives in numbered spec folders under `artifacts/`.
 
 ### Short-name generation rules
 
@@ -151,38 +143,27 @@ ARTHUR generates the short name from the user's request:
 - Preserve technical terms and acronyms (`oauth2`, `api`, `jwt`)
 - Concise but descriptive
 
-**Short-name examples** — Four annotated examples mapping user requests to spec folder names. → See [references/worked-examples.md](references/worked-examples.md#short-name-examples)
+**Short-name examples** — Four annotated examples mapping user requests to spec folder names.
+1. Read `references/worked-examples.md` § short-name-examples.
 
 ### Folder procedure
 
-1. Before starting a standard or full path effort, scan `artifacts/` for existing `spec###-*` folders.
-2. Determine the next available number and generate the short name.
-3. Tell SAGE which folder to use (e.g., "use `artifacts/spec004-fix-payment-timeout/`").
-4. **SAGE creates the folder**, not ARTHUR. ARTHUR assigns the name; SAGE writes artifacts there.
-5. When dispatching other agents in the same effort, reference the same spec folder in their brief.
-6. Multiple efforts may run in parallel in different spec folders.
-
-### Standalone documentation
-
-When QUILL is dispatched outside a standard or full path (e.g., "write me a README", "document this API"), there is no spec folder. Direct QUILL to write output to `artifacts/docs/` — no spec numbering needed.
+1. Tell SAGE which folder to use (e.g., "use `artifacts/spec004-fix-payment-timeout/`").
+2. When dispatching other agents in the same effort, reference the same spec folder in their brief.
+3. Multiple efforts may run in parallel in different spec folders.
 
 ---
 
 ## Error Recovery
 
-| Situation | Response |
-|-----------|----------|
-| **Task failure** — agent reports it can't complete | Assess why. Missing dependency → reorder. Skill gap → engage MERLIN to hire a specialist. |
-| **Plan invalidation** — implementation reveals the plan is wrong | Pause execution. Re-engage SAGE with the new information. Don't force a broken plan forward. |
-| **Conflicting results** — parallel agents produce contradictory outputs | Pause and resolve before continuing. If the conflict is a design decision, escalate to the user. |
-| **Stuck** — no clear path forward | Report to the user: what you know, what failed, what the options are. Do not spin. |
-| **Agent interrupted** — timeout, network error, partial progress | Check `/memories/session/` for checkpoint state. Re-dispatch with explicit "resume from checkpoint" instructions. Do NOT restart from scratch without checking for a checkpoint first. |
+> For error recovery procedures (task failure, plan invalidation, conflicting results, stuck, agent interrupted), see `.github/agents/arthur.agent.md` § Error Recovery.
 
 ---
 
 ## Worked examples
 
-**Worked examples** — Six DO/DON'T pairs covering: multiple research topics, narration without dispatch, explicit path request, simple task delegation, parallel vs sequential dispatch, and Spec Checkpoint skip. → See [references/worked-examples.md](references/worked-examples.md)
+**Worked examples** — Six DO/DON'T pairs covering: multiple research topics, narration without dispatch, explicit path request, simple task delegation, parallel vs sequential dispatch, and Spec Checkpoint skip.
+1. Read `references/worked-examples.md` for DO/DON'T examples.
 
 ---
 
@@ -192,5 +173,5 @@ When QUILL is dispatched outside a standard or full path (e.g., "write me a READ
 - **One topic or many?** → Count independent topics before briefing. One brief per task.
 - **Parallel or sequential?** → Independent + no shared files = parallel in one batched response.
 - **Spec or plan returned?** → Verify on disk, summarize, ask for explicit approval, STOP.
-- **Something failed?** → See Error Recovery table.
-- **PROBE run or LENS dispatch?** → See [references/testing-protocol.md](references/testing-protocol.md)
+- **Something failed?** → See `.github/agents/arthur.agent.md` § Error Recovery.
+- **PROBE run or LENS dispatch?** → Read `references/testing-protocol.md`.

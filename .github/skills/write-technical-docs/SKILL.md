@@ -7,11 +7,11 @@ description: Documentation-authoring playbook for QUILL — how to turn an appro
 
 Process detail for QUILL. The agent file defines *who QUILL is* and the absolute principles (radical empathy for the confused reader, verification obsession, no marketing voice). This skill defines *how QUILL writes* — the doc-type decisions, the plan-draft-review loop, the structural conventions, the code-sample discipline, and the review pass.
 
-Read this skill whenever a task brief asks for any developer-facing written artifact. If you are QUILL and you are about to draft anything, you should already be inside this skill.
+Read this skill whenever a task brief asks for any developer-facing written artifact. If you are QUILL and you are about to draft anything, you must already be inside this skill.
 
 ## How to use this skill
 
-1. **Classify the doc type** using the [Doc-Type Decision Table](references/doc-type-table.md).
+1. **Classify the doc type** — read `references/doc-type-table.md`.
 2. **Identify the audience** — evaluator, implementer, or troubleshooter — and state it in the opening.
 3. **Plan the structure first** (outline before prose).
 4. **Draft code before prose.** Every section leads with a runnable snippet; the prose explains it.
@@ -20,9 +20,8 @@ Read this skill whenever a task brief asks for any developer-facing written arti
 
 ---
 
-→ [Boundaries](references/boundaries.md) — role-ownership table and refusal scripts for writing vs. researching vs. deciding
-
-→ [Doc-Type Decision Table](references/doc-type-table.md) — lookup table mapping doc type to use case, governing question, and required sections, plus the "Which am I writing?" decision heuristic
+1. Read `references/boundaries.md` — role-ownership table and refusal scripts for writing vs. researching vs. deciding.
+2. Read `references/doc-type-table.md` — lookup table mapping doc type to use case, governing question, and required sections, plus the “Which am I writing?” decision heuristic.
 
 ---
 
@@ -36,7 +35,7 @@ Before drafting, answer these three questions in writing (internally or in the s
 
 State the audience in the document's opening sentence or an explicit "Who this is for" callout. Every paragraph that follows earns its place by answering a question this reader is likely to have.
 
-→ [Writing Standards](references/writing-standards.md) — terminology gating rules and mixed-audience layering patterns
+1. Read `references/writing-standards.md` — terminology gating rules and mixed-audience layering patterns.
 
 ---
 
@@ -91,7 +90,6 @@ Before declaring complete, run this checklist. Every item. Every time.
 - **Marketing voice** — any "blazing fast", "incredibly easy", "powerful", "seamlessly" without evidence? Strip them.
 - **Links** — relative paths between project docs? Anchor links for within-document navigation? No broken links?
 - **Typos and grammar** — read the whole thing top to bottom one more time.
-- **Confused Developer Test** — imagine a frustrated developer at 11 PM trying to ship. Does every paragraph help them or slow them down? Sections that slow them down get rewritten.
 
 ### 5. Refine
 
@@ -105,7 +103,7 @@ Rewrite anything that fails the review pass. Rewrite is not "polish" — it is s
 
 ---
 
-→ [Structural Conventions](references/structural-conventions.md) — headings, code blocks, tables, callouts, feature gap matrix, and front-loaded summary patterns
+1. Read `references/structural-conventions.md` — headings, code blocks, tables, callouts, feature gap matrix, and front-loaded summary patterns.
 
 ---
 
@@ -121,14 +119,14 @@ For any doc likely to exceed ~500 lines (full API references, multi-chapter guid
 
 ---
 
-→ [Output Standards](references/output-standards.md) — format, file placement, length, version pinning, full imports, and unstable API flagging rules
+1. Read `references/output-standards.md` — format, file placement, length, version pinning, full imports, and unstable API flagging rules.
 
 ---
 
-→ [Worked Examples](references/worked-examples.md) — four DO/DON'T pairs: concept-before-code ordering, comparison verdicts, unverified code samples, and SCOOP research transformation
+1. Read `references/worked-examples.md` — four DO/DON'T pairs: concept-before-code ordering, comparison verdicts, unverified code samples, and SCOOP research transformation.
 
 ---
 
-→ [Quick Reference](references/quick-reference.md) — nine-bullet summary lookup for common decision points
+1. Read `references/quick-reference.md` — nine-bullet summary lookup for common decision points.
 
 

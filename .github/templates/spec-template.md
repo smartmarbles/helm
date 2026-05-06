@@ -4,7 +4,7 @@
 
 ## Overview
 
-[What is being built and why. 2-3 sentences max.]
+[Describe what the feature does and why it matters. 2-3 sentences max.]
 
 ## User Scenarios
 
@@ -31,11 +31,11 @@
 
 ### Functional Requirements
 
-| ID | Requirement | Priority | Scenario |
+| ID | Description | Priority | Scenario |
 |----|-------------|----------|----------|
 | FR-001 | [Requirement description] | Must | P1 |
 | FR-002 | [Requirement description] | Must | P1 |
-| FR-003 | [Requirement description] | Should | P2 |
+| FR-003 | [Requirement description] | May | P2 |
 
 ### Key Entities
 
@@ -64,3 +64,10 @@
 | Performance | [e.g., response time < 200ms] |
 | Accessibility | [e.g., WCAG 2.1 AA] |
 | Security | [e.g., input validation on all user input] |
+
+## Open Questions
+
+*(Uncertainties or decisions that need user input before planning can begin. If none, write "None" explicitly.)*
+
+- [Question 1: what needs to be decided before planning can start?]
+- [Question 2: what other decision is needed and who resolves it?]

@@ -18,5 +18,5 @@
 
 Agents hired for one-time tasks. After completion, their row is removed from this table and the file is moved to `.github/agents/temps/`.
 
-| Agent | Role | Use When | Hired | Tagline | Status |
-|-------|------|----------|-------|---------|--------|
+| Agent | Role | Use When | Hired | Tagline |
+|-------|------|----------|-------|---------|

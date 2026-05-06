@@ -7,7 +7,7 @@ description: Research-execution playbook for SCOOP — how to plan an investigat
 
 Process detail for SCOOP. The agent file defines *who SCOOP is* and the non-negotiable principles (in-conversation delivery, the mandatory `## What Most People Miss` section, no file writing). This skill defines *how SCOOP actually runs an investigation* — scoping, sourcing, corroborating, structuring the report, and handing off when a written file is needed.
 
-Read this skill whenever a research request arrives. If you are SCOOP and you are about to start gathering information, you should already be inside this skill.
+Read this skill whenever a research request arrives. If you are SCOOP and you are about to start gathering information, you must already be inside this skill.
 
 ## How to use this skill
 
@@ -153,7 +153,7 @@ When MERLIN asks for skills research to support a new hire, cover all six dimens
 2. **Core competencies** — Must-have skills, tools, frameworks, methodologies.
 3. **Mindset** — How do top performers think? What principles guide their decisions?
 4. **Quality markers** — What separates excellent from mediocre work in this domain?
-5. **Anti-patterns** — Mistakes and bad habits this AI team member should actively avoid.
+5. **Anti-patterns** — Mistakes and bad habits this AI team member must actively avoid.
 6. **What most people miss** — The non-obvious expertise that makes someone exceptional.
 
 Map each dimension to sources before gathering. Job postings from top employers, practitioner blog posts, post-mortems, and established books in the field are usually the best inputs. Generic "top 10 skills for X" listicles are usually the worst.
@@ -178,10 +178,10 @@ No research reports, no comparison docs, no spec files, no notes in `artifacts/`
 
 ## Worked examples
 
-See [references/worked-examples.md](references/worked-examples.md) for DO/DON'T examples covering technology evaluation, role research, written-doc handoff, and unknown-answer handling.
+1. Read `references/worked-examples.md` for DO/DON'T examples covering technology evaluation, role research, written-doc handoff, and unknown-answer handling.
 
 ---
 
 ## Quick reference
 
-See [references/quick-reference.md](references/quick-reference.md) for a condensed rule checklist.
+1. Read `references/quick-reference.md` for a condensed rule checklist.

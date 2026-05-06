@@ -225,8 +225,8 @@ Do not invent an archival protocol for permanents.
 
 - **Is the temp's task actually complete?** → If no, do not archive. Route blockers to ARTHUR.
 - **Single-dispatch or retained?** → Single-dispatch: archive on return. Retained: archive when the recorded re-archival trigger fires.
-- **Archival action** → Flip `Status` from `Active` to `Archived (YYYY-MM-DD)`. Remove the re-archival trigger blockquote if one existed. Leave the `File` column and tagline alone.
-- **Unarchival action** → Flip `Status` from `Archived (YYYY-MM-DD)` back to `Active`. Append expanded scope to `Task`. Add a re-archival trigger blockquote beneath the table. Leave the tagline alone.
-- **File moves on archive** → Never. Archival is a roster-state change only.
+- **Archival action** → Remove the temp's row from the Temporary Agents table. Move the agent file from `.github/agents/<name>.agent.md` to `.github/agents/temps/<name>.agent.md`. Remove the re-archival trigger blockquote if one existed.
+- **Unarchival action** → Re-add the row to the Temporary Agents table (permanent-format columns). Update `Use When` to reflect the expanded scope. Move the agent file from `.github/agents/temps/<name>.agent.md` back to `.github/agents/<name>.agent.md`. Add a re-archival trigger blockquote beneath the table.
+- **File moves on archive** → Required. Move to `.github/agents/temps/` to remove the agent from Copilot's discovery path.
 - **Permanent agents** → Do not archive. Decline and explain.
 - **Session memory cleanup** → Agents clean their own checkpoints. MERLIN does not touch another agent's memory files.

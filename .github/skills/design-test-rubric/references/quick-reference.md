@@ -9,6 +9,6 @@
 - **Model tag is canonical, typed from the rubric's list.** Untagged run = invalid.
 - **Three verification layers: self-ID probe, behavioural fingerprint, user-UI confirm.** No single layer is sufficient.
 - **Inconclusive ≠ mismatch.** Document and proceed; do not flag.
-- **Adding a model tag ships with its fingerprint row in the same version bump.**
+- **A new model tag must ship with its fingerprint row in the same version bump.**
 - **Bump minor version for any contract change.** Append a one-line changelog entry.
 - **Re-balance weights only from cross-phase evidence.** Never from a single run.

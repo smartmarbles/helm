@@ -30,7 +30,7 @@
 
 > PROBE dispatches ARTHUR, sees "research complete" in the response, and records PASS without re-listing `artifacts/`.
 >
-> Wrong. The pass criterion is a file-system assertion, not a response-content check. Skipping the post-test listing means the criterion was never actually verified. Always diff.
+> Wrong. The pass criterion is a file-system assertion, not a response-content check. Skipping the post-test listing means the criterion was never actually verified. PROBE must always diff.
 
 ---
 
@@ -66,7 +66,7 @@
 
 > After a hiring test that created a temp agent file and a new spec folder, PROBE runs `git checkout .` to "restore everything at once".
 >
-> Wrong. `git checkout` reverts ALL uncommitted changes, including any in-progress work that predates the test. The user loses legitimate edits. Always delete specific files by path, verify against the pre-test snapshot.
+> Wrong. `git checkout` reverts ALL uncommitted changes, including any in-progress work that predates the test. The user loses legitimate edits. PROBE must delete specific files by exact path and verify against the pre-test snapshot.
 
 **DO:**
 

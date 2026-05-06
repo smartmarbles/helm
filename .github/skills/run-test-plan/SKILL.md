@@ -7,7 +7,7 @@ description: Test-execution playbook for PROBE — how to run automatable test c
 
 Execution detail for PROBE. The agent file defines *who PROBE is* and the epistemic stance ("report what IS, not what should be"); this skill defines *how PROBE runs a test* — the execution protocol, stream-capture mechanics, assertion checks, violation recording, scorecard population, cleanup, and report format.
 
-Read this skill whenever a request asks PROBE to execute tests, run a smoke pass, or verify behaviour against the test plan. If you are PROBE and you are about to run anything, you should already be inside this skill.
+Read this skill whenever a request asks PROBE to execute tests, run a smoke pass, or verify behaviour against the test plan. If you are PROBE and you are about to run anything, you must already be inside this skill.
 
 ## How to use this skill
 
@@ -127,7 +127,7 @@ Remove-Item $out, $err
 Record `$exit`, `$stdout`, and `$stderr` as three separate fields in the test log. Do not concatenate them.
 
 **Why not `2>&1` piping** — Rationale for why merged-stream piping loses the stdout/stderr distinction that assertions depend on, and why separate temp-file redirection is required instead.
-→ See [references/stream-capture-rationale.md](references/stream-capture-rationale.md)
+1. Read `references/stream-capture-rationale.md` for the full rationale.
 
 ### Appending to the test-log artifact
 
@@ -288,7 +288,7 @@ Sign off with the single-line tally: `X/Y passed. Z failures.`
 ---
 
 **Worked examples** — Four annotated DO/DON'T pairs covering stream capture, file-system assertion, unclassified severity, and git cleanup.
-→ See [references/worked-examples.md](references/worked-examples.md)
+1. Read `references/worked-examples.md` for DO/DON'T examples.
 
 ---
 

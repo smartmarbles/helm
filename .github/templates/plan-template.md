@@ -6,15 +6,6 @@
 
 [One paragraph: what's being built, the primary technical approach, and the key constraint.]
 
-## Technical Context
-
-| Attribute | Value |
-|-----------|-------|
-| Language/Version | [e.g., TypeScript 5.x] |
-| Key Dependencies | [frameworks, libraries] |
-| Target Platform | [e.g., web, Node.js, mobile] |
-| Testing Strategy | [e.g., Vitest, Jest] |
-
 ## Phases
 
 ### Phase 1: [Name] — [Purpose]
@@ -38,13 +29,6 @@
 > PARALLEL: Tasks 2.1 and 2.2 run simultaneously
 > BLOCKED BY: Phase 1 (all tasks)
 
-### Phase N: Verification & Polish
-
-- [ ] **Task N.1**: Run full test suite
-- [ ] **Task N.2**: Validate acceptance criteria against spec
-
-> BLOCKED BY: All prior phases
-
 ## Watch Out
 
 - [Gotcha 1: the subtle dependency or trap]
@@ -53,10 +37,3 @@
 ## Open Questions
 
 - [ ] [Question 1 — what decision is needed and from whom]
-
-## Progress
-
-| Phase | Status | Notes |
-|-------|--------|-------|
-| Phase 1 | Not started | |
-| Phase 2 | Not started | |

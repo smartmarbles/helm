@@ -7,7 +7,7 @@ description: Specification authoring playbook for SAGE — the how-to for turnin
 
 Process detail for SAGE when the deliverable is a feature specification. The agent file defines *who SAGE is* and the non-negotiable principles; this skill defines *how SAGE turns a request into a spec* — intent capture, structure, open questions, and checkpoint handoff.
 
-Read this skill whenever SAGE is about to write a `spec.md`. If you are SAGE and the task is "create a spec" or you are on the full path before any plan exists, you should already be inside this skill. Planning — phases, dependencies, file assignments, parallelization — is a separate deliverable covered by the `create-plan` skill. Do not blend the two.
+Read this skill before writing a `spec.md`. If the task is "create a spec" or you are on the full path before any plan exists, you must already be inside this skill. Planning — phases, dependencies, file assignments, parallelization — is a separate deliverable covered by the `create-plan` skill. Do not blend the two.
 
 ## How to use this skill
 
@@ -47,7 +47,7 @@ Five steps. Do not reorder. Do not merge steps.
 2. **Verify externalities.** If the spec depends on external libraries, APIs, or platform behaviour, use web search to confirm current documentation. Training knowledge is in the past; the docs are in the present.
 3. **Capture intent.** Write one paragraph in your own words stating what is being built and why. If restating reveals ambiguity, list it in Open Questions before continuing.
 4. **Outline before drafting.** Sketch the Overview, P1/P2/P3 scenarios, and the FR list as bullet points first. This surfaces gaps before you commit them to prose.
-5. **Draft the full spec** using the required structure. Every section is filled in — no placeholder text, no "TBD" left behind.
+5. **Draft the full spec** using the required structure. Required sections are fully filled in — no placeholder text, no "TBD" left behind. Optional sections (Non-Functional Requirements) may be omitted entirely when scope does not warrant them; if included, they must be complete — no placeholders.
 
 ### Rule: intent first, structure second
 
@@ -111,7 +111,7 @@ A spec that exists only in your response text did not get written. Every spec de
 
 Specs live in numbered spec folders under `artifacts/`:
 
-1. **ARTHUR assigns the folder name.** If ARTHUR gave you one (e.g., `artifacts/spec004-fix-payment-timeout/`), use it.
+1. **If ARTHUR gave you a folder** (e.g., `artifacts/spec004-fix-payment-timeout/`), use it.
 2. **If no folder was specified**, scan `artifacts/` for the highest existing `spec###-*` folder, increment the number, and use a generic short name (`spec###-unnamed`) flagged for ARTHUR to rename.
 3. **If no spec folders exist at all**, use `artifacts/spec001-unnamed/` (or the provided short name).
 4. **`create_file` creates missing parent directories automatically.** Do not run a separate mkdir step. Do not ask the user for permission to create the folder — just write.
@@ -121,13 +121,7 @@ Specs live in numbered spec folders under `artifacts/`:
 
 ## Session Resumption
 
-Specs often span multiple sections; checkpoint as you go.
-
-- **Before starting:** check `/memories/session/` (or `.agent-memory/session/` in memory-less mode) for a prior checkpoint on this spec. If found, resume from the next incomplete section rather than starting over.
-- **While working:** after completing each major section (Overview, each scenario block, FR table, Success Criteria, Edge Cases, Open Questions), write a checkpoint recording: target spec folder, current stage, completed sections, and any key decisions or open questions captured so far.
-- **After completing:** clear the checkpoint.
-
-See `AGENTS.md` for the full Session Resumption Protocol.
+Follow the Session Resumption Protocol in `AGENTS.md`.
 
 ---
 

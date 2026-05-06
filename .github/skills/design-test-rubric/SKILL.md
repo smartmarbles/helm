@@ -7,7 +7,7 @@ description: Rubric-design playbook for PROBE — how to author a Helm test-run 
 
 Rubric-authoring detail for PROBE. The agent file defines *who PROBE is* ("report what IS, not what should be") and the `run-test-plan` skill defines *how PROBE executes* a run; this skill defines *how PROBE designs the instrument* that a run is scored against — the categories, their weights, the severity tiers, the violation log shape, the model-verification protocol, and the scorecard template.
 
-Read this skill whenever a request asks PROBE to build, extend, or revise a rubric. If you are PROBE and you are about to name a category, pick a weight, define a severity tier, or write a scorecard schema, you should already be inside this skill.
+Read this skill whenever a request asks PROBE to build, extend, or revise a rubric. If you are PROBE and you are about to name a category, pick a weight, define a severity tier, or write a scorecard schema, you must already be inside this skill.
 
 ## How to use this skill
 
@@ -31,7 +31,7 @@ Every rubric covers exactly **eight categories** whose weights sum to **100**. E
 
 Weight allocation is empirical. Cluster weight on the failure modes that actually surface most on the weakest supported model. A pristine-looking rubric whose weights are spread evenly across categories will hide the failure modes that matter most.
 
-- Top-two categories should absorb roughly **40–50%** of total weight when one or two failure modes dominate the target model's error profile.
+- Top-two categories must absorb roughly **40–50%** of total weight when one or two failure modes dominate the target model's error profile.
 - Mid-weight categories (**~10%** each) cover process-quality dimensions that matter but affect fewer interactions.
 - Lowest-weight categories (**~5–8%** each) capture hygiene issues whose per-violation cost is small.
 
@@ -39,7 +39,7 @@ Weight allocation is empirical. Cluster weight on the failure modes that actuall
 
 Each category row must carry a one-sentence justification for its weight, grounded in either an observed failure pattern or a traceable spec requirement. "Because it seemed important" is not a rationale.
 
-→ [Category Table Shape and Sub-score Formulas](references/category-weight-tables.md) — column scaffold, required total row, and weighted sub-score calculation formulas
+1. Read `references/category-weight-tables.md` — column scaffold, required total row, and weighted sub-score calculation formulas.
 
 ---
 
@@ -47,7 +47,7 @@ Each category row must carry a one-sentence justification for its weight, ground
 
 Every violation carries a severity tag. Severity is a design artifact of the rubric — PROBE the runner does not invent new severities at execution time.
 
-→ [Severity Taxonomy Table](references/severity-taxonomy.md) — critical/major/minor definitions and sub-score impact
+1. Read `references/severity-taxonomy.md` — critical/major/minor definitions and sub-score impact.
 
 ### Rule: critical violations have a hard ceiling on the overall score
 
@@ -67,7 +67,7 @@ Runners record `unclassified` for novel violations. The rubric author's job is t
 
 Every rubric specifies the schema for the violation log that accompanies each scorecard. Runners append rows; the rubric defines the columns.
 
-→ [Violation Log Required Fields](references/violation-log-schema.md) — field names, types, and descriptions
+1. Read `references/violation-log-schema.md` — field names, types, and descriptions.
 
 ### Rule: `expected` and `actual` are both required and both concrete
 
@@ -81,7 +81,7 @@ A line reference, a file path, a quoted response excerpt. "Agent's response" is 
 
 ## Run Tagging Conventions
 
-→ [Run Tagging Reference](references/run-tagging-conventions.md) — canonical YAML block shape and model tag values
+1. Read `references/run-tagging-conventions.md` — canonical YAML block shape and model tag values.
 
 ### Rule: an untagged or mis-tagged run is invalid
 
@@ -111,7 +111,7 @@ Before any test cases in a batch, issue a single pre-flight prompt:
 
 Record one or two concrete fingerprint observations per run. Each fingerprint is a **single observation captured from the first 2–3 real test responses**, not a standalone test case added to the corpus.
 
-→ [Model Behavioural Fingerprints](references/model-fingerprints.md) — per-model latency and style fingerprints for Layer 2 verification
+1. Read `references/model-fingerprints.md` — per-model latency and style fingerprints for Layer 2 verification.
 
 **Recorded as** (per run, in a `## Verification` section of the scorecard): observation value (latency range, sample preamble string) + verdict — **match / mismatch / inconclusive**.
 
@@ -133,7 +133,7 @@ The model slug passed in the brief (`model=<slug>`) is the report label for this
 
 ### Flagging and retry rules
 
-→ [Flagging and Retry Rules](references/model-fingerprints.md#flagging-and-retry-rules) — signal-pattern → action lookup for non-nominal layer signals
+1. Read `references/model-fingerprints.md` § flagging-and-retry-rules — signal-pattern → action lookup for non-nominal layer signals.
 
 Every scorecard must include a `## Verification` section recording:
 
@@ -147,7 +147,7 @@ Runs missing any of the three layers' records are invalid.
 
 ## Scorecard Template
 
-→ [Scorecard Template](references/scorecard-template.md) — full markdown scaffold and fixed-per-version rule
+1. Read `references/scorecard-template.md` — full markdown scaffold and fixed-per-version rule.
 
 ---
 
@@ -182,10 +182,10 @@ Cross-phase evidence (≥2 runs on ≥2 models) is required before shifting weig
 
 ## Worked examples
 
-→ [Worked Examples](references/worked-examples.md) — four DO/DON'T scenario pairs (weighting, severity, new-model fingerprint, inconclusive verification)
+1. Read `references/worked-examples.md` — four DO/DON'T scenario pairs (weighting, severity, new-model fingerprint, inconclusive verification).
 
 ---
 
 ## Quick reference
 
-→ [Quick Reference](references/quick-reference.md) — condensed cheat-sheet of all key rules
+1. Read `references/quick-reference.md` — condensed cheat-sheet of all key rules.

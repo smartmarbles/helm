@@ -7,7 +7,7 @@ description: Implementation-plan authoring playbook for SAGE — the how-to for 
 
 Process detail for SAGE when the deliverable is an implementation plan. The agent file defines *who SAGE is* and the non-negotiable principles; this skill defines *how SAGE turns an approved spec (or a clear standard-path request) into an executable plan* — phase design, dependency annotation, file-ownership assignment, and checkpoint handoff.
 
-Read this skill whenever SAGE is about to write a `plan.md`. If you are SAGE and the task is "create a plan," or you are on the full path after a spec has been approved, or on the standard path from the start, you should already be inside this skill. Spec authoring — intent capture, user scenarios, functional requirements — is a separate deliverable covered by the `create-spec` skill. Do not blend the two.
+Read this skill before writing a `plan.md`. If the task is "create a plan," or you are on the full path after a spec has been approved, or on the standard path from the start, you must already be inside this skill. Spec authoring — intent capture, user scenarios, functional requirements — is a separate deliverable covered by the `create-spec` skill. Do not blend the two.
 
 ## How to use this skill
 
@@ -49,9 +49,9 @@ Five steps. Do not reorder. Do not merge steps.
 2. **Verify externalities.** If the plan depends on external libraries, APIs, or platform behaviour, use web search to confirm current documentation. Training knowledge is in the past; the docs are in the present.
 3. **Consider edge cases and implicit requirements** the user or spec did not mention. These feed the **Watch Out** section.
 4. **Plan — WHAT, not HOW.** Describe what each task must achieve and which files it touches. Do not write pseudocode, do not dictate function signatures, do not prescribe algorithms. The implementer is the expert on implementation.
-5. **Right-size the output.** A 2-file change does not need 5 phases. Match plan complexity to task complexity. Produce a separate `tasks.md` or detailed per-task annotations only when the work genuinely warrants it (see tasks.md split rule below).
+5. **Right-size the output.** A 2-file change does not need 5 phases. Match plan complexity to task complexity. All task tracking lives in `plan.md` checkboxes — no secondary tracker is needed.
 
-   **Phase size rule:** Each phase must be completable by a single agent in a single pass. If a phase contains more than ~8 tasks, or if executing all tasks would produce more than ~200 lines of file output, **split the phase**. An agent that hits its output token limit mid-phase leaves the file in an inconsistent half-written state — phased splitting prevents this. Each sub-phase should have a clear entry criterion (what the prior sub-phase produced) and a clear exit criterion (what the next sub-phase needs as input).
+   **Phase size rule:** Each phase must be completable by a single agent in a single pass. If a phase contains more than ~8 tasks, or if executing all tasks would produce more than ~200 lines of file output, **split the phase**. An agent that hits its output token limit mid-phase leaves the file in an inconsistent half-written state — phased splitting prevents this. Each sub-phase must have a clear entry criterion (what the prior sub-phase produced) and a clear exit criterion (what the next sub-phase needs as input).
 
    **Flag to ARTHUR** when a task or phase is ambiguously large — e.g., "Author 22 test entries" is not one task, it is many. Split it during planning, not during execution.
 
@@ -131,7 +131,7 @@ Every task owns the files it touches. Ownership is the contract that makes paral
 
 ### Rule: vague file assignments are not assignments
 
-"Modifies the checkout flow" is not a file assignment. `apps/web/src/checkout/index.tsx, apps/web/src/checkout/validation.ts` is a file assignment. If you cannot name the paths, do more research before writing the phase.
+"Modifies the checkout flow" is not a file assignment. `apps/web/src/checkout/index.tsx, apps/web/src/checkout/validation.ts` is a file assignment. If you cannot name the paths, delegate more research to SCOOP via the agent tool before writing the phase — do not read the codebase yourself.
 
 ---
 
@@ -154,7 +154,7 @@ After the plan is written, ARTHUR runs the Plan Checkpoint before any phased exe
 1. **Write the file to disk** with `create_file`. Path: `artifacts/spec###-short-name/plan.md`. Never return plan content as response text.
 2. **Report back** to ARTHUR in this exact shape:
    - The spec folder path
-   - The file(s) written (`plan.md`, optionally `tasks.md`)
+   - The file written (`plan.md`)
    - A 1–2 sentence summary of the plan shape: phase count, parallel vs sequential balance, agents involved
    - The count of Open Questions (so ARTHUR knows to surface them) and a pointer to the Watch Out section
 3. **Stop.** Do not start executing phases. Do not dispatch agents. The user owns the checkpoint decision.
@@ -169,7 +169,7 @@ A plan that exists only in your response text did not get written. Every plan de
 
 Plans live in numbered spec folders under `artifacts/`:
 
-1. **ARTHUR assigns the folder name.** On the full path, use the same folder where the approved spec was written (e.g., `artifacts/spec004-fix-payment-timeout/`).
+1. **On the full path**, use the same folder where the approved spec was written (e.g., `artifacts/spec004-fix-payment-timeout/`).
 2. **On the standard path with no pre-existing folder**, scan `artifacts/` for the highest existing `spec###-*`, increment, and use the provided short name (or `spec###-unnamed` flagged for ARTHUR to rename).
 3. **`create_file` creates missing parent directories automatically.** Do not run a separate mkdir step. Do not ask the user for permission — just write.
 4. **The only filename is `plan.md`.**
@@ -178,13 +178,7 @@ Plans live in numbered spec folders under `artifacts/`:
 
 ## Session Resumption
 
-Plans span multiple phases; checkpoint as you go.
-
-- **Before starting:** check `/memories/session/` (or `.agent-memory/session/` in memory-less mode) for a prior checkpoint on this plan. If found, resume from the next incomplete phase rather than starting over.
-- **While working:** after drafting each phase (and after identifying Watch Out entries), write a checkpoint recording: target spec folder, current stage, phases drafted so far, key dependency decisions, and any open questions surfaced.
-- **After completing:** clear the checkpoint.
-
-See `AGENTS.md` for the full Session Resumption Protocol.
+Follow the Session Resumption Protocol in `AGENTS.md`.
 
 ---
 
@@ -250,7 +244,7 @@ See `AGENTS.md` for the full Session Resumption Protocol.
 
 > SAGE writes `artifacts/spec007-recurring-exports/plan.md` with `create_file`, then reports:
 >
-> > Plan written to `artifacts/spec007-recurring-exports/plan.md`. 4 phases: Phase 1 foundational (shared types, scheduler schema), Phases 2–3 parallel feature work, Phase 4 integration. 14 tasks total — `tasks.md` also produced. **1 Open Question** (email-delivery provider choice). Watch Out covers DST scheduling edge case.
+> > Plan written to `artifacts/spec007-recurring-exports/plan.md`. 4 phases: Phase 1 foundational (shared types, scheduler schema), Phases 2–3 parallel feature work, Phase 4 integration. 14 tasks total. **1 Open Question** (email-delivery provider choice). Watch Out covers DST scheduling edge case.
 >
 > Stops. Does not dispatch agents.
 
@@ -270,6 +264,6 @@ See `AGENTS.md` for the full Session Resumption Protocol.
 - **Every task has files?** → Explicit paths, no overlap within a phase.
 - **Watch Out filled in?** → Non-negotiable.
 - **Open Questions surfaced?** → Explicit section, never hidden. "None" is a valid answer; silence is not.
-- **tasks.md needed?** → Only if >10 tasks or multi-session work.
+- **tasks.md needed?** → Never. `plan.md` is the only tracker.
 - **Written to disk?** → `create_file` always. Narration is not delivery.
 - **Checkpoint handoff?** → Report folder, files, phase summary, Open-Questions count, Watch Out pointer. Then stop.

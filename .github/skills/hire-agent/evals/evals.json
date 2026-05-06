@@ -18,13 +18,14 @@
     {
       "id": 2,
       "prompt": "Hire a temp to run a one-shot Python migration script for converting legacy config files. This is a single-task hire.",
-      "expected_output": "MERLIN invokes SCOOP on Python migration-script engineers before drafting. Drafts a temporary agent file at `.github/agents/<name>.agent.md` (active location) with the full schema including `## Research Foundation`. Adds a row to the Temporary Agents table with Task, Hired=today, Archived=*(active)*, and File pointing to the active path. Records the tagline in the callout below the table. Does NOT add a re-archival trigger (this is single-dispatch, not retained). Does NOT move the file into `.github/agents/temps/` yet — archival is a separate workflow and out of scope.",
+      "expected_output": "MERLIN invokes SCOOP on Python migration-script engineers before drafting. Drafts a temporary agent file at `.github/agents/<name>.agent.md` (active location) with the full schema including `## Research Foundation`. Appends a row to the Temporary Agents table with columns Agent | Role | Use When | Hired=today | Tagline, placing the tagline directly in the Tagline column cell. Does NOT add a re-archival trigger (this is single-dispatch, not retained). Does NOT move the file into `.github/agents/temps/` yet — archival is a separate workflow and out of scope.",
       "files": [],
       "expectations": [
         "MERLIN invokes SCOOP before drafting any agent file",
         "Placement is temporary — roster row lands in the Temporary Agents table, not Permanent Team",
         "The agent file is written to `.github/agents/<name>.agent.md` (the active location), NOT directly into `.github/agents/temps/`",
-        "The Archived column reads `*(active)*` while the agent is in use",
+        "The row appended to the Temporary Agents table uses columns: Agent | Role | Use When | Hired | Tagline — no Task, Archived, File, or Status columns",
+        "The tagline is placed in the Tagline column cell, not in a callout below the table",
         "No re-archival trigger callout is added — this is single-dispatch, not a retained temp",
         "MERLIN does NOT perform archival to `temps/` in this turn — that workflow belongs to the `archive-agent` skill"
       ]

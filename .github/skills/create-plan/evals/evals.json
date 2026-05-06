@@ -3,7 +3,7 @@
     {
       "id": "plan-from-approved-spec",
       "prompt": "The spec at artifacts/spec007-recurring-exports/spec.md has been approved at the Spec Checkpoint. Produce the implementation plan.",
-      "expected_output": "SAGE dispatches SCOOP for codebase/pattern research, then drafts a phased plan.md under artifacts/spec007-recurring-exports/. Each phase has explicit PARALLEL and BLOCKED BY annotations; each task names the files it owns with no file overlap inside a phase. Shared/foundational work (types, schemas) appears in Phase 1. A Watch Out section is present. Open Questions section is explicit. If >10 tasks, a tasks.md is also produced. Files are written via create_file. SAGE reports back with folder path, files written, 1-2 sentence phase summary, Open Questions count, and a Watch Out pointer. Does NOT begin phased execution.",
+      "expected_output": "SAGE dispatches SCOOP for codebase/pattern research, then drafts a phased plan.md under artifacts/spec007-recurring-exports/. Each phase has explicit PARALLEL and BLOCKED BY annotations; each task names the files it owns with no file overlap inside a phase. Shared/foundational work (types, schemas) appears in Phase 1. A Watch Out section is present. Open Questions section is explicit. No tasks.md is produced — all task tracking lives in plan.md checkboxes only. Files are written via create_file. SAGE reports back with folder path, files written, 1-2 sentence phase summary, Open Questions count, and a Watch Out pointer. Does NOT begin phased execution.",
       "files": [],
       "expectations": [
         "SCOOP is dispatched for technical/codebase research before phases are drafted",

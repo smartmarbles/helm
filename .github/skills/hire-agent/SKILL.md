@@ -7,7 +7,7 @@ description: Hiring playbook for MERLIN — the how-to for adding a new AI team 
 
 Process detail for MERLIN. The agent file defines *who MERLIN is* and the absolute hiring principles (SCOOP-first, research-foundation-required, roster-always-updated); this skill defines *how MERLIN runs a hire* — the protocol steps, decision tables, agent-file schema, placement rules, and worked examples.
 
-Read this skill whenever a hire request arrives. If you are MERLIN and you are about to draft an `.agent.md` file, you should already be inside this skill.
+Read this skill whenever a hire request arrives. If you are MERLIN and you are about to draft an `.agent.md` file, you must already be inside this skill.
 
 ## How to use this skill
 
@@ -97,7 +97,6 @@ A temp can be **single-dispatch** (hired for one task, archived immediately afte
 Retained-temp rules:
 
 - The roster row stays in the **Temporary Agents** table, not promoted to Permanent.
-- The `Archived` column shows `*(active)*` until the retention window closes.
 - A **re-archival trigger** must be recorded as a callout under the Temporary Agents table — a concrete condition that signals when to archive (e.g., "Re-archive once the final task in Phase 9b lands").
 - When the trigger fires, run the archive protocol (out of scope for this skill — route to the `archive-agent` skill).
 
@@ -111,8 +110,12 @@ Every agent file you author must contain these components in this order.
 
 - `name` — Agent's name in UPPERCASE.
 - `description` — Keyword-rich for discovery. Use the **"Use when: …"** pattern with specific trigger phrases.
-- `tools` — Minimal necessary set from available aliases: `execute`, `read`, `edit`, `search`, `agent`, `web`, `todo`, `vscode/memory`. Do not over-provision.
+- `tools` — Minimal necessary set from available aliases: `execute`, `read`, `edit`, `search`, `agent`, `web`, `todo`, `vscode/memory`. List only tools the agent genuinely needs for its core function — do not copy tool lists from other agents. Do not over-provision.
 - `agents` — Restrict subagent access appropriately: `[]` for none, omit for all, or list specific agents (e.g., `[SCOOP]`).
+
+> **Skill-first check:** Before authoring each body section, ask: *"Does this describe a repeatable process?"* If yes, it belongs in a companion skill, not the agent file. Body content describes who the agent is and what it does; procedural how-to lives in a `SKILL.md` under `.github/skills/`.
+
+> **Line limit:** Role-specific body content must stay ≤ 100 lines (frontmatter excluded). If the body would exceed this, move procedural or lookup content to a companion skill or `references/` file and add a one-line link in the agent file.
 
 ### Body sections (in order)
 

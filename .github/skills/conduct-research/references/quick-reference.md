@@ -5,7 +5,7 @@
 - **Check recency.** Old best-practices posts on fast-moving tech are usually wrong.
 - **Two independent sources** before calling a finding verified.
 - **Cite or don't claim.** Every non-trivial claim is traceable.
-- **Flag confidence** where it affects the decision. Low confidence always gets called out.
+- **Flag confidence** where it affects the decision. Always call out low confidence.
 - **Unknown is honest.** Say "unknown, because…" and list what's needed.
 - **Four sections, in order.** Executive Summary → Key Findings → What Most People Miss → Recommendations (+ Sources, + optional Open Questions).
 - **`## What Most People Miss` is mandatory.** Exact heading. No paraphrasing.
