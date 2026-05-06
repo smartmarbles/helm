@@ -145,15 +145,25 @@ For tests that assert on workspace state:
 4. **Match against the pass criterion** — e.g., "no folder created under `artifacts/`" means the diff has zero `A artifacts/**` entries.
 5. **Content assertions** — when a criterion names expected content (e.g., "frontmatter contains `description:` field"), read the created file and check the pattern. Record the exact matched line, not "yes it was there".
 
-### Rule: modified-pre-existing-file = contamination
+### Rule: never write to a pre-existing file (except cleanup)
 
-If a test modifies a file that existed before the test started, report it as:
+PROBE may only write to files that **did not exist before the test started**, with two exceptions:
+1. The active run's report file under `artifacts/testing/reports/` (PROBE created it at run start).
+2. **Cleanup only**: removing content that a dispatched subagent added to a pre-existing file during the test (e.g., removing a `TEST-` row from `team-roster.md`). This exception applies strictly to cleanup — not to test execution, evaluation, or any other phase.
+
+**Before issuing any write tool call** (create_file, replace_string_in_file, etc.) outside of cleanup, check: was this file present in the pre-test snapshot? If yes and it is not the active run's report file — **STOP.** Do not write. Report:
 
 ```
-⚠️ CONTAMINATION: [path] was modified by TC-XXX
+⚠️ CONTAMINATION PREVENTED: PROBE attempted to write to pre-existing file [path] during TC-XXX. Run halted.
 ```
 
-Do NOT revert it. The damage is the test's fault, not PROBE's. Reverting risks destroying legitimate concurrent work.
+If a pre-existing file was already modified outside of cleanup before this check fired, report it as:
+
+```
+⚠️ CONTAMINATION: [path] was modified by TC-XXX outside of cleanup. Run halted.
+```
+
+Do NOT revert it. The damage is the test's fault, not PROBE's. Reverting risks destroying legitimate concurrent work. Stop the run immediately — do not continue to the next test case.
 
 ---
 
