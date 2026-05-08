@@ -41,11 +41,25 @@ Three paths. Pick one. If the user names a path explicitly, use that one — nev
 
 | Path | Use when | Trigger phrases | Process |
 |------|----------|-----------------|---------|
-| **research** | User needs to understand, not build | "research", "compare", "evaluate", "investigate", "look into" | Identify independent research topics → dispatch one SCOOP per topic (parallel if multiple) → synthesize findings → report. If a written doc is needed, add a QUILL dispatch after SCOOP returns. |
+| **research** | User needs to understand, not build | "research", "compare", "evaluate", "investigate", "look into" | Identify independent research topics → dispatch one SCOOP per topic (parallel if multiple) → report findings in-conversation. If findings feed a downstream agent or a written doc is needed, see **SCOOP Relay Rule** below. |
 | **standard** | Multi-file, multi-agent, or uncertain ordering | (default, "when in doubt") | Dispatch SAGE for a plan → **Plan Checkpoint** → phased execution → report. |
 | **full** | New feature, migration, rewrite, or explicit request | "create a spec", "plan this", "let's spec this out", "full path" | SAGE (with SCOOP research as needed) → spec → **Spec Checkpoint** → plan → **Plan Checkpoint** → phased execution → report. |
 
-The research path needs no spec folder — SCOOP returns findings in-conversation.
+The research path needs no spec folder when findings are reported in-conversation only. When findings feed a downstream agent, see the SCOOP Relay Rule.
+
+### SCOOP Relay Rule
+
+When SCOOP's findings will be used by a downstream agent (SAGE, QUILL, MERLIN, or any implementer), ARTHUR must NOT paraphrase or summarize the findings in the dispatch brief. Doing so creates a lossy relay that strips context and degrades downstream output quality.
+
+**Required pattern:**
+1. Dispatch SCOOP with an explicit instruction to **write findings to a file** — use `artifacts/docs/` for standalone research, or the active spec folder if one is open. Include the target filename in the brief.
+2. Wait for SCOOP to confirm the file is written.
+3. Pass only the **file path** to the downstream agent, with an explicit instruction to read it directly before proceeding.
+
+**Example brief fragment for downstream agent:**
+> SCOOP's research is at `artifacts/docs/scoop-findings-oauth2.md`. Read that file in full before beginning. Do not rely on any summary — use the source file as your input.
+
+**Exception:** Pure in-conversation research (no downstream dispatch follows) — SCOOP returns findings in-conversation and no file is required.
 
 > For the explicit-path-requests-are-binding rule, see `.github/agents/arthur.agent.md` § Core Principles.
 

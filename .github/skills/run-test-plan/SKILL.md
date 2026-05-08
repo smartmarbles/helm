@@ -17,8 +17,11 @@ Read this skill whenever a request asks PROBE to execute tests, run a smoke pass
 
    > **Ordering violation self-report:** If model verification was skipped or partially completed before proceeding, record it explicitly in the run report's Verification section and note which test cases were affected. Do not silently proceed.
 1. **Accept the command** (`run TC-XXX`, `run category X`, `run agent AGENT`, `run smoke`) — parse scope.
-2. **Load the test plan** at `artifacts/testing/test-plan.md` and the pre-existing scorecard (if the run targets one).
-3. **Read the Summary Checklist** — located near the bottom of the test plan under the heading `## Summary Checklist`. This is the authoritative source for each test's mode and category membership. Build your run list from it before reading individual test bodies. Never infer mode from icons in the test body.
+2. **Verify clean working tree** — run `git status --short`. If the output is not empty, **stop immediately** and tell the user:
+   > ⛔ Working tree is not clean. Commit or stash all changes before running tests — PROBE uses `git status` to detect test artifacts, and a dirty tree makes that unreliable.
+   Do not proceed until the user confirms the tree is clean.
+3. **Load the test plan** at `artifacts/testing/test-plan.md` and the pre-existing scorecard (if the run targets one).
+4. **Read the Summary Checklist** — located near the bottom of the test plan under the heading `## Summary Checklist`. This is the authoritative source for each test's mode and category membership. Build your run list from it before reading individual test bodies. Never infer mode from icons in the test body.
 
    **For `run category X` commands**: find the category X sub-section in the Summary Checklist (e.g., `### X — ...` or the rows grouped under the `X` category label). Collect only the TC rows explicitly listed under that sub-section. Do NOT infer membership by TC-number proximity or contiguous range — a category's TCs may be non-contiguous. The checklist rows are the definitive membership list.
 
@@ -35,11 +38,11 @@ Read this skill whenever a request asks PROBE to execute tests, run a smoke pass
    > | **[4]** automatable criterion | ❌ FAIL \| V-001 (critical) | … |
    > | **[5]** manual criterion | ⏭️ SKIP — manual criteria, requires human execution | 👤 manual |
 
-4. **Execute each test** via the Execution Protocol — snapshot → run → evaluate → check side effects → record → clean up.
-5. **Capture streams** for any shell or tool command using the Stream Capture rules.
-6. **Record violations** into the Violation Log using the schema below — observed, not inferred.
-7. **Populate the scorecard** with what was observed (severity/weight come from the rubric; *filling it in* is execution).
-8. **Report** with the pass/fail summary format and sign off with the one-line tally.
+5. **Execute each test** via the Execution Protocol — snapshot → run → evaluate → check side effects → record → clean up.
+6. **Capture streams** for any shell or tool command using the Stream Capture rules.
+7. **Record violations** into the Violation Log using the schema below — observed, not inferred.
+8. **Populate the scorecard** with what was observed (severity/weight come from the rubric; *filling it in* is execution).
+9. **Report** with the pass/fail summary format and sign off with the one-line tally.
 
 ---
 
@@ -49,10 +52,10 @@ Every automatable test follows these seven steps. Do not reorder. Do not skip a 
 
 1. **Announce** — `Running TC-XXX: [name]...`
 2. **Read the test** from the test plan to get the exact input prompt and pass criteria. Do not rely on a registry table alone for pass criteria.
-3. **Snapshot** pre-test state relevant to the test:
-   - List `artifacts/` for artifact tests.
-   - List `.github/agents/` for hiring tests.
-   - Use the `memory` tool to view `/memories/session/` and `/memories/repo/` for memory tests.
+3. **Snapshot** pre-test state relevant to the test. Use the cheapest signal that gives an unambiguous diff:
+   - **Artifact tests** — run `git status --short` and confirm the output is empty before dispatching. If not clean, a previous test's cleanup failed — halt, report the dirty paths, and do not proceed until resolved.
+   - **Hiring tests** — run `Get-ChildItem .github/agents/ -Filter "*.agent.md" | Select-Object -ExpandProperty Name` (names only, not contents).
+   - **Memory tests** — use the `memory` tool to view `/memories/session/` and `/memories/repo/`.
    - `/memories/` paths are VS Code virtual paths accessed via the `memory` tool — they are NOT physical folders. A `memories/` folder appearing in the workspace filesystem is contamination.
 4. **Execute** — invoke the target agent as a subagent with the *exact* input prompt from the test plan. For shell/tool tests, run the command and capture streams (see Stream Capture below).
 5. **Evaluate** the response against each pass criterion. For each criterion, determine PASS or FAIL and record the specific evidence observed — quote the relevant response excerpt, tool call name, or file content. Evidence is required for every criterion regardless of pass or fail. A criterion row with no evidence is invalid and must be treated as UNVERIFIABLE.
