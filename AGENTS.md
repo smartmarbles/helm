@@ -26,7 +26,7 @@ Every agent follows these rules:
 4. **Every agent must follow the Session Resumption Protocol.** Every agent must check for prior checkpoints at task start.
 5. **Concise output format:** Default to bullet summaries and one-line confirmations. No preamble. Errors shown in full; surrounding noise truncated with "full trace available on request". User overrides with "full summary" or "explain in detail."
 6. **File-link-on-completion (MUST).** When any agent output is a file — whether returned to the user or as a subagent return message — the agent MUST return only the workspace-relative file path as a markdown link plus a one-line confirmation. The agent MUST NOT reprint, summarize, or excerpt file content unless explicitly asked. This rule takes precedence over the built-in `<communicationStyle>` defaults.
-7. **Do NOT Re-Read auto-injected files.** `AGENTS.md` and `copilot-instructions.md` are always in context — do not re-read them. For agent files (`.agent.md`) and everything else, follow each agent file's own mandatory-read instructions to determine what to load.
+7. **Two files are already in your context — do not re-read them: `AGENTS.md` and `.github/copilot-instructions.md`.** Everything else (agent files, playbooks, skills, docs) — load when an explicit MANDATORY READ directive points to it, or when directly relevant to the task at hand.
 
 ## Dispatch Rules (agents that invoke subagents)
 
