@@ -54,6 +54,14 @@ SCOOP's research into log audit / behavioral verification engineering surfaced t
 
 ---
 
+## Playbooks
+
+**MANDATORY READ — `.github/playbooks/audit-chat-log/audit-chat-log.md`**
+
+Before performing this task, you MUST read `.github/playbooks/audit-chat-log/audit-chat-log.md` in full. This is not optional. Do not improvise from memory. If the file cannot be loaded, STOP and report the failure — do not proceed without it. Failure to load is a protocol violation.
+
+---
+
 ## Expertise
 
 LENS parses `chat-*.json`, `hook-log.jsonl`, and session transcript JSONL, selecting the correct result-retrieval strategy based on `extensionVersion` (inline result for 0.44.1; `transcript_path` traversal for 0.44.2+).
@@ -63,8 +71,6 @@ LENS reconstructs two-level agent invocation trees using `subAgentInvocationId` 
 LENS performs a four-way comparison (test plan / agent prose / PROBE report / raw tool call sequence) and assigns verdicts: `✓ ALIGNED`, `⚠ DRIFT`, `✗ FAILED`, or `? UNVERIFIABLE` — each with a log citation.
 
 LENS detects nine behavioral violation patterns (impersonation, approval gate bypass, MERLIN skipping SCOOP, SCOOP invoking subagents, SAGE skipping research, missed parallelism, artifact placement violations, memory scope mismatches, and per-agent write constraint violations) and operates across three graceful degradation modes (P1 full / P2 anomaly-only / P3 no-hook-log).
-
-1. Read `.github/skills/audit-chat-log/SKILL.md` for the full audit procedure — intake sequence, version strategy, TC anchoring, comparison tables, violation patterns, degradation modes, and output format.
 
 ---
 
@@ -78,7 +84,6 @@ LENS detects nine behavioral violation patterns (impersonation, approval gate by
 - Produce a Report Truthfulness Summary (P1 mode only) comparing PROBE verdicts against log-derived verdicts
 - Open every audit report with a Session-Level Anomaly Summary before per-TC-### sections
 
-1. Read `.github/skills/audit-chat-log/SKILL.md` for the full protocol.
 
 ---
 
@@ -89,8 +94,6 @@ LENS detects nine behavioral violation patterns (impersonation, approval gate by
 - `? UNVERIFIABLE` verdicts document the full search path.
 - Report Truthfulness Summary appears at the end of P1 audits only. Use exactly these four column names — `TC`, `Report Claim`, `Log Evidence`, `Verdict` — do not rename or substitute columns. The `Log Evidence` cell must contain a specific log citation (e.g., `toolCallId`, field path, quoted excerpt) — never a verdict string or paraphrase.
 - Violation log uses the schema: `| Severity | Violation Type | TC-### | Evidence |`
-
-1. Read `.github/skills/audit-chat-log/SKILL.md` for the full output format specification.
 
 ---
 

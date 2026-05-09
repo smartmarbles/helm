@@ -24,9 +24,37 @@ Every agent follows these rules:
 2. **Read referenced docs only when directly relevant** — when you need the content for the task at hand, not preemptively.
 3. **"Read X before doing anything" means once per session** — not before every sub-task.
 4. **Every agent must follow the Session Resumption Protocol.** Every agent must check for prior checkpoints at task start.
-5. **Fresh-conversation hygiene:** When switching tasks, open a new conversation. Chat history is injected with every message — long sessions carry full overhead into unrelated tasks and weaker models lose track of original constraints.
-6. **Concise output format:** Default to bullet summaries and one-line confirmations. No preamble. Errors shown in full; surrounding noise truncated with "full trace available on request". User overrides with "full summary" or "explain in detail."
-7. **File-link-on-completion:** When output is a file, return the file path link and a one-line confirmation only. Do NOT reprint or summarize file content unless asked.
+5. **Concise output format:** Default to bullet summaries and one-line confirmations. No preamble. Errors shown in full; surrounding noise truncated with "full trace available on request". User overrides with "full summary" or "explain in detail."
+6. **File-link-on-completion (MUST).** When any agent output is a file — whether returned to the user or as a subagent return message — the agent MUST return only the workspace-relative file path as a markdown link plus a one-line confirmation. The agent MUST NOT reprint, summarize, or excerpt file content unless explicitly asked. This rule takes precedence over the built-in `<communicationStyle>` defaults.
+7. **Do NOT Re-Read auto-injected files.** `AGENTS.md` and `copilot-instructions.md` are always in context — do not re-read them. For agent files (`.agent.md`) and everything else, follow each agent file's own mandatory-read instructions to determine what to load.
+
+## Dispatch Rules (agents that invoke subagents)
+
+These rules apply to every agent that calls `runSubagent` — not only ARTHUR.
+
+1. **ALWAYS use structured brief format.** Every `runSubagent` call MUST be structured as: **Objective / Constraints / Inputs / Expected Output**. Narrative prose dispatches are non-compliant.
+2. **NEVER narrate a delegation without executing it.** Every delegation MUST include an actual `runSubagent` tool call in the same response. Writing "I'm dispatching X now" without a corresponding tool call is a protocol violation. If you catch yourself describing a delegation in text, STOP and emit the tool call immediately. A delegation that exists only in prose did not happen.
+3. **NEVER fabricate or paraphrase error messages.** When a subagent dispatch or tool call fails, report the exact verbatim error text returned by the system. Do NOT infer, guess, paraphrase, or construct a plausible-sounding explanation. If the raw error is unavailable, say exactly that — "the system returned no error detail" — and stop. When reporting a blocker, include: what was attempted, the verbatim error (or "no error text available"), and what the user should do next.
+
+## Mandatory-Read Template
+
+When an agent file references playbooks, use the pattern that matches the agent's playbook count:
+
+**Single playbook** — use this block verbatim (substituting `<path>` only):
+
+> **MANDATORY READ — `<path>`**
+>
+> Before performing this task, you MUST read `<path>` in full. This is not optional. Do not improvise from memory. If the file cannot be loaded, STOP and report the failure — do not proceed without it. Failure to load is a protocol violation.
+
+**Multiple playbooks** — list each with a one-line purpose description, then add a single conditional instruction:
+
+> ## Playbooks
+>
+> **MANDATORY READ — select the playbook that matches your task:**
+>
+> - **\<name\>** — `<path>` — \<one-line description of when to use it\>
+>
+> The playbook corresponding to your task MUST be read in full before proceeding. This is not optional. Do not improvise from memory. Do not read playbooks that do not apply to the current task. If it cannot be loaded, STOP and report the failure — do not proceed without it. Failure to load is a protocol violation.
 
 ## Artifacts
 
@@ -38,15 +66,7 @@ Standalone documentation lives in `artifacts/docs/`.
 
 ## Memory Scope
 
-| Scope | Path prefix | Write here when… |
-|-------|-------------|------------------|
-| **Session** | `/memories/session/` | Working state — checkpoints, handoff notes, in-progress outlines. |
-| **Repo** | `/memories/repo/` | Durable project knowledge — conventions, decisions, verified facts. |
-| **User** | `/memories/` | Content that genuinely crosses projects. Rare. |
-
-**DEFAULT: Write project knowledge to `/memories/repo/`.** Write to `/memories/` only for content that genuinely crosses projects.
-
-> **WARNING:** Files under `/memories/` load into every Copilot session on this machine — Do NOT write project-specific content there.
+Memory scopes follow built-in `<memoryInstructions>`. **DEFAULT to `/memories/repo/`** for project knowledge; `/memories/` only for genuinely cross-project content.
 
 ## Session Resumption Protocol
 

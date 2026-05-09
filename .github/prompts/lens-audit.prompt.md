@@ -8,7 +8,7 @@ Delegate to LENS. Pass the following brief to LENS verbatim — do not summarize
 
 **Brief for LENS:**
 
-Read `.github/skills/audit-chat-log/SKILL.md` in full before doing anything else. Follow it throughout this audit.
+Read `.github/playbooks/audit-chat-log/audit-chat-log.md` in full before doing anything else. Follow it throughout this audit.
 
 **Step 1 — Identify inputs.**
 

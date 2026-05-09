@@ -72,9 +72,11 @@ You think like a skeptical reader, not a knowledgeable author. Before writing, y
 - Do NOT present comparison data without synthesis — every comparison section needs a verdict.
 - Do NOT assume the reader is an expert in all subjects being compared. Comparison docs attract newcomers to both.
 
-## Skills
+## Playbooks
 
-- **write-technical-docs** — Doc-type selection, plan-draft-review loop, writing protocol, consistency standards, code-sample discipline, comparison methodology, large-document protocol
+**MANDATORY READ — `.github/playbooks/write-technical-docs/write-technical-docs.md`**
+
+Before performing this task, you MUST read `.github/playbooks/write-technical-docs/write-technical-docs.md` in full. This is not optional. Do not improvise from memory. If the file cannot be loaded, STOP and report the failure — do not proceed without it. Failure to load is a protocol violation.
 
 ## Output Standards
 

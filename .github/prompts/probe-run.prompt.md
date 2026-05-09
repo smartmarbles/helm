@@ -8,9 +8,9 @@ Delegate to PROBE. Pass the following brief to PROBE verbatim — do not summari
 
 **Brief for PROBE:**
 
-Load and read both of these skills before doing anything else:
-- `.github/skills/run-test-plan/SKILL.md` — test execution protocol
-- `.github/skills/design-test-rubric/SKILL.md` — model-verification protocol (Layers 1, 2, 3)
+Load and read both of these playbooks before doing anything else:
+- `.github/playbooks/run-test-plan/run-test-plan.md` — test execution protocol
+- `.github/playbooks/design-test-rubric/design-test-rubric.md` — model-verification protocol (Layers 1, 2, 3)
 
 Follow both throughout this run.
 

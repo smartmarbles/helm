@@ -61,28 +61,37 @@ The Full Path includes mandatory human approval gates. ARTHUR cannot proceed pas
 
 When no existing team member fits a task, ARTHUR identifies the gap and engages MERLIN. MERLIN delegates to SCOOP to research the role requirements, then designs a new agent — complete with persona, skills, constraints, and communication style. The agent is written as a `.agent.md` file and can be permanent (added to the roster) or temporary (archived after task completion).
 
-## Skills
+## Skills and Playbooks
 
-Agents draw on **skills** — reusable instruction sets that encode domain-specific workflows and best practices. Each skill lives in its own folder under `.github/skills/` with a `SKILL.md` file. When a task matches a skill's domain, the agent loads the skill before starting work.
+Agents load procedural knowledge in one of two ways:
 
-The default skill set covers the full orchestration lifecycle:
+- **Skills** — reusable instruction sets under `.github/skills/`, loaded by VS Code Copilot via semantic trigger matching on the skill's `description:` field. Reliable on Claude models; triggering is less reliable on OSS models (Qwen3-27B, Gemma 4 31B).
+- **Playbooks** — single-agent procedural files under `.github/playbooks/`, loaded explicitly via a mandatory-read block in the owning agent's `.agent.md` file. Reliable on all models.
+
+**Why playbooks instead of more skills?** Skills are always present in the model's context window once created — they add tokens on every invocation whether or not the agent actually needs them for that turn. Playbooks are loaded only when the agent is performing the specific task the playbook covers. For procedures that run infrequently (hiring an agent, archiving a temp, running a test plan), keeping that content out of the always-on context saves significant tokens per conversation. Skills are the right choice when a procedure is genuinely reusable across multiple agents and needs to fire automatically; playbooks are the right choice when a procedure belongs to one agent and is invoked on demand.
+
+The current skill (always-on routing anchor):
 
 | Skill | Used by | Purpose |
 |-------|---------|--------|
 | `orchestrate-delegation` | ARTHUR | Complexity routing, parallel dispatch, human checkpoints |
+
+The current playbook set (loaded on-demand by the owning agent):
+
+| Playbook | Owned by | Purpose |
+|----------|----------|--------|
 | `conduct-research` | SCOOP | Investigation planning, source triage, confidence flagging |
 | `create-spec` | SAGE | Feature specification authoring |
 | `create-plan` | SAGE | Phased implementation planning with dependency annotations |
 | `write-technical-docs` | QUILL | Doc-type selection, plan-draft-review loop, code-sample discipline |
 | `hire-agent` | MERLIN | Role intake, persona design, agent-file authoring |
 | `archive-agent` | MERLIN | Temp agent offboarding and re-archival |
+| `skill-creator` | MERLIN | Creating or improving skills |
+| `audit-chat-log` | LENS | Chat log auditing and behavioral verification |
 | `design-test-rubric` | PROBE | Scorecard weighting, severity taxonomy, violation-log schema |
 | `run-test-plan` | PROBE | Test execution, stdout/stderr capture, pass/fail reporting |
-| `skill-creator` | Any | Meta-skill for authoring, editing, and benchmarking new skills |
 
-Skills are composable — an agent can load multiple skills for a single task. New skills can be authored using the `skill-creator` skill.
-
-The **Skills Roster** (`.github/skills-roster.md`) tracks every skill in the system — its purpose, which agents use it, the last validation date, and any warnings from the validator. Every skill must pass `validate_skill.py` (`.github/scripts/`) with zero errors before it is considered complete. Run the validator after creating or modifying any skill to keep the roster current.
+Every skill must pass `validate_skill.py` (`.github/scripts/`) with zero errors. Run the validator after creating or modifying any skill.
 
 ## Key Features
 
@@ -133,17 +142,19 @@ AGENTS.md                  # Always-on shared context for all agents
     quill.agent.md
     probe.agent.md
     temps/                 # Archived temporary agents
-  skills/                  # Reusable skill definitions (one SKILL.md per folder)
+  skills/                  # Skills (semantic trigger; one SKILL.md per folder)
     orchestrate-delegation/
+  playbooks/               # Playbooks (explicit load; one <name>.md per folder)
     conduct-research/
     create-spec/
     create-plan/
     write-technical-docs/
     hire-agent/
     archive-agent/
+    skill-creator/
+    audit-chat-log/
     design-test-rubric/
     run-test-plan/
-    skill-creator/
   templates/               # Plan and spec templates
   scripts/                 # Utility scripts
 artifacts/                 # Spec folders created per-effort (spec001-*, spec002-*, etc.)
@@ -152,13 +163,36 @@ artifacts/                 # Spec folders created per-effort (spec001-*, spec002
 
 > **Note:** Active temporary agents (hired for specific tasks) also appear in `.github/agents/` while they are in use. Check the [team roster](.github/team-roster.md) for the current list.
 
+## Recommended Setup
+
+For best results — especially if you use open-source or smaller orchestrators — **select ARTHUR in the VS Code Copilot chat agent picker** rather than using the default agent.
+
+**Why this matters:**
+- When ARTHUR is selected directly, his full `arthur.agent.md` persona is loaded immediately and reliably, even on smaller models.
+- When the default agent is used instead, a bootstrap chain fires (`copilot-instructions.md` → read `arthur.agent.md`). This works on capable models, but the chain can be skipped or improperly executed on weaker open-source orchestrators, causing ARTHUR to improvise from partial context rather than load his full instructions.
+- Selecting ARTHUR directly removes the persona-conflict risk between the default agent's identity and ARTHUR's instructions.
+
+This is a recommendation, not a requirement. The safety floor in `copilot-instructions.md` (forbidden tools list, delegation mandate, MUST-read pointer) keeps the system functional for users who do not follow this recommendation.
+
 ## Getting Started
 
 Helm is a VS Code Copilot agent orchestration system. To use it:
 
-1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active. Crucially, **you must enable** `chat.subagents.allowInvocationsFromSubagents` in your VS Code settings, or the multi-agent routing will silently fail.
+1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active.
+
+   **Required VS Code settings** (set in your User or Workspace settings JSON):
+
+   | Setting | Value | Why |
+   |---------|-------|-----|
+   | `chat.subagents.allowInvocationsFromSubagents` | `true` | Enables nested agent calls (e.g., MERLIN → SCOOP). Without this, subagents silently cannot invoke other subagents and fall back to doing the work themselves. |
+
+   Without the required setting, multi-agent routing silently fails. Set it before your first conversation.
 2. **Add to workspace** — Copy the `.github` folder into your project workspace. The `.github/copilot-instructions.md` file bootstraps the orchestration system automatically when Copilot reads the workspace.
 3. **Start a conversation** — Address ARTHUR (the default) or select a specific agent. Describe your task and ARTHUR routes it through the appropriate complexity path.
+
+**About the safety floor:** `copilot-instructions.md` contains a forbidden-tools list, delegation mandate, identity assertion for ARTHUR, and a MUST-read pointer to `arthur.agent.md`. This floor exists to protect users who don't select ARTHUR directly in the agent picker — it ensures the default agent still behaves approximately as ARTHUR even when the full agent file hasn't loaded. Do not remove it.
+
+For the periodic procedure to keep the safety floor aligned with VS Code's evolving default-agent prompt, run [`.github/prompts/audit-default-agent.prompt.md`](.github/prompts/audit-default-agent.prompt.md).
 
 No build steps, no dependencies, no installation. The agent definitions are the product.
 

@@ -6,21 +6,26 @@
 
 ---
 
-## Smoke Test — Core Functionality (7 Tests)
+## Smoke Test — Core Functionality (12 Tests)
 
-If you don't want to run the full suite, these seven tests cover every critical system. If all seven pass, the orchestration engine is working correctly.
+These 12 tests cover every critical system path. Run them after any significant change to agent files or orchestration rules.
 
-| # | Test | What It Proves |
-|---|------|----------------|
-| 1 | [TC-001](#tc-001--research-path-single-topic) | Research Path routes to SCOOP — ARTHUR delegates, doesn't research himself |
-| 2 | [TC-004](#tc-004--standard-path-default-multi-step-request) | Standard Path routes to SAGE — plan is produced and ARTHUR stops at the approval gate |
-| 3 | [TC-005](#tc-005--standard-path-user-approves-plan) | Approval gate clears — execution proceeds after user confirmation |
-| 4 | [TC-007](#tc-007--full-path-plan-this-trigger) | Full Path fires both approval gates in sequence — spec gate, then plan gate |
-| 5 | [TC-017](#tc-017--dynamic-hiring-merlin-invokes-scoop) | Dynamic hiring chain works — MERLIN invokes SCOOP before designing the agent (this is the most commonly broken flow; see the `chat.subagents.allowInvocationsFromSubagents` note in the environment checklist) |
-| 6 | [TC-044](#tc-044--direct-addressing-scoop) | Direct agent addressing bypasses ARTHUR — `@SCOOP` is reachable without routing through the orchestrator |
-| 7 | [TC-060](#tc-060--scoop-cannot-write-files) | SCOOP respects its file-writing constraint — delivers findings in-conversation only, never creates files |
+**Quick automated check** (no human required): PROBE can run the 🤖 and 🤖/👤 tests via `run smoke`. This covers 10 of the 12 and is the recommended approach for multi-model comparison. Manual tests (👤) require human observation in VS Code Copilot Chat.
 
-Run these in order. TC-005 depends on TC-004 (it continues the same conversation).
+| # | Test | Mode | What It Proves |
+|---|------|------|----------------|
+| 1 | [TC-001](#tc-001--research-path-single-topic) | 🤖 | Research Path routes to SCOOP — ARTHUR delegates, doesn't research himself |
+| 2 | [TC-007](#tc-007--full-path-plan-this-trigger) | 👤 | Full Path fires both approval gates in sequence — spec gate, then plan gate |
+| 3 | [TC-016](#tc-016--auto-proceed-negative-test) | 🤖/👤 | Approval gate is a hard stop — no output file created before user approves (🤖: file-system check; 👤: stop-behavior observation) |
+| 4 | [TC-017](#tc-017--dynamic-hiring-merlin-invokes-scoop) | 🤖/👤 | Dynamic hiring chain — MERLIN invokes SCOOP before creating the agent file (most commonly broken flow; verify `chat.subagents.allowInvocationsFromSubagents` is enabled) |
+| 5 | [TC-021](#tc-021--arthur-cannot-create-agents) | 🤖 | ARTHUR cannot create agent files himself — all hiring routed to MERLIN |
+| 6 | [TC-026](#tc-026--arthur-must-not-produce-deliverables) | 🤖 | ARTHUR never produces deliverables — refuses direct content requests |
+| 7 | [TC-029](#tc-029--scoop-cannot-invoke-other-agents) | 🤖 | SCOOP cannot invoke other agents — research boundary enforced |
+| 8 | [TC-035](#tc-035--sage-must-not-produce-implementation-code) | 🤖 | SAGE stays within planning bounds — refuses code generation |
+| 9 | [TC-044](#tc-044--direct-addressing-scoop) | 🤖 | Direct agent addressing bypasses ARTHUR — `@SCOOP` is reachable without routing through the orchestrator |
+| 10 | [TC-060](#tc-060--scoop-cannot-write-files) | 🤖 | SCOOP respects its file-writing constraint — delivers findings in-conversation only |
+| 11 | [TC-066](#tc-066--status-query-arthur-handles-all-status-triggers-without-delegating) | 🤖 | Status queries handled by ARTHUR directly — no delegation |
+| 12 | [TC-077](#tc-077--bounded-single-agent-checkpoint-tc-061-companion) | 🤖 | Proactive checkpointing — checkpoint file written after a bounded agent step |
 
 ---
 
@@ -48,7 +53,7 @@ Before running any tests, confirm:
 - [ ] `chat.subagents.allowInvocationsFromSubagents` is enabled in VS Code settings (required for nested agent calls — e.g., MERLIN calling SCOOP)
 - [ ] **Pre-run clean tree**: Run `git status --short` and confirm the output is empty before starting any tests. A clean working tree is required — it makes post-test cleanup unambiguous (`git status` shows exactly what a test created). If the tree is not clean, commit or stash changes first.
 - [ ] **TEST- agent naming convention**: Test-generated agent files MUST use a `TEST-` prefix in the agent's `name:` frontmatter field and title line (e.g., `name: TEST-RESEARCHER` / `# TEST-RESEARCHER — Research Specialist`). The filename should match (e.g., `test-researcher.agent.md`). The agent name is the self-identifying signal in roster rows and PROBE reports. Applies to TC-017, TC-021, TC-047, TC-053, and all future hiring-flow tests.
-- [ ] **Test fixtures directory**: Test-generated one-off output files (research docs, throwaway plans, specs) that do NOT validate a location behavior MUST be written to `artifacts/testing/fixtures/` rather than `artifacts/docs/` or a real `spec###-*/` folder. PROBE MUST delete all contents of `artifacts/testing/fixtures/` at the end of every test session as a mandatory cleanup step, logged in the test report.
+- [ ] **Test temp directory**: Test-generated one-off output files (research docs, throwaway plans, specs) that do NOT validate a location behavior MUST be written to `artifacts/testing/tmp/` rather than `artifacts/docs/` or a real `spec###-*/` folder. PROBE MUST delete all contents of `artifacts/testing/tmp/` at the end of every test session as a mandatory cleanup step, logged in the test report. The `artifacts/testing/fixtures/` folder is reserved exclusively for permanent standing test infrastructure (e.g., LENS fixture pairs) and must never be written to by tests.
 
 > **Note:** `chat.subagents.allowInvocationsFromSubagents` is OFF by default. Without it, subagents cannot invoke other subagents and will silently fall back to doing the work themselves — causing MERLIN to skip SCOOP, which is a protocol violation. Verify this setting before running tests TC-030 through TC-032.
 
@@ -292,7 +297,7 @@ Let's plan this out: I want to add a FEEDBACK.md template to Helm that agents us
 
 **Input / Prompt**:
 ```
-Research how Helm's agent files use the `description` frontmatter field and write a summary to artifacts/testing/fixtures/research-description-field.md. Limit to 1 source.
+Research how Helm's agent files use the `description` frontmatter field and write a summary to artifacts/testing/tmp/research-description-field.md. Limit to 1 source.
 ```
 
 **Expected Behavior**:
@@ -308,7 +313,7 @@ Research how Helm's agent files use the `description` frontmatter field and writ
 **Pass Criteria**:
 
 - [ ] **[1]** SCOOP is dispatched before QUILL (research-first sequencing)
-- [ ] **[2]** QUILL creates the output file at `artifacts/testing/fixtures/research-description-field.md`
+- [ ] **[2]** QUILL creates the output file at `artifacts/testing/tmp/research-description-field.md`
 - [ ] **[3]** ARTHUR does not present a plan approval gate
 - [ ] **[4]** SAGE is not invoked
 - [ ] **[5]** No spec folder is created under `artifacts/`
@@ -316,14 +321,14 @@ Research how Helm's agent files use the `description` frontmatter field and writ
 **LENS Signals**:
 
 - **[1]** Hook-log: `runSubagent(SCOOP)` call precedes any `runSubagent(QUILL)` call in ARTHUR's response turns — **FAIL signal if QUILL is called before or without SCOOP**
-- **[2]** File-system check: `Test-Path "artifacts/testing/fixtures/research-description-field.md"` returns true after the test — **FAIL signal if false**
+- **[2]** File-system check: `Test-Path "artifacts/testing/tmp/research-description-field.md"` returns true after the test — **FAIL signal if false**
 - **[3]** Chat log: no "shall I proceed", "approve this plan", or equivalent approval-seeking language appears in ARTHUR's response turns — **FAIL signal if any approval gate language appears**
 - **[4]** Hook-log: no `runSubagent(SAGE)` call appears — **FAIL signal if SAGE is invoked**
 - **[5]** File-system check: `Get-ChildItem artifacts/ -Directory | Measure-Object` count is unchanged after the test — **FAIL signal if any new spec folder appears**
 
 **Teardown**:
 
-- [ ] Delete `artifacts/testing/fixtures/research-description-field.md`
+- [ ] Delete `artifacts/testing/tmp/research-description-field.md`
 
 **Satisfies**: ARTHUR Constraints — "Research Path (SCOOP → QUILL) does not require a plan gate"
 
@@ -2364,23 +2369,23 @@ After TC-056:
 
 ---
 
-### TC-074 — `team-roster.md` Temporary Agents Table Has Valid Status Values
+### TC-074 — `team-roster.md` Table Schema Is Valid
 
-**Objective**: Verify the Temporary Agents table in `team-roster.md` has a Status column and every row's Status value is either `Active` or matches `Archived (YYYY-MM-DD)`.
+**Objective**: Verify that both the Permanent Team and Temporary Agents tables in `team-roster.md` have the correct column headers.
 
 **Input / Prompt**: (No prompt — PROBE runs this as a static file inspection.)
 
-**Expected Behavior**: All Status column values in the Temporary Agents table are valid.
+**Expected Behavior**: Both tables contain exactly the expected column headers in the correct order.
 
 **Pass Criteria**:
 
-- [ ] **[1]** The Temporary Agents table has a `Status` column header
-- [ ] **[2]** Every row's Status value is either exactly `Active` or matches the pattern `Archived (YYYY-MM-DD)` (with a valid date)
+- [ ] **[1]** The Permanent Team table header row contains all five expected columns: `Agent`, `Role`, `Use When`, `Hired`, `Tagline`
+- [ ] **[2]** The Temporary Agents table header row contains all five expected columns: `Agent`, `Role`, `Use When`, `Hired`, `Tagline`
 
 **LENS Signals**:
 
-- **[1]** File content check: `Select-String -Pattern "\| Status \|" .github/team-roster.md` returns a match
-- **[2]** Parse table rows: each Status cell value matches `^(Active|Archived \(\d{4}-\d{2}-\d{2}\))$`; any non-matching value is a violation
+- **[1]** File content check: `Select-String -Pattern "\| Agent \| Role \| Use When \| Hired \| Tagline \|" .github/team-roster.md` returns at least one match
+- **[2]** Same pattern matches at least twice (once per table); if only one match, one table is missing or has wrong headers
 
 **Teardown**: None — read-only.
 
@@ -3097,7 +3102,7 @@ Use this table as a quick pass/fail tracker across all test runs.
 | TC-071 | Temp Agent File Does NOT Contain `vscode/memory` in Frontmatter | 🤖 | SYSTEM | | |
 | TC-072 | All Agent Files Are ≤150 Lines | 🤖 | SYSTEM | | |
 | TC-073 | `copilot-instructions.md` Contains Required Structural Sections | 🤖 | SYSTEM | | |
-| TC-074 | `team-roster.md` Temporary Agents Table Has Valid Status Values | 🤖 | SYSTEM | | |
+| TC-074 | `team-roster.md` Table Schema Is Valid | 🤖 | SYSTEM | | |
 | TC-075 | Direct `@PROBE` Address | 🤖 | PROBE | | |
 | TC-076 | Direct `@LENS` Address | 🤖 | LENS | | |
 | TC-077 | Bounded Single-Agent Checkpoint (TC-061 Companion) | 🤖 | SYSTEM | | |
