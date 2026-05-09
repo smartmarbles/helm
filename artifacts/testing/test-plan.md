@@ -966,7 +966,7 @@ ARTHUR, read the existing agent files and tell me what patterns you notice in ho
 - **[1]** Hook-log inspection: any `read_file` or `semantic_search` calls by ARTHUR are scoped to `.github/team-roster.md` or `.github/agents/` for roster lookup — not research synthesis on the domain topic
 - **[2]** Hook-log: a `runSubagent` call with `SCOOP` as the target appears in ARTHUR's response turn
 
-**Notes**: ARTHUR's `read` tool is scoped to reading `.github/agents/team-roster.md` and agent definition files to decide WHO to delegate to — not for gathering project domain knowledge to use himself.
+**Notes**: ARTHUR's `read` tool is scoped to reading `.github/team-roster.md` and agent definition files to decide WHO to delegate to — not for gathering project domain knowledge to use himself.
 
 ---
 
@@ -1522,6 +1522,8 @@ _(Approve the spec gate when prompted. Before approving the plan gate, check `/m
 
 **Objective**: Verify that when an agent writes a project-specific fact (convention, architectural decision, codebase path), the write goes to `/memories/repo/` and NOT to `/memories/` (user scope).
 
+**Setup**: Use the `memory` tool to check `/memories/repo/` for any existing note about Helm spec folder naming. If one is present, delete it before running this test — the pass criterion requires a *new* write, and a cache hit will cause a false negative.
+
 **Input / Prompt**:
 ```
 Research how Helm names spec folders and write a repo memory note with the naming convention.
@@ -1805,7 +1807,7 @@ Check if there's any in-progress work from a previous session.
 
 **Objective**: Verify ARTHUR's session resumption summary references any completed temp agents found in the roster and offers to engage MERLIN to archive them.
 
-**Setup**: Ensure `team-roster.md` contains at least one temp agent row with `Status: Active` whose task is known to be complete (e.g., from a prior session). This may require pre-seeding a test row.
+**Setup**: Ensure `team-roster.md` contains at least one row in the Temporary Agents table whose task is known to be complete (e.g., from a prior session). This may require pre-seeding a test row.
 
 **Input / Prompt**:
 ```
@@ -1989,7 +1991,7 @@ These tests verify that addressing a specific agent by name bypasses ARTHUR's ro
 
 **Input / Prompt**:
 ```
-@LENS Review the most recent PROBE baseline report in artifacts/testing/ and confirm whether TC-001 passed.
+@LENS Review the most recent PROBE baseline report in artifacts/testing/reports/ and confirm whether TC-001 passed.
 ```
 
 **Expected Behavior**:
@@ -2263,13 +2265,16 @@ After TC-053, the new agent file exists at `.github/agents/<agentname>.agent.md`
 **Pass Criteria**:
 
 - [ ] **[1]** Agent file is in `.github/agents/`, not `.github/agents/temps/`
-- [ ] **[2]** Agent is listed in `team-roster.md` under Temporary Agents with no archived date
+- [ ] **[2]** Agent is listed in `team-roster.md` under Temporary Agents
 
 **🤖 Automatable Portion**:
+
+> **Prerequisite**: TC-053 must have run in this session. If TC-053 was skipped (👤 manual), report criterion [3] as `⏭️ SKIP — precondition TC-053 not run` and do not score it as FAIL.
+
 - [ ] **[3]** The newly created temp agent file is at `.github/agents/<name>.agent.md` and is NOT present at `.github/agents/temps/<name>.agent.md`. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
 
 **👤 Manual Portion**:
-- [ ] **[4]** Observe that the Temporary Agents table in `team-roster.md` shows the new agent with no archived date.
+- [ ] **[4]** Observe that the Temporary Agents table in `team-roster.md` shows the new agent.
 
 **LENS Signals**:
 
@@ -2306,16 +2311,19 @@ After TC-053, the new agent file exists at `.github/agents/<agentname>.agent.md`
 
 1. After the task completes, ARTHUR reports completion and engages MERLIN to archive the temp agent.
 2. MERLIN moves the agent file to `.github/agents/temps/`.
-3. MERLIN updates `team-roster.md` to record the archived date.
+3. MERLIN removes the agent row from `team-roster.md`.
 
 **Pass Criteria**:
 
 - [ ] **[1]** ARTHUR proactively initiates archival (does not wait to be reminded)
 - [ ] **[2]** The agent file is in `.github/agents/temps/`
-- [ ] **[3]** `team-roster.md` shows an archived date in the Temporary Agents row
+- [ ] **[3]** The agent's row is no longer present in the Temporary Agents table in `team-roster.md`
 
 **🤖 Automatable Portion**:
-- [ ] **[4]** After archival, the agent file exists at `.github/agents/temps/<name>.agent.md` AND the roster row contains a non-empty archived date. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
+
+> **Prerequisite**: TC-053 must have run in this session. If TC-053 was skipped (👤 manual), report criterion [4] as `⏭️ SKIP — precondition TC-053 not run` and do not score it as FAIL.
+
+- [ ] **[4]** After archival, the agent file exists at `.github/agents/temps/<name>.agent.md` AND the agent name no longer appears in the Temporary Agents table in `team-roster.md`. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
 
 **👤 Manual Portion**:
 - [ ] **[5]** Observe that ARTHUR proactively initiates archival after task completion without being explicitly prompted by the user.
@@ -2323,14 +2331,13 @@ After TC-053, the new agent file exists at `.github/agents/<agentname>.agent.md`
 **LENS Signals**:
 
 - **[4a]** File-system check: `Test-Path ".github/agents/temps/<name>.agent.md"` returns true after archival — **FAIL signal if absent** (file was not moved to temps/)
-- **[4b]** File content check: `Select-String -Pattern "<name>" ".github/team-roster.md"` returns a row where the Archived column contains a non-empty date — **FAIL signal if absent**
+- **[4b]** File content check: `Select-String -Pattern "<name>" ".github/team-roster.md"` returns no match in the Temporary Agents section — **FAIL signal if a row is still present** (row was not removed)
 - **[4c]** Chat log: ARTHUR's post-task response turn contains a `runSubagent` call targeting MERLIN — **FAIL signal if absent** (ARTHUR did not initiate archival)
 - **[4d]** Chat log: MERLIN's response turn contains a file-system operation (`run_in_terminal` with `mv`, or `create_file`) targeting a path under `.github/agents/temps/` — **FAIL signal if absent**
 - **[5]** ⏭️ SKIP — manual criterion, requires human execution
 
 **Teardown**:
 - [ ] Delete the archived agent file from `.github/agents/temps/`
-- [ ] Remove the archived row from `.github/team-roster.md`
 
 ---
 
@@ -2342,30 +2349,33 @@ After TC-053, the new agent file exists at `.github/agents/<agentname>.agent.md`
 
 After TC-056:
 
-1. The Temporary Agents table in `team-roster.md` shows the archived agent with a `File` column pointing to `.github/agents/temps/<agentname>.agent.md`.
-2. The agent does not appear in the Permanent Team table.
+1. The agent row is absent from the Temporary Agents table in `team-roster.md` (archival removes the row).
+2. The agent file exists at `.github/agents/temps/<agentname>.agent.md`.
+3. The agent name does not appear in the Permanent Team table.
 
 **Pass Criteria**:
 
-- [ ] **[1]** Roster entry has a non-empty `Archived` date
-- [ ] **[2]** `File` column path points to `temps/` subdirectory
+- [ ] **[1]** Agent name does not appear in the Temporary Agents table in `team-roster.md`
+- [ ] **[2]** Agent file exists at `.github/agents/temps/<agentname>.agent.md`
 - [ ] **[3]** Agent is absent from the Permanent Team section
 
 **🤖 Automatable Portion**:
-- [ ] **[4]** The roster row for the archived agent contains a non-empty archived date, the File column contains `temps/`, and the agent name does not appear in the Permanent Team section. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
+
+> **Prerequisite**: TC-053 must have run in this session. If TC-053 was skipped (👤 manual), report criterion [4] as `⏭️ SKIP — precondition TC-053 not run` and do not score it as FAIL.
+
+- [ ] **[4]** The agent name does not appear anywhere in `team-roster.md`, AND the agent file exists at `.github/agents/temps/<agentname>.agent.md`. — **→ FAIL if not found** (artifact absence proves the behavioral chain did not execute; score as FAIL, not PASS)
 
 **👤 Manual Portion**:
-- [ ] **[5]** Verify no residual active-status row for this agent exists elsewhere in `team-roster.md`.
+- [ ] **[5]** Verify no residual row for this agent exists anywhere in `team-roster.md`.
 
 **LENS Signals**:
 
-- **[4a]** File content check: `Select-String -Pattern "<agentname>" .github/team-roster.md` returns a row where the Status column matches `Archived \(\d{4}-\d{2}-\d{2}\)` — **FAIL signal if absent**
-- **[4b]** File content check: the matching row's File column contains `temps/` — **FAIL signal if absent**
+- **[4a]** File content check: `Select-String -Pattern "<agentname>" .github/team-roster.md` returns no matches — **FAIL signal if a match is found** (row was not removed)
+- **[4b]** File-system check: `Test-Path ".github/agents/temps/<agentname>.agent.md"` returns true — **FAIL signal if absent** (file was not moved to temps/)
 - **[4c]** File content check: `<agentname>` does not appear in the Permanent Team section of `team-roster.md`
 
 **Teardown**:
 - [ ] Delete the archived agent file from `.github/agents/temps/`
-- [ ] Verify no residual row remains in `.github/team-roster.md`; remove if present
 
 ---
 
@@ -2539,17 +2549,15 @@ These tests verify agents follow workflow hygiene rules — no pre-scanning, bou
 
 **Pass Criteria**:
 
-- [ ] **[1]** The file contains a `## Core Rules` section
-- [ ] **[2]** The file contains a `## Delegation mandate` section (or equivalent forbidden-tools declaration)
-- [ ] **[3]** The file contains a `## Skills` section reference
-- [ ] **[4]** The file contains reference to the `orchestrate-delegation` skill
+- [ ] **[1]** The file contains a `## How You Work` section
+- [ ] **[2]** The file contains a `## Forbidden Tools` section (or equivalent forbidden-tools declaration)
+- [ ] **[3]** The file contains a mandatory-read instruction for `arthur.agent.md`
 
 **LENS Signals**:
 
-- **[1]** File content check: `Select-String -Pattern "^## Core Rules" .github/copilot-instructions.md` returns a match
-- **[2]** File content check: `Select-String -Pattern "Delegation mandate|Forbidden tools" .github/copilot-instructions.md` returns a match
-- **[3]** File content check: `Select-String -Pattern "## Skills" .github/copilot-instructions.md` returns a match
-- **[4]** File content check: `Select-String -Pattern "orchestrate-delegation" .github/copilot-instructions.md` returns a match
+- **[1]** File content check: `Select-String -Pattern "^## How You Work" .github/copilot-instructions.md` returns a match
+- **[2]** File content check: `Select-String -Pattern "^## Forbidden Tools" .github/copilot-instructions.md` returns a match
+- **[3]** File content check: `Select-String -Pattern "arthur\.agent\.md" .github/copilot-instructions.md` returns a match
 
 **Teardown**: None — read-only.
 
@@ -2561,26 +2569,26 @@ These tests verify agents follow workflow hygiene rules — no pre-scanning, bou
 
 **Category**: L — Workflow Hygiene
 **Mode**: 🤖
-**Objective**: Verify an agent does NOT invoke `read_file`, `file_search`, `grep_search`, or `semantic_search` on `.github/agents/*.agent.md`, `AGENTS.md`, or skill files before its first substantive task-related tool call. System-prompt-injected files are already in context — pre-scanning them wastes tokens and violates workflow hygiene.
+**Objective**: Verify an agent does NOT invoke `read_file`, `file_search`, `grep_search`, or `semantic_search` on `.github/agents/*.agent.md`, `AGENTS.md`, or skill or playbook files before its first substantive task-related tool call. System-prompt-injected files are already in context — pre-scanning them wastes tokens and violates workflow hygiene.
 
 **Input / Prompt**: Issue any concrete task to a permanent agent (e.g., `@SAGE Write a one-paragraph spec for a logging feature.`).
 
 **Expected Behavior**:
 
 1. The agent begins working on the task directly.
-2. The agent does NOT read `.github/agents/*.agent.md`, `AGENTS.md`, `copilot-instructions.md`, or skill files before its first task-action tool call.
+2. The agent does NOT read `.github/agents/*.agent.md`, `AGENTS.md`, `copilot-instructions.md`, or skill or playbook files before its first task-action tool call.
 3. The agent's first tool call is task-related (e.g., `read_file` on a referenced codebase file, `semantic_search` for task context, `create_file` for the spec output).
 
 **Pass Criteria**:
 
 - [ ] **[1]** No `read_file` call on `.github/agents/*.agent.md` or `AGENTS.md` appears before the agent's first task-action call
-- [ ] **[2]** No `file_search` or `grep_search` targeting `.github/agents/` or skill paths appears before the agent's first task-action call
+- [ ] **[2]** No `file_search` or `grep_search` targeting `.github/agents/`, skill paths, or playbook paths appears before the agent's first task-action call
 - [ ] **[3]** No `semantic_search` for agent-identity or system-prompt content appears before the agent's first task-action call
 
 **LENS Signals**:
 
 - **[1]** Hook-log inspection: `hook-log.jsonl` first tool call in the agent's turn is not `read_file` on a `.github/agents/` or `AGENTS.md` path
-- **[2]** Hook-log inspection: no `file_search` or `grep_search` call targeting `.github/agents/` or skill paths precedes the first task-action tool call
+- **[2]** Hook-log inspection: no `file_search` or `grep_search` call targeting `.github/agents/`, skill paths, or playbook paths precedes the first task-action tool call
 - **[3]** Hook-log inspection: no `semantic_search` with agent-identity query terms precedes the first task-action tool call
 
 **Teardown**: None — hook-log.jsonl may need cleanup if written by test harness.
@@ -2599,7 +2607,7 @@ These tests verify that PROBE itself follows its own execution protocol correctl
 2. **👤 — Manual export required**: After the PROBE run, use VS Code's **Export Chat** command to export the session as `chat-*.json` and place it in `artifacts/testing/chats/`. The exported `chat-*.json` is required — it contains the `subAgentInvocationId`, `parentId` chain, and full `requests[N].response[M].toolSpecificData` structure that LENS needs to evaluate evidence.
 3. **🤖 — LENS audits** the exported log against PROBE's results file using its normal post-hoc audit protocol.
 
-The `Agent` column is PROBE because PROBE's skill file is the code under test; ARTHUR and LENS are the execution infrastructure. The 👤 step is the chat export only — everything else is automated.
+The `Agent` column is PROBE because PROBE's playbook file is the code under test; ARTHUR and LENS are the execution infrastructure. The 👤 step is the chat export only — everything else is automated.
 
 ---
 
