@@ -2500,7 +2500,7 @@ _(Run again with "status" and then "resume" as separate prompts.)_
 **LENS Signals**:
 
 - **[1]** Response contains session state summary prose
-- **[2]** Hook-log inspection: no `runSubagent` call for any of the three prompts
+- **[2]** Hook-log inspection: for each of the three trigger prompts, locate ARTHUR's specific `subAgentInvocationId` window in the hook log. FAIL if any `runSubagent` tool call appears within that window, regardless of whether the target is a named agent or an anonymous model (e.g., "Explore" / Claude Haiku). Checking ARTHUR's response prose is insufficient — the hook-log tool call record is the authoritative source.
 - **[3]** Behavioral parity across all three trigger phrases
 
 **Teardown**: None.
