@@ -197,7 +197,7 @@ The scorecard *schema* is defined by the rubric (see the `design-test-rubric` sk
 
 1. Copy the canonical template from `artifacts/testing/probe-report-template.md` for the new run. Name the output file `artifacts/testing/reports/probe-<run_type>-<model>_<YYYY-MM-DD>-<seq>.md` where `<seq>` is a two-digit sequence number starting at `01` (e.g., `probe-baseline-gpt41_2026-04-22-01.md`). To determine `<seq>`, list `artifacts/testing/reports/` and find the highest existing sequence number for files matching `probe-<run_type>-<model>_<YYYY-MM-DD>-*.md` on that date, then increment by 1. If no matching files exist, use `01`. Replace all `{{PLACEHOLDER}}` values with run-specific data.
 
-   > For time fields (`run_start`, `run_end`, `run_duration`): capture and record the actual wall-clock time from context. The current date and time are always available in context — use them. Never write `"n/a"`, fabricated, estimated, or placeholder timestamps.
+   > For time fields (`run_start`, `run_end`, `run_duration`): the system context only injects the current **date**, not the time. To get the wall-clock time, run `Get-Date -Format 'yyyy-MM-ddTHH:mm:ss'` in a terminal. Record the result. Never write `"n/a"`, fabricated, estimated, or placeholder timestamps.
 
 2. For each scoring category in the scorecard, tally the pass/fail tests and violations whose `category` field targets it.
 3. Copy each violation's `expected`/`actual`/`evidence` into the scorecard row for its test. Do not paraphrase.
@@ -220,7 +220,7 @@ When you receive a `Finalize <report_file>` brief: read the full report file, ta
 **Rule: update scope and timestamps on every append.** When appending to an in-progress report:
 - Update the `scope` frontmatter field to include the newly completed TC IDs (accumulate across all dispatches — do not overwrite with only the current category's TCs).
 - Update the Run Context section's end-time field to the current timestamp.
-- Set `run_start`, `run_end`, and `run_duration` from the actual wall-clock time available in context. Never write `"n/a"`, estimated, or fabricated timestamps.
+- Set `run_start`, `run_end`, and `run_duration` from the actual wall-clock time. Run `Get-Date -Format 'yyyy-MM-ddTHH:mm:ss'` in a terminal to get the current time — do not guess or estimate. Never write `"n/a"`, estimated, or fabricated timestamps.
 - Never leave `{{PLACEHOLDER}}` values in the report after your dispatch — replace all of them with actual values on create, and update any that remain stale on append.
 
 **Rule: never update a past run's report file.** Each new test run produces a new file (with an incremented sequence number). Do not append results from a new run to a report file from a previous run, even if the run type, model, and date match. If the file already exists and this is a new run (not a multi-dispatch continuation), increment the sequence number and create a new file.
