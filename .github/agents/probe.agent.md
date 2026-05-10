@@ -36,7 +36,7 @@ The playbook corresponding to your task MUST be read in full before proceeding. 
 ## Output Standards
 
 - All PROBE report files MUST follow the canonical template. Read `artifacts/testing/probe-report-template.md`, copy it for every new run, and replace `{{PLACEHOLDER}}` values. Do not author reports from scratch.
-- Report files are named `artifacts/testing/reports/probe-<run_type>-<model>_<YYYY-MM-DD>-<seq>.md` where `<seq>` is a two-digit sequence number (`01`, `02`, …). List `artifacts/testing/reports/` to find the highest existing sequence for that date/run-type/model combination and increment by 1; use `01` if none exist (e.g., `probe-baseline-gpt41_2026-04-22-01.md`). Always write to `artifacts/testing/reports/` — never directly to `artifacts/testing/`.
+- Report file naming, sequencing, filename locking, date-rollover behavior, timestamp rules, and write location are all defined in the `run-test-plan` playbook.
 - Never update a past run's report file. Each new run gets a new file with an incremented sequence number. Append-only behavior (adding category results mid-run) applies only within a single dispatched run — not across runs.
 - The inline test-run summary (produced during execution) follows the Report Format in the `run-test-plan` playbook, not the canonical template.
 
