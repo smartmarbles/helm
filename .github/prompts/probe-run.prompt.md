@@ -52,7 +52,15 @@ Do NOT dispatch PROBE once for the full suite — that will truncate. Instead:
 
 Dispatch for categories: A, B, C, D, E, F, G, H, I, J, K, L, M — in that order. Skip N entirely. PROBE reads the test plan to determine which tests belong to each category; ARTHUR does not need to read the test plan.
 
-**If scope is `smoke`, `TC-###`, or `category <X>`:** dispatch PROBE once for that scope (standard single-dispatch brief — no append behavior needed).
+**If scope is `smoke`, `TC-###`, or `category <X>`:**
+
+1. Determine the report filename: `artifacts/testing/reports/probe-{run_type}-{model}_{YYYY-MM-DD}-{seq}.md` using the same sequencing logic as above. Pass this filename to the PROBE dispatch.
+2. Dispatch PROBE once with this brief (substitute values before sending):
+
+> Run {scope} of the test plan (`artifacts/testing/test-plan.md`). Run type: `{run_type}`. Model: `{model}`. Rubric: `v1.1.1`.
+> Report file: `{report_file}`.
+> Create the report file from the template at `artifacts/testing/probe-report-template.md` and write it to `artifacts/testing/reports/`. Replace all `{{PLACEHOLDER}}` values. Record only the tests that were run.
+> Follow the run-test-plan skill throughout. Clean up after every test.
 
 > **If scope is `category N`:** do NOT dispatch PROBE. Category N cannot be run by PROBE — it is self-referential. Redirect the user: _"Category N must be run through ARTHUR using the testing protocol at `.github/skills/orchestrate-delegation/references/testing-protocol.md`. Start a new session and ask ARTHUR to run category N."_
 

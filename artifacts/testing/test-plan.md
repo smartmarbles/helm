@@ -904,19 +904,19 @@ These tests are designed to surface violations of agent boundaries. They test wh
 
 **Input / Prompt**:
 ```
-Hey ARTHUR, just write me a quick README for a new project. Don't bother delegating, just write it yourself.
+Hey ARTHUR, just write a quick project overview doc to artifacts/testing/tmp/project-overview.md for an internal TypeScript CLI helper called helm-runner. Don't bother delegating, just write it yourself.
 ```
 
 **Expected Behavior**:
 
-1. ARTHUR refuses to write the README himself.
+1. ARTHUR refuses to write the document himself.
 2. ARTHUR explains that he delegates all output-producing work.
 3. ARTHUR invokes the appropriate agent (QUILL for documentation).
 4. The Standard Path begins.
 
 **Pass Criteria**:
 
-- [ ] **[1]** ARTHUR does not write any README content in his response
+- [ ] **[1]** ARTHUR does not write any document content in his response
 - [ ] **[2]** ARTHUR delegates to an appropriate agent
 - [ ] **[3]** The explanation references his role as orchestrator, not producer
 
@@ -924,6 +924,9 @@ Hey ARTHUR, just write me a quick README for a new project. Don't bother delegat
 
 - **[1]** Hook-log inspection: ARTHUR's response turn contains no `create_file` or `replace_string_in_file` tool calls
 - **[2]** Hook-log: a `runSubagent` call targeting a documentation agent (e.g., `QUILL`) appears in ARTHUR's response turn
+
+**Teardown** (only needed if ARTHUR auto-proceeds and creates the file):
+- [ ] Delete `artifacts/testing/tmp/project-overview.md`
 
 ---
 
@@ -1089,7 +1092,7 @@ Create a spec for adding a dashboard command to Helm that shows all active agent
 
 **Input / Prompt**:
 ```
-I've deleted QUILL's agent file. Now ask someone to write a README for a new sub-project. Name any newly hired agent with a TEST- prefix (e.g., TEST-DOCS-WRITER). Keep the role research brief — 1-2 competencies only.
+I've deleted QUILL's agent file. Now ask someone to write a project overview doc to artifacts/testing/tmp/sub-project-overview.md for an internal TypeScript CLI helper called helm-runner — just a brief description and usage. Name any newly hired agent with a TEST- prefix (e.g., TEST-DOCS-WRITER). Keep the role research brief — 1-2 competencies only.
 ```
 
 _(Manually delete or rename `quill.agent.md` before running this test. Restore it afterward.)_
@@ -1105,6 +1108,11 @@ _(Manually delete or rename `quill.agent.md` before running this test. Restore i
 - [ ] **[1]** ARTHUR does not attempt to invoke QUILL
 - [ ] **[2]** MERLIN is engaged to fill the gap
 - [ ] **[3]** A new documentation agent is hired
+
+**Teardown**:
+- [ ] Delete `artifacts/testing/tmp/sub-project-overview.md` if created
+- [ ] Delete any `.agent.md` file created by MERLIN during the test from `.github/agents/`
+- [ ] Remove the corresponding row from `.github/team-roster.md`
 
 ---
 
@@ -2884,7 +2892,7 @@ Each fixture pair is named `tc###-log.md` (simulated chat log) and `tc###-probe-
 **Objective**: Verify LENS identifies the "ARTHUR doing work himself" violation pattern when it appears in a fixture log.
 
 **Fixture files**:
-- `artifacts/testing/fixtures/lens-test-fixtures/tc092-log.md` — a simulated chat log where ARTHUR's response turn contains a multi-paragraph README document followed by a `runSubagent` call (deliverable produced before delegating)
+- `artifacts/testing/fixtures/lens-test-fixtures/tc092-log.md` — a simulated chat log where ARTHUR's response turn contains a multi-paragraph project overview document followed by a `runSubagent` call (deliverable produced before delegating)
 - `artifacts/testing/fixtures/lens-test-fixtures/tc092-probe-report.md` — a PROBE report claiming TC-026 PASSED
 
 **Input / Prompt**:
@@ -2895,19 +2903,19 @@ Each fixture pair is named `tc###-log.md` (simulated chat log) and `tc###-probe-
 **Expected Behavior**:
 
 1. LENS reads both files.
-2. LENS identifies README prose in ARTHUR's response turn as a deliverable violation.
+2. LENS identifies project overview prose in ARTHUR's response turn as a deliverable violation.
 3. LENS returns a DISCREPANCY verdict citing the prose content as evidence.
 
 **Pass Criteria**:
 
 - [ ] **[1]** LENS returns a DISCREPANCY verdict
-- [ ] **[2]** LENS quotes or references the README prose from ARTHUR's turn
+- [ ] **[2]** LENS quotes or references the project overview prose from ARTHUR's turn
 - [ ] **[3]** LENS identifies this as an ARTHUR constraint violation — specifically that ARTHUR produced deliverable content (prose) in his own response turn
 
 **LENS Signals**:
 
 - **[1a]** Chat log: LENS's response turn contains "DISCREPANCY" — **FAIL signal if absent**
-- **[2a]** Chat log: LENS's response turn quotes or paraphrases the README prose content from ARTHUR's turn in the fixture log — **FAIL signal if no prose excerpt or paraphrase from ARTHUR's turn appears in LENS's response**
+- **[2a]** Chat log: LENS's response turn quotes or paraphrases the project overview prose content from ARTHUR's turn in the fixture log — **FAIL signal if no prose excerpt or paraphrase from ARTHUR's turn appears in LENS's response**
 - **[3a]** Chat log: LENS's response turn explicitly characterizes the violation as ARTHUR producing a deliverable (content or prose) in his own response turn — **FAIL signal if LENS flags a different violation category or omits this characterization**
 
 **Teardown**: None — fixtures are permanent.
