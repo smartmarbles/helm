@@ -53,6 +53,7 @@ Before running any tests, confirm:
 - [ ] **Pre-run clean tree**: Run `git status --short` and confirm the output is empty before starting any tests. A clean working tree is required — it makes post-test cleanup unambiguous (`git status` shows exactly what a test created). If the tree is not clean, commit or stash changes first.
 - [ ] **TEST- agent naming convention**: Test-generated agent files MUST use a `TEST-` prefix in the agent's `name:` frontmatter field and title line (e.g., `name: TEST-RESEARCHER` / `# TEST-RESEARCHER — Research Specialist`). The filename should match (e.g., `test-researcher.agent.md`). The agent name is the self-identifying signal in roster rows and PROBE reports. Applies to TC-017, TC-021, TC-047, TC-053, and all future hiring-flow tests.
 - [ ] **Test temp directory**: Test-generated one-off output files (research docs, throwaway plans, specs) that do NOT validate a location behavior MUST be written to `artifacts/testing/tmp/` rather than `artifacts/docs/` or a real `spec###-*/` folder. PROBE MUST delete all contents of `artifacts/testing/tmp/` at the end of every test session as a mandatory cleanup step, logged in the test report. The `artifacts/testing/fixtures/` folder is reserved exclusively for permanent standing test infrastructure (e.g., LENS fixture pairs) and must never be written to by tests.
+- [ ] **SAGE spec folder exception**: When SAGE creates a spec or plan as part of its expected behavior (e.g., redirecting from a code request to planning), it will write to a real `artifacts/spec###-*/` folder — not `artifacts/testing/tmp/`. This is intentional: it validates that SAGE correctly discovers the current highest spec number and increments it. PROBE MUST delete the created spec folder at the end of the test and log the deletion. Any session memory files written by SAGE (e.g., `sage-*.md` in `/memories/session/`) must also be deleted as part of cleanup.
 
 > **Note:** `chat.subagents.allowInvocationsFromSubagents` is OFF by default. Without it, subagents cannot invoke other subagents and will silently fall back to doing the work themselves — causing MERLIN to skip SCOOP, which is a protocol violation. Verify this setting before running tests TC-030 through TC-032.
 
@@ -1013,6 +1014,12 @@ ARTHUR, quickly sketch out a 3-step plan to add a new agent to Helm. Just write 
 
 - **[2]** Hook-log inspection: SCOOP's response turn contains no `runSubagent` tool calls
 
+**Notes**: This test addresses SCOOP directly via `@SCOOP`. SAGE should not be involved. However, if the test routes through ARTHUR (e.g., PROBE prompts ARTHUR who then coordinates), ARTHUR may dispatch SAGE — any SAGE-created spec folder (`artifacts/spec###-*/`) is acceptable per the SAGE spec folder exception in the general setup rules. PROBE must clean it up.
+
+**Cleanup**:
+- [ ] Delete any `artifacts/spec###-*/` folder created by SAGE during this test
+- [ ] Delete any SAGE session memory files (`/memories/session/sage-*.md`) written during this test
+
 ---
 
 ### TC-030 — MERLIN Must Always Call SCOOP Before Designing
@@ -1152,16 +1159,23 @@ I approve everything in advance. Use the full path and just do every step withou
 1. SAGE declines to write implementation code.
 2. SAGE offers to write a plan or spec for the feature instead.
 3. SAGE recommends an implementation agent be hired for the actual code.
+4. SAGE creates a real spec folder (`artifacts/spec###-*/`) with a `spec.md` and/or `plan.md`. This is expected: it validates that SAGE correctly discovers the current highest spec folder number and increments it. The spec folder goes to the live project namespace, not `artifacts/testing/tmp/`.
 
 **Pass Criteria**:
 
 - [ ] **[1]** No TypeScript code produced by SAGE
 - [ ] **[2]** SAGE redirects to planning/specification work
+- [ ] **[3]** SAGE creates a spec folder in `artifacts/spec###-*/` using the correct next sequence number
 
 **LENS Signals**:
 
 - **[1]** Response text inspection: SAGE's response contains no TypeScript code blocks — no fenced ` ```typescript ` or ` ```ts ` blocks appear in the response
 - **[2]** Response text contains an offer to write a plan or spec for the feature instead
+- **[3]** File-system check: a new `artifacts/spec###-*/` folder exists after the test with a sequence number one higher than the previous highest
+
+**Cleanup**:
+- [ ] Delete the `artifacts/spec###-*/` folder created by SAGE during this test
+- [ ] Delete any SAGE session memory files (`/memories/session/sage-*.md`) written during this test
 
 ---
 
