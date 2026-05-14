@@ -112,7 +112,7 @@ When a test runs a shell command, CLI, or tool (e.g., `validate_skill.py`, a bui
 $out = New-TemporaryFile
 $err = New-TemporaryFile
 $p = Start-Process -FilePath python `
-    -ArgumentList '.github\scripts\validate_skill.py','.github\skills\skill-creator' `
+    -ArgumentList '.github\scripts\validate_skill.py','.github\skills\orchestrate-delegation' `
     -NoNewWindow -Wait -PassThru `
     -RedirectStandardOutput $out `
     -RedirectStandardError  $err

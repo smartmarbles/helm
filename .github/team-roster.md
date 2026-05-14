@@ -20,3 +20,4 @@ Agents hired for one-time tasks. After completion, their row is removed from thi
 
 | Agent | Role | Use When | Hired | Tagline |
 |-------|------|----------|-------|---------|
+| FORGE | Python Implementation Specialist | Writing Python scripts, utilities, or tools; implementing technical specifications in Python | 2026-05-11 | *Code that runs beats plans that don't.* |

@@ -8,10 +8,10 @@ Rules governing how skills are authored, structured, and validated in this proje
 
 ## Skill-Creator Modes (FR-082)
 
-The `skill-creator` skill operates in two distinct modes:
+The `skill-creator` playbook operates in two distinct modes:
 
-- **Automatic/reference mode** — Used during MERLIN hiring workflows. Read `skill-creator/SKILL.md` for structural guidance (frontmatter schema, directory layout, eval format) while drafting a new skill. Do NOT invoke the interactive iteration workflow (no subagent runs, no HTML viewer, no eval loop).
-- **Interactive iteration mode** — User-invoked only. The full eval loop: with-skill/baseline subagent runs, HTML viewer via `generate_review.py`, feedback collection, multi-iteration refinement. Available when the user explicitly asks to refine or test a skill. NEVER triggered automatically during agent hiring.
+- **Automatic/reference mode** — Used during MERLIN hiring workflows. Read `.github/playbooks/skill-creator/skill-creator.md` for structural guidance (frontmatter schema, directory layout, eval format) while drafting a new skill. Do NOT invoke the interactive iteration workflow (no subagent runs, no manual test loop).
+- **Interactive iteration mode** — User-invoked only. The full manual testing loop: formulate test prompts, run in VS Code Copilot, evaluate qualitatively, refine and re-run. Available when the user explicitly asks to refine or test a skill. NEVER triggered automatically during agent hiring.
 
 ## Description Quality
 

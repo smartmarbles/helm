@@ -171,6 +171,7 @@ For best results — especially if you use open-source or smaller orchestrators 
 - When ARTHUR is selected directly, his full `arthur.agent.md` persona is loaded immediately and reliably, even on smaller models.
 - When the default agent is used instead, a bootstrap chain fires (`copilot-instructions.md` → read `arthur.agent.md`). This works on capable models, but the chain can be skipped or improperly executed on weaker open-source orchestrators, causing ARTHUR to improvise from partial context rather than load his full instructions.
 - Selecting ARTHUR directly removes the persona-conflict risk between the default agent's identity and ARTHUR's instructions.
+- Alternatively, addressing ARTHUR by name at the start of your prompt (e.g., "Arthur, let's do X") also triggers the mechanism to load `arthur.agent.md` — this works reliably even on OSS models without changing the agent picker at all.
 
 This is a recommendation, not a requirement. The safety floor in `copilot-instructions.md` (forbidden tools list, delegation mandate, MUST-read pointer) keeps the system functional for users who do not follow this recommendation.
 
@@ -202,11 +203,11 @@ Helm works with both reasoning models (e.g., Claude Opus 4.6, GPT-5.3-Codex) and
 
 ## Testing
 
-A comprehensive behavioral test plan is included at [`artifacts/testing/test-plan.md`](artifacts/testing/test-plan.md) with 83 test cases across 12 categories. Because Helm has no runtime, tests are conversational — you send a prompt, observe what the agents say and do, and verify the outcome. The plan covers all three execution paths, both approval gates, the dynamic hiring chain, parallel dispatch, constraint enforcement, memory behavior, error recovery, artifact naming, the temporary agent lifecycle, status-query handling, and workflow hygiene.
+A comprehensive behavioral test plan is included at [`artifacts/testing/test-plan.md`](artifacts/testing/test-plan.md) with 92 test cases across 15 categories. Because Helm has no runtime, tests are conversational — you send a prompt, observe what the agents say and do, and verify the outcome. The plan covers all three execution paths, both approval gates, the dynamic hiring chain, parallel dispatch, constraint enforcement, memory behavior, error recovery, artifact naming, the temporary agent lifecycle, status-query handling, and workflow hygiene.
 
-Of the 83 tests, 34 are marked 🤖 (automatable) and can be run by **PROBE**, the test runner agent. Use `@PROBE run all` to execute all automatable tests, or `@PROBE run TC-XXX` for a specific test. PROBE calls target agents as subagents, evaluates responses against pass criteria, checks file system side effects, and cleans up all artifacts. The remaining 49 tests are manual (👤) and require multi-turn interaction or environment changes.
+Of the 92 tests, 38 are marked 🤖 (fully automatable) and can be run by **PROBE**, the test runner agent. An additional 20 are marked 🤖/👤 — PROBE runs the automated criteria while the manual criteria require human observation in VS Code Copilot Chat. Use `@PROBE run all` to execute all automatable tests, or `@PROBE run TC-XXX` for a specific test. PROBE calls target agents as subagents, evaluates responses against pass criteria, checks file system side effects, and cleans up all artifacts. The remaining 34 tests are manual (👤) and require multi-turn interaction or environment changes.
 
-If you want to quickly verify the engine is working without running the full suite, the test plan opens with a **Smoke Test** section — seven targeted prompts that exercise every critical system: routing, delegation, approval gates, nested agent calls, direct addressing, and constraint enforcement.
+If you want to quickly verify the engine is working without running the full suite, the test plan opens with a **Smoke Test** section — 11 targeted prompts that exercise every critical system: routing, delegation, approval gates, nested agent calls, direct addressing, and constraint enforcement.
 
 ## Portability
 

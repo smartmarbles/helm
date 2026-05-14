@@ -239,7 +239,7 @@ ARTHUR_FORBIDDEN_TOOLS = {
 }
 
 
-def _extract_tool_invocations(response_raw: list, model: str, turn_number: int) -> list[dict]:
+def _extract_tool_invocations(response_raw: list, model: str, turn_number: int, tool_call_results=None, tool_call_rounds=None) -> list[dict]:
     """
     Walk a VS Code response list and extract toolInvocationSerialized items as turn dicts.
 
@@ -281,10 +281,31 @@ def _extract_tool_invocations(response_raw: list, model: str, turn_number: int) 
                 and not item.get("subAgentInvocationId")):
             has_untagged_exec_subagent = True
 
+    rounds_by_call_id: dict[str, dict] = {}
+    if tool_call_rounds:
+        for rnd in tool_call_rounds:
+            for tc in rnd.get("toolCalls") or []:
+                cid = tc.get("callId") or tc.get("id") or ""
+                if cid:
+                    rounds_by_call_id[cid] = tc.get("parameters") or {}
+
     # Pass 2: emit turn dicts
     turns: list[dict] = []
     for item in response_raw:
-        if not isinstance(item, dict) or item.get("kind") != "toolInvocationSerialized":
+        if not isinstance(item, dict):
+            continue
+        if item.get("kind") == "progressTaskSerialized":
+            val = item.get("value", "")
+            if "Recovered from a request error" in (val if isinstance(val, str) else ""):
+                turns.append({
+                    "turn": turn_number,
+                    "role": "recovery_marker",
+                    "model": model,
+                    "content": "Recovered from a request error",
+                    "tokens": 0,
+                })
+            continue
+        if item.get("kind") != "toolInvocationSerialized":
             continue
 
         tool_id       = item.get("toolId", "unknown")
@@ -323,20 +344,35 @@ def _extract_tool_invocations(response_raw: list, model: str, turn_number: int) 
         if isinstance(tsd, dict) and tsd.get("kind") == "subagent":
             call_text = tsd.get("prompt", "") or ""
         else:
-            inv = item.get("invocationMessage", "")
-            call_text = inv.get("value", "") if isinstance(inv, dict) else (str(inv) if inv else "")
+            tc_id = item.get("toolCallId", "")
+            if tc_id and tc_id in rounds_by_call_id:
+                call_text = json.dumps(rounds_by_call_id[tc_id])
+            else:
+                inv = item.get("invocationMessage", "")
+                call_text = inv.get("value", "") if isinstance(inv, dict) else (str(inv) if inv else "")
 
         # Result content
         if isinstance(tsd, dict) and tsd.get("kind") == "subagent":
             result_text = tsd.get("result", "") or ""
+            if result_text.startswith("Agent error:"):
+                result_role = result_role.replace("tool_result(", "tool_result[ERR](", 1)
         else:
-            past = item.get("pastTenseMessage", "")
-            result_text = past.get("value", "") if isinstance(past, dict) else (str(past) if past else "")
-            # Fallback: resultDetails as JSON
-            if not result_text.strip():
-                rd = item.get("resultDetails")
-                if rd:
-                    result_text = json.dumps(rd)
+            tc_id = item.get("toolCallId", "")
+            if tool_call_results and tc_id and tc_id in tool_call_results:
+                tcr = tool_call_results[tc_id]
+                result_text = "".join(
+                    c.get("value", "") for c in (tcr.get("content") or [])
+                    if isinstance(c, dict) and c.get("kind") == "text"
+                )
+                if tcr.get("isError"):
+                    result_role = result_role.replace("tool_result(", "tool_result[ERR](", 1)
+            else:
+                past = item.get("pastTenseMessage", "")
+                result_text = past.get("value", "") if isinstance(past, dict) else (str(past) if past else "")
+                if not result_text.strip():
+                    rd = item.get("resultDetails")
+                    if rd:
+                        result_text = json.dumps(rd)
 
         if call_text.strip():
             turns.append({
@@ -379,6 +415,10 @@ def parse_raw_session(data: dict) -> list[dict]:
             continue
 
         model = req.get("model", req.get("modelId", "unknown"))
+        error_details = req.get("result", {}).get("errorDetails") or {}
+        turn_failed = bool(error_details.get("responseIsIncomplete", False))
+        if turn_failed:
+            model += "[FAILED]"
 
         # ── User message ──
         user_text = _extract_text(
@@ -409,7 +449,9 @@ def parse_raw_session(data: dict) -> list[dict]:
                 or response.get("content")
                 or ""
             )
-            model = response.get("model", response.get("modelId", model))
+            raw_model = response.get("model", response.get("modelId", ""))
+            if raw_model:
+                model = raw_model + ("[FAILED]" if turn_failed else "")
         elif isinstance(response, list):
             resp_text = _extract_text(response)
         else:
@@ -453,7 +495,13 @@ def parse_raw_session(data: dict) -> list[dict]:
         # ── Inline tool invocations (VS Code toolInvocationSerialized format) ──
         response_raw = req.get("response") or req.get("result") or req.get("output") or {}
         if isinstance(response_raw, list):
-            turns += _extract_tool_invocations(response_raw, model, i + 1)
+            tool_call_results = (
+                req.get("result", {}).get("metadata", {}).get("toolCallResults") or {}
+            )
+            tool_call_rounds = (
+                req.get("result", {}).get("metadata", {}).get("toolCallRounds") or []
+            )
+            turns += _extract_tool_invocations(response_raw, model, i + 1, tool_call_results, tool_call_rounds)
 
     return turns
 
@@ -591,6 +639,7 @@ ROLE_COLORS = {
 }
 RESET = "\033[0m"
 BOLD  = "\033[1m"
+ERR   = "\033[91m"
 
 
 def role_label(role: str, width: int = 30) -> str:
@@ -606,6 +655,8 @@ def _extract_agent_name(role: str):
         return role[10:-1], "call"
     if role.startswith("tool_result(") and role.endswith(")"):
         return role[12:-1], "result"
+    if role.startswith("tool_result[ERR](") and role.endswith(")"):
+        return role[17:-1], "result"
     return None
 
 
@@ -858,6 +909,9 @@ def _tool_type_stats(turns: list[dict]) -> dict:
         elif role.startswith("tool_result(") and role.endswith(")"):
             inner = role[12:-1]
             direction = "result"
+        elif role.startswith("tool_result[ERR](") and role.endswith(")"):
+            inner = role[17:-1]
+            direction = "result"
         else:
             continue
         if "/" in inner:
@@ -895,7 +949,7 @@ def print_tool_type_report(tool_stats: dict):
     print(f"  {'  Total':<32} {total_calls:>6}  {total_call_tok:>6,} {total_result_tok:>8,} {total_tokens:>8,}")
 
 
-def print_session_report(path, turns: list[dict], summary_only: bool = False, top_n: int = 0):
+def print_session_report(path, turns: list[dict], summary_only: bool = False, top_n: int = 0, context_growth: bool = False, context_window: int = 128000):
     if not turns:
         return
 
@@ -936,6 +990,18 @@ def print_session_report(path, turns: list[dict], summary_only: bool = False, to
             for i, t in enumerate(top5, 1):
                 pct = t["tokens"] / total * 100 if total else 0
                 print(f"  #{i:<3}  {t['turn']:<6}  {t['role']:<32}  {t['tokens']:>6,}  {pct:>4.1f}%")
+        if context_growth:
+            win_k = context_window // 1000
+            print(f"\nContext growth:  ({win_k}k window)")
+            print(f"{'Turn':<6}  {'Role':<32}  {'Tokens':>8}   {'Cumulative':>10}  Window %")
+            print(f"{'────':<6}  {'────────────────────────────────':<32}  {'──────':>8}   {'──────────':>10}  {'─'*40}")
+            cumulative = 0
+            for t in sorted(turns, key=lambda t: (t["turn"], turns.index(t))):
+                cumulative += t["tokens"]
+                pct = cumulative / context_window * 100 if context_window else 0
+                filled = min(40, int(pct / 2.5))
+                bar = "█" * filled + "░" * (40 - filled)
+                print(f"{t['turn']:>4}  {t['role']:<32}  {t['tokens']:>8,}   {cumulative:>10,}  {bar}  {pct:.1f}%")
 
     # Per-agent breakdown
     agents = _agent_stats(turns)
@@ -952,6 +1018,19 @@ def print_session_report(path, turns: list[dict], summary_only: bool = False, to
         print(f"\n{BOLD}Per-model breakdown:{RESET}")
         for m, tok in sorted(model_totals.items(), key=lambda x: -x[1]):
             print(f"  {m:<35} {tok:>10,} tokens")
+    base_totals: dict[str, int] = {}
+    for m, tok in model_totals.items():
+        base = m.replace("[FAILED]", "")
+        base_totals[base] = base_totals.get(base, 0) + tok
+    if any("[FAILED]" in m for m in model_totals):
+        print(f"\n  Consolidated (base model):")
+        for m, tok in sorted(base_totals.items(), key=lambda x: -x[1]):
+            print(f"    {m:<33} {tok:>10,} tokens")
+    failed_turns = [t for t in turns if "[FAILED]" in t.get("model", "")]
+    if failed_turns:
+        failed_tokens = sum(t["tokens"] for t in failed_turns)
+        failed_turn_nums = len({t["turn"] for t in failed_turns})
+        print(f"\n  {ERR}Failed turns   : {failed_turn_nums:>12}  ({failed_tokens:,} tokens on failed/retried turns){RESET}")
 
 def print_grand_total(all_turns: list[dict]):
     if not all_turns:
@@ -978,6 +1057,23 @@ def print_grand_total(all_turns: list[dict]):
         pct = tok / total * 100 if total else 0
         bar = "█" * int(pct / 2.5)
         print(f"    {m:<35} {tok:>10,}  ({pct:4.1f}%)  {bar}")
+    base_totals: dict[str, int] = {}
+    for m, tok in model_totals.items():
+        base = m.replace("[FAILED]", "")
+        base_totals[base] = base_totals.get(base, 0) + tok
+    if any("[FAILED]" in m for m in model_totals):
+        print(f"\n  Consolidated (base model):")
+        for m, tok in sorted(base_totals.items(), key=lambda x: -x[1]):
+            print(f"    {m:<33} {tok:>10,} tokens")
+    failed_turns = [t for t in all_turns if "[FAILED]" in t.get("model", "")]
+    if failed_turns:
+        failed_tokens = sum(t["tokens"] for t in failed_turns)
+        failed_turn_nums = len({t["turn"] for t in failed_turns})
+        print(f"\n  {ERR}Failed turns   : {failed_turn_nums:>12}  ({failed_tokens:,} tokens on failed/retried turns){RESET}")
+    err_results = [t for t in all_turns if t["role"].startswith("tool_result[ERR](")]
+    if err_results:
+        err_tokens = sum(t["tokens"] for t in err_results)
+        print(f"  {ERR}Error tool results: {len(err_results):>9}  ({err_tokens:,} tokens in errored tool results){RESET}")
     print(f"\n{'='*72}")
 
     if not TIKTOKEN_AVAILABLE:
@@ -1187,6 +1283,10 @@ def main():
                         help="Suppress Markdown output even when --file is used")
     parser.add_argument("--top", type=int, default=0, metavar="N",
                         help="In the detail table, show only the N most expensive rows (0 = all)")
+    parser.add_argument("--context-growth", action="store_true",
+                        help="Show cumulative context window growth after the turn table")
+    parser.add_argument("--context-window", type=int, default=128000, metavar="N",
+                        help="Context window size for growth %%%% calculation (default: 128000)")
     args = parser.parse_args()
 
     # --file mode: write markdown by default unless --no-md is set
@@ -1269,13 +1369,15 @@ def main():
         if args.md:
             buf = io.StringIO()
             with redirect_stdout(buf):
-                print_session_report(f, turns, summary_only=args.summary, top_n=args.top)
+                print_session_report(f, turns, summary_only=args.summary, top_n=args.top,
+                                     context_growth=args.context_growth, context_window=args.context_window)
             session_text = buf.getvalue()
             print(session_text, end="")
             md_path = f.parent / f"{f.stem}_tokens.md"
             _write_markdown(md_path, session_text)
         else:
-            print_session_report(f, turns, summary_only=args.summary, top_n=args.top)
+            print_session_report(f, turns, summary_only=args.summary, top_n=args.top,
+                                 context_growth=args.context_growth, context_window=args.context_window)
 
     print(f"\n  Parsed {parsed_count} session file(s) with content.")
 
