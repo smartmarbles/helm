@@ -70,6 +70,16 @@ Every non-trivial factual claim in the report must be traceable to a source or e
 
 Default: five sources maximum per investigation. For a broad survey spanning more than four dimensions: up to seven. For a single-claim verification: one or two is enough. More sources rarely improve quality — they multiply tokens and dilute focus. If you find yourself reaching for a sixth source, ask whether you are genuinely uncertain or hedging. The answer is almost always hedging.
 
+## Rule: sequential retrieval for multi-URL source lists
+
+When the source list contains two or more URLs to fetch:
+
+1. **Retrieve and document each source individually** – fetch one URL, write up the key findings from that source as a brief inline note (title, main claim, relevant details, confidence tier), then move to the next. Do not batch-fetch multiple URLs in parallel.
+2. **Complete all per-source notes before synthesizing** – do not begin the report structure until every source has been individually documented.
+3. **Scan all per-source notes for contradictions before writing the synthesis** – explicitly check whether any source conflicts with another before drafting Key Findings. Surface every conflict in the report; do not average or suppress it.
+
+**Why:** Parallel retrieval against large source lists overloads context, causing truncation or corruption of findings. Sequential processing bounds each retrieval cycle, preserves per-source depth, and ensures the synthesis pass has complete, uncorrupted notes to reason from. The small reduction in serendipitous cross-source pattern detection during gathering is more than recovered by the explicit contradiction scan at synthesis time.
+
 ---
 
 ## Corroboration Discipline

@@ -35,6 +35,47 @@ Every delegation follows these seven steps. Do not reorder. Do not merge steps t
 
 ---
 
+## Brief Composition Rules
+
+Two rules govern *how* a brief is written, applied at the moment ARTHUR drafts each dispatch. They are anticipatory — triggered by signals visible at brief-writing time — not reactive after failure.
+
+### Rule A — Line-range relay for input references
+
+**Trigger:** the brief is about to reference an existing artifact (spec, plan, findings doc, source file, agent file).
+
+**Decision:**
+
+- **Precise range, >10 lines** — if ARTHUR can name an exact line range AND that range is longer than ~10 lines, relay it as a markdown line-range link (format: `[display-text]` followed by a parenthesized link target combining the workspace-relative path with an `#L<start>-L<end>` anchor) and do NOT inline the content.
+- **Imprecise or short** — if the range is under ~10 lines, OR exact lines are not knowable, OR the agent needs to read freely around the reference, inline the content directly in the brief.
+- **Never** relay a bare whole-file path without a line range, unless the file is purpose-built for end-to-end reading (SCOOP findings docs, READMEs the agent must absorb whole, the active spec or plan). When invoking that exception, say so explicitly in the brief ("read in full").
+
+**Why precision is the threshold (not token count):** path-relay only wins when the agent reads strictly less than would have been inlined. With an exact line range, the agent reads exactly the needed range and skips surrounding context — net savings. Without a precise range, the agent reads the same content plus the tool-call overhead of opening the file and locating the section — net loss. Token count is a downstream consequence of precision, not a useful trigger on its own.
+
+> The SCOOP Relay Rule under Complexity Routing is the whole-file-read exception for SCOOP findings — it does not conflict with Rule A; it instances it.
+
+### Rule B — Staged-writes output strategy for segmented deliverables
+
+**What staged-writes is:** an output strategy where the agent divides a large deliverable across multiple sequential write operations against the same file *within a single dispatch*, confirming each section before proceeding. ARTHUR triggers it by adding `Output Strategy: staged-writes` to the brief. This is the full definition — you do not need to consult another file to understand or apply it.
+
+**Trigger (any one is sufficient):**
+- The deliverable is structurally segmented into named sections, and there are more than three of them.
+- The brief uses qualifiers like "deep analysis," "comprehensive," "full spec," "thorough."
+- The target deliverable is a multi-section document or multi-module artifact.
+
+**Rule:** add an explicit `Output Strategy: staged-writes` field to the brief.
+
+**This is not multi-dispatch and not a clarification loop.** ARTHUR issues exactly one `runSubagent` call. Multiple internal writes happen inside that single dispatch. The "dispatch once" constraint in `arthur.agent.md` § Constraints is not violated because no second `runSubagent` call occurs.
+
+**Why:** large multi-section deliverables fail when an agent tries to emit them in a single model response — the generation either truncates, drops sections, or degrades in quality across the tail. Staged writes turn one giant generation into a sequence of smaller, verifiable write operations against the same file.
+
+### Rule C — Sequential dispatch for over-capacity tasks
+
+**Trigger:** The task assigned to an agent is too large for one dispatch — too many files to write, too broad a scope to research, too large a deliverable even with staged-writes.
+
+**Rule:** Split into sequential dispatches, each a complete and independent brief covering a bounded scope. This applies to any agent. The "dispatch once" constraint prohibits refining the same brief — not decomposing a task into distinct scoped briefs.
+
+---
+
 ## Complexity Routing
 
 Three paths. Pick one. If the user names a path explicitly, use that one — never downgrade.
@@ -92,7 +133,7 @@ If task B needs the output of task A, they are sequential. Never parallelize dep
 
 ## Human Checkpoints
 
-**STOP: ARTHUR MUST NOT proceed past the Spec or Plan Checkpoint without explicit user approval.** Always pause, summarize, and await confirmation before continuing. No exceptions.
+**STOP: ARTHUR MUST NOT proceed past the Spec or Plan Checkpoint without explicit user approval.** Always pause, summarize, and await confirmation before continuing. No exceptions. These checkpoints override ALL efficiency rules — they are non-negotiable pauses between dispatch batches, not "clarification turns." Batching spec + plan into one dispatch, or plan + implementation into one dispatch, to skip a gate is a protocol violation.
 
 ### Spec Checkpoint (full path only)
 

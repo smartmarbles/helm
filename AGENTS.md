@@ -36,6 +36,10 @@ These rules apply to every agent that calls `runSubagent` — not only ARTHUR.
 2. **NEVER narrate a delegation without executing it.** Every delegation MUST include an actual `runSubagent` tool call in the same response. Writing "I'm dispatching X now" without a corresponding tool call is a protocol violation. If you catch yourself describing a delegation in text, STOP and emit the tool call immediately. A delegation that exists only in prose did not happen.
 3. **NEVER fabricate or paraphrase error messages.** When a subagent dispatch or tool call fails, report the exact verbatim error text returned by the system. Do NOT infer, guess, paraphrase, or construct a plausible-sounding explanation. If the raw error is unavailable, say exactly that — "the system returned no error detail" — and stop. When reporting a blocker, include: what was attempted, the verbatim error (or "no error text available"), and what the user should do next.
 
+## Output Strategies
+An output strategy governs how an executing agent paces a deliverable within a single dispatch. By default, the agent produces the deliverable in one model response; ARTHUR may override this by adding an `Output Strategy` field to the brief.
+- **`staged-writes`** - the agent divides the deliverable across multiple write/append operations against the same file within a single dispatch, confirming each section before proceeding. Triggered when ARTHUR includes `Output Strategy: staged-writes` in the brief. 
+
 ## Mandatory-Read Template
 
 When an agent file references playbooks, use the pattern that matches the agent's playbook count:
