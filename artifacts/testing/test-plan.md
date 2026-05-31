@@ -45,9 +45,9 @@ Helm is not a library or runtime — it is a set of `.agent.md` files and orches
 Before running any tests, confirm:
 
 - [ ] `.github/copilot-instructions.md` is present and loads correctly (VS Code should pick it up automatically)
-- [ ] All seven agent files exist: `arthur.agent.md`, `merlin.agent.md`, `sage.agent.md`, `scoop.agent.md`, `quill.agent.md`, `probe.agent.md`, `lens.agent.md`
+- [ ] All eight agent files exist: `arthur.agent.md`, `merlin.agent.md`, `sage.agent.md`, `scoop.agent.md`, `quill.agent.md`, `probe.agent.md`, `lens.agent.md`, `quiz.agent.md`
 - [ ] `AGENTS.md` exists at the repo root (provides team structure context and the Session Resumption Protocol to all agents)
-- [ ] `team-roster.md` lists all five permanent agents
+- [ ] `team-roster.md` lists all eight permanent agents
 - [ ] You are using VS Code Copilot with agent mode enabled
 - [ ] `chat.subagents.allowInvocationsFromSubagents` is enabled in VS Code settings (required for nested agent calls — e.g., MERLIN calling SCOOP)
 - [ ] **Pre-run clean tree**: Run `git status --short` and confirm the output is empty before starting any tests. A clean working tree is required — it makes post-test cleanup unambiguous (`git status` shows exactly what a test created). If the tree is not clean, commit or stash changes first.
@@ -78,6 +78,7 @@ Before running any tests, confirm:
 | [M — Workflow Hygiene](#m--workflow-hygiene) | TC-072 – TC-073, TC-083 | Static structural assertions and workflow compliance checks |
 | [N — PROBE Protocol](#n--probe-protocol) | TC-084 – TC-089 | PROBE follows its own execution rules correctly |
 | [O — LENS Validation](#o--lens-validation) | TC-090 – TC-095 | LENS accurately detects log/report discrepancies via fixture-based testing |
+| [P — QUIZ Agent & Artifact Readiness](#p--quiz-agent--artifact-readiness) | TC-096 – TC-109 | QUIZ on-demand invocation, unknown classification, discoverability, convergence, stop conditions, register lifecycle, DEFINITIONS.md restrictions, ADR gate, universal flagging, ARTHUR checkpoint |
 
 ---
 
@@ -3036,6 +3037,480 @@ Each fixture pair is named `tc###-log.md` (simulated chat log) and `tc###-probe-
 
 ---
 
+## P — QUIZ Agent & Artifact Readiness
+
+These tests verify QUIZ's on-demand invocation constraints, unknown classification and convergence, register lifecycle, write boundaries, ADR gate conditions, and ARTHUR's checkpoint open-questions behavior.
+
+---
+
+### TC-096 — QUIZ On-Demand Only: No Agent Auto-Invokes QUIZ
+
+**Objective**: Verify QUIZ is never auto-invoked by any agent; only explicit user invocation triggers QUIZ.
+
+**Input / Prompt**:
+```
+User submits a complex, ambiguous prompt directly to ARTHUR without mentioning QUIZ.
+```
+
+**Expected Behavior**:
+
+1. ARTHUR routes the request normally (Research / Standard / Full Path).
+2. ARTHUR does not invoke QUIZ at any point during routing or dispatch.
+3. QUIZ does not appear in any agent's tool calls during the workflow.
+
+**Pass Criteria**:
+
+- [ ] **[1]** No `runSubagent` call targeting QUIZ appears in the session
+- [ ] **[2]** ARTHUR proceeds without offering to invoke QUIZ unless the prompt contains open questions at a gate checkpoint
+- [ ] **[3]** Workflow completes without QUIZ involvement
+
+**Notes**: QUIZ is an on-demand agent. Agents must not invoke it automatically, regardless of prompt ambiguity.
+
+**LENS Signals**:
+
+- **[1]** hook-log inspection: no `runSubagent` entry with target `QUIZ` during the routing workflow
+
+---
+
+### TC-097 — QUIZ Unknown Classification: All Five Categories
+
+**Objective**: Verify QUIZ classifies all unknowns before asking the user any question, and applies the correct disposition to each category.
+
+**Input / Prompt**:
+```
+User invokes QUIZ with a prompt that contains all five unknown types: one Blocking, one Assumable, one Non-Blocking, one Discoverable, and one OutOfScope.
+```
+
+**Expected Behavior**:
+
+1. QUIZ reads the prompt and completes a full internal classification pass before generating any user-facing question.
+2. QUIZ asks the user only about the Blocking unknown (directly) and the Assumable unknown (with a proposed assumption).
+3. QUIZ does not ask about the Non-Blocking, Discoverable, or OutOfScope unknowns.
+4. Non-Blocking and Discoverable unknowns appear in the handoff's Open Questions section.
+5. OutOfScope unknown is excluded from the handoff entirely.
+6. Classification remains internal scaffolding; QUIZ does not present a classification table or list to the user.
+
+**Pass Criteria**:
+
+- [ ] **[1]** QUIZ produces no user-facing questions before completing classification
+- [ ] **[2]** Only Blocking and Assumable unknowns trigger user-facing questions
+- [ ] **[3]** Non-Blocking and Discoverable unknowns appear in handoff Open Questions
+- [ ] **[4]** OutOfScope unknown does not appear anywhere in the handoff
+- [ ] **[5]** Classification remains internal; no classification table/list is shown to the user
+
+**🤖 Automatable Portion**:
+- [ ] **[3]** Handoff `## Open Questions` contains Non-Blocking and Discoverable items — file/output check
+- [ ] **[4]** OutOfScope unknown is absent from all handoff sections — file/output check
+- [ ] **[5]** Session output contains no user-facing classification table/list — verifiable via LENS chat-log inspection
+
+**👤 Manual Portion**:
+- [ ] **[1]** Observe that classification completed before the first user-facing question — requires reviewing the conversation sequence
+- [ ] **[2]** Observe that ONLY Blocking and Assumable unknowns generated user-facing questions — requires reviewing the conversation sequence
+
+**Notes**: Classification must be a complete pass over all unknowns before the first question is surfaced.
+
+**LENS Signals**:
+
+- **[3]** File check: handoff `## Open Questions` contains Non-Blocking and Discoverable items
+- **[4]** File check: OutOfScope unknown is absent from all handoff sections
+- **[5]** Session output: no user-facing classification table/list appears
+
+---
+
+### TC-098 — QUIZ Assumable: Propose, Confirm, Record
+
+**Objective**: Verify QUIZ proposes a best assumption for an Assumable unknown, records a confirmed assumption with confidence and risk in the handoff.
+
+**Input / Prompt**:
+```
+User invokes QUIZ; one unknown is classified as Assumable (e.g., preferred output format).
+```
+
+**Expected Behavior**:
+
+1. QUIZ classifies the unknown as Assumable.
+2. QUIZ proposes its best assumption with a confidence level (High / Medium / Low) and a risk level (Low / Medium / High).
+3. User confirms (or does not challenge) the assumption.
+4. Confirmed assumption appears in the handoff `## Assumptions` section with confidence and risk fields populated.
+
+**Pass Criteria**:
+
+- [ ] **[1]** QUIZ presents a proposed assumption rather than asking a direct question
+- [ ] **[2]** The proposal includes confidence (High/Medium/Low) and risk level (Low/Medium/High)
+- [ ] **[3]** Confirmed assumption appears in handoff `## Assumptions` with both fields
+- [ ] **[4]** QUIZ does not record unconfirmed assumptions as confirmed
+
+**🤖 Automatable Portion**:
+- [ ] **[2]** Session output: proposal message contains a confidence label (High/Medium/Low) and a risk level (Low/Medium/High) — verifiable via LENS
+- [ ] **[3]** Handoff `## Assumptions` entry has non-empty `confidence` and `risk` fields — file/output check
+
+**👤 Manual Portion**:
+- [ ] **[1]** Observe that QUIZ presents a proposed assumption rather than asking a direct question — requires reviewing QUIZ’s message
+- [ ] **[4]** Observe that no unconfirmed assumptions are recorded as confirmed — requires reviewing the full interaction
+
+**Notes**: The distinction between proposing an assumption and asking a question is load-bearing — a direct question for an assumable unknown is a disposition error.
+
+**LENS Signals**:
+
+- **[2]** Session output: proposal message contains a confidence label (High/Medium/Low) and a risk level (Low/Medium/High)
+- **[3]** File check: handoff `## Assumptions` entry has non-empty `confidence` and `risk` fields
+
+---
+
+### TC-099 — QUIZ Discoverability Override: Resolve From Files
+
+**Objective**: Verify QUIZ reads existing project files to resolve a Blocking unknown before surfacing a question.
+
+**Input / Prompt**:
+```
+User invokes QUIZ; one Blocking unknown can be answered by reading a file already in the workspace.
+```
+
+**Expected Behavior**:
+
+1. QUIZ classifies the unknown as Blocking.
+2. QUIZ applies the Discoverability Override — inspects the relevant file before asking the user.
+3. QUIZ resolves the unknown from the file without generating a user-facing question.
+4. The handoff `## Files Inspected` section lists the file that resolved the unknown.
+5. The resolved unknown appears in `## Resolved Items`, not in Open Questions.
+
+**Pass Criteria**:
+
+- [ ] **[1]** QUIZ reads the relevant file before asking the user
+- [ ] **[2]** No user-facing question is generated for this unknown
+- [ ] **[3]** File appears in handoff `## Files Inspected`
+- [ ] **[4]** Resolved item appears in handoff `## Resolved Items`
+
+**Notes**: If QUIZ asks the user about a discoverable unknown without first checking files, that is a constraint violation (FR-008).
+
+**LENS Signals**:
+
+- **[1]** hook-log inspection: a `read_file` call targeting the relevant workspace file precedes any user-facing question for this unknown
+- **[3]** File check: handoff `## Files Inspected` lists the resolved file
+- **[4]** File check: resolved unknown appears in `## Resolved Items`, absent from `## Open Questions`
+
+---
+
+### TC-100 — QUIZ Required-Slot Convergence: Stops When Slots Are Filled
+
+**Objective**: Verify QUIZ stops asking questions when required slots are filled, even if further refinement questions would be possible.
+
+**Input / Prompt**:
+```
+User invokes QUIZ; two unknowns exist — one Blocking (fills a required slot), one that would only refine wording.
+```
+
+**Expected Behavior**:
+
+1. QUIZ asks the user about the Blocking unknown (required slot).
+2. User answers; the required slot is filled.
+3. QUIZ does not ask the wording-refinement question — it meets stop condition 4 (additional questions would only refine wording).
+4. QUIZ returns a handoff with status READY or READY_WITH_ASSUMPTIONS.
+
+**Pass Criteria**:
+
+- [ ] **[1]** QUIZ stops after required slots are filled
+- [ ] **[2]** No wording-refinement question is surfaced to the user
+- [ ] **[3]** Handoff status is READY or READY_WITH_ASSUMPTIONS, not NOT_READY
+
+**🤖 Automatable Portion**:
+- [ ] **[3]** Handoff status is READY or READY_WITH_ASSUMPTIONS, not NOT_READY — file/output check
+
+**👤 Manual Portion**:
+- [ ] **[1]** Observe that QUIZ stops asking after required slots are filled — requires reviewing the conversation
+- [ ] **[2]** Observe that no wording-refinement question was surfaced — requires reviewing all questions asked
+
+---
+
+### TC-101 — QUIZ Stop Conditions: All Six Conditions Trigger Handoff Return
+
+**Objective**: Verify each of the six stop conditions individually causes QUIZ to return a handoff.
+
+**Input / Prompt**:
+```
+Six separate QUIZ invocations, each designed to trigger exactly one stop condition: (1) all Blocking unknowns resolved; (2) remaining unknowns are safely assumable/non-blocking/discoverable; (3) artifact writable with explicit assumptions; (4) additional questions would only refine wording; (5) user invokes escape hatch; (6) one retry attempt on the same Blocking unknown exhausted.
+```
+
+**Expected Behavior**:
+
+1. In each invocation, exactly one stop condition is met.
+2. QUIZ returns a handoff immediately when the condition is met.
+3. QUIZ does not continue asking after a stop condition is reached.
+
+**Pass Criteria**:
+
+- [ ] **[1]** Each stop condition individually produces a handoff without further questions
+- [ ] **[2]** Stop condition 6 (one retry exhausted) records the safest assumption and risk in the handoff
+- [ ] **[3]** No stop condition is skipped or overridden by continued questioning
+
+**🤖 Automatable Portion**:
+- [ ] **[2]** Stop condition 6 handoff contains the safest assumption and risk in `## Assumptions` — file/output check
+
+**👤 Manual Portion**:
+- [ ] **[1]** For each of the six invocations, observe that a handoff is returned without further questions — requires running 6 separate QUIZ sessions
+- [ ] **[3]** Observe that no stop condition is skipped or overridden by continued questioning — requires reviewing each session
+
+---
+
+### TC-102 — QUIZ Escape Hatch: Correct Readiness Status Returned
+
+**Objective**: Verify QUIZ stops immediately on user escape-hatch request and returns the correct readiness status.
+
+**Input / Prompt**:
+```
+Variant A — safe assumptions remain: User invokes QUIZ, answers one question, then says "just proceed, stop asking."
+Variant B — unsafe assumptions remain: User invokes QUIZ, one Blocking unknown is unresolved, user says "proceed anyway."
+```
+
+**Expected Behavior**:
+
+1. (A) QUIZ stops asking immediately.
+2. (A) Remaining unknowns are assumable.
+3. (A) QUIZ returns READY_WITH_ASSUMPTIONS with assumptions recorded.
+4. (B) QUIZ stops asking immediately.
+5. (B) A Blocking unknown remains unresolved and cannot be safely assumed.
+6. (B) QUIZ returns NOT_READY with the unresolved item noted.
+
+**Pass Criteria**:
+
+- [ ] **[1]** QUIZ stops in both variants without asking another question
+- [ ] **[2]** Variant A produces READY_WITH_ASSUMPTIONS
+- [ ] **[3]** Variant B produces NOT_READY
+- [ ] **[4]** Unresolved items are documented in the handoff in both variants
+
+**🤖 Automatable Portion**:
+- [ ] **[2]** Variant A handoff status is READY_WITH_ASSUMPTIONS — file/output check
+- [ ] **[3]** Variant B handoff status is NOT_READY — file/output check
+- [ ] **[4]** Unresolved items are documented in the handoff in both variants — file/output check
+
+**👤 Manual Portion**:
+- [ ] **[1]** Observe that QUIZ stops in both variants without asking another question — requires reviewing the conversation immediately after the escape-hatch input
+
+---
+
+### TC-103 — QUIZ Register Lifecycle: Overwrite on New Invocation
+
+**Objective**: Verify `temp_question_register` is overwritten at the start of each new QUIZ invocation with no carry-over from a prior session.
+
+**Input / Prompt**:
+```
+Two QUIZ invocations in the same VS Code session — first on topic A, second on topic B. The second invocation begins with a fresh classification pass.
+```
+
+**Expected Behavior**:
+
+1. First invocation writes `temp_question_register` with unknowns from topic A.
+2. Second invocation overwrites the register — topic A unknowns do not appear.
+3. Second invocation's register contains only topic B unknowns.
+4. QUIZ does not skip classification of any unknown in the second invocation due to stale state.
+
+**Pass Criteria**:
+
+- [ ] **[1]** Second invocation's register contains no entries from the first invocation
+- [ ] **[2]** QUIZ does not treat topic B unknowns as "already seen" due to topic A history
+- [ ] **[3]** `/memories/session/temp-question-register.md` reflects only the current invocation's state
+
+**LENS Signals**:
+
+- **[3]** Memory read after second invocation start: `temp-question-register.md` contains only topic B entries — no topic A terms present
+
+---
+
+### TC-104 — QUIZ Register Write Boundary: Never Written Under `artifacts/docs/`
+
+**Objective**: Verify `temp_question_register` is only ever written to `/memories/session/temp-question-register.md` and never under `artifacts/docs/`.
+
+**Input / Prompt**:
+```
+User invokes QUIZ for any task. After the session completes, verify register location.
+```
+
+**Expected Behavior**:
+
+1. QUIZ creates/overwrites `temp_question_register` at `/memories/session/temp-question-register.md`.
+2. No file matching `temp-question-register` or similar appears under `artifacts/docs/`.
+
+**Pass Criteria**:
+
+- [ ] **[1]** Register file exists at `/memories/session/temp-question-register.md`
+- [ ] **[2]** No register file exists under `artifacts/docs/`
+
+**LENS Signals**:
+
+- **[2]** File-system check: `Get-ChildItem artifacts/docs/ -Recurse | Where-Object { $_.Name -like '*register*' }` returns empty
+
+---
+
+### TC-105 — DEFINITIONS.md Scope: Rejects Helm Vocabulary
+
+**Objective**: Verify QUIZ does not write Helm vocabulary terms (agent, playbook, skill, path, etc.) to `DEFINITIONS.md`.
+
+**Input / Prompt**:
+```
+User instructs QUIZ in project scan mode; one candidate term is "agent" (already covered by Helm's operating files).
+```
+
+**Expected Behavior**:
+
+1. QUIZ identifies "agent" as a candidate during project scan.
+2. QUIZ classifies it as already covered by Helm's operating files — `OutOfScope` for `DEFINITIONS.md`.
+3. QUIZ does not write "agent" to `DEFINITIONS.md`.
+4. The excluded candidate is noted in the handoff but not written.
+
+**Pass Criteria**:
+
+- [ ] **[1]** "agent" (or any Helm vocabulary term) does not appear as a new entry in `DEFINITIONS.md`
+- [ ] **[2]** Excluded candidate is noted in the handoff, not silently discarded
+
+**🤖 Automatable Portion**:
+- [ ] **[1]** `artifacts/docs/DEFINITIONS.md` does not contain a new entry for the Helm vocabulary term — file check
+
+**👤 Manual Portion**:
+- [ ] **[2]** Observe that the excluded candidate is noted in the handoff output — requires reviewing QUIZ’s session output
+
+**Notes**: Helm vocabulary covered by exclusion: agent, playbook, skill, path, temp, roster, spec, plan, handoff.
+
+---
+
+### TC-106 — DEFINITIONS.md Write Permissions: QUIZ Is the Only Writer
+
+**Objective**: Verify no agent other than QUIZ writes to `artifacts/docs/DEFINITIONS.md`.
+
+**Input / Prompt**:
+```
+A workflow involving SAGE, QUILL, and FORGE; none are writing definitions.
+```
+
+**Expected Behavior**:
+
+1. SAGE, QUILL, and FORGE produce their respective outputs.
+2. None of these agents write to `artifacts/docs/DEFINITIONS.md`.
+3. `DEFINITIONS.md` is unchanged after the workflow.
+
+**Pass Criteria**:
+
+- [ ] **[1]** `artifacts/docs/DEFINITIONS.md` is unchanged after the workflow
+- [ ] **[2]** No agent other than QUIZ writes to `DEFINITIONS.md`
+
+**LENS Signals**:
+
+- **[1]** File-system check: `(Get-Item artifacts/docs/DEFINITIONS.md).LastWriteTime` is unchanged before and after the workflow
+
+---
+
+### TC-107 — ADR Gate: All Three Conditions Required
+
+**Objective**: Verify an ADR is created only when all three ADR Gate conditions are true; failure of any one condition = no ADR.
+
+**Input / Prompt**:
+```
+(A) all three conditions met; (B) decision is reversible; (C) decision is not surprising without context; (D) decision was not a real trade-off.
+```
+
+**Expected Behavior**:
+
+1. Variant A: ADR is created in `artifacts/docs/adr/`.
+2. Variants B, C, D: No ADR is created; the candidate is noted in the return message with the failing condition identified.
+
+**Pass Criteria**:
+
+- [ ] **[1]** Variant A results in a new file under `artifacts/docs/adr/`
+- [ ] **[2]** Variants B, C, D produce no new file under `artifacts/docs/adr/`
+- [ ] **[3]** Failed candidates in B, C, D are noted with the specific failing gate condition — not silently discarded
+
+**🤖 Automatable Portion**:
+- [ ] **[1]** File-system check: `Get-ChildItem artifacts/docs/adr/ | Where-Object { $_.Name -ne '.gitkeep' }` returns exactly one new file after Variant A — LENS signal
+- [ ] **[2]** Same check returns no new files after Variants B, C, D — LENS signal
+
+**👤 Manual Portion**:
+- [ ] **[3]** Observe that failed candidates in Variants B, C, D are noted in the return message with the specific failing gate condition identified — requires reviewing the agent output
+
+**LENS Signals**:
+
+- **[1]** File-system check: `Get-ChildItem artifacts/docs/adr/ | Where-Object { $_.Name -ne '.gitkeep' }` returns exactly one new file after variant A
+- **[2]** Same check returns no new files after variants B, C, D
+
+---
+
+### TC-108 — Universal ADR Flagging Rule: Any Agent, Not Only QUIZ
+
+**Objective**: Verify any Helm agent (e.g., SAGE, FORGE) flags ADR candidates in its return message to ARTHUR, without QUIZ being involved.
+
+**Input / Prompt**:
+```
+SAGE completes a plan that includes a hard-to-reverse, surprising, trade-off decision. QUIZ was not invoked during the workflow.
+```
+
+**Expected Behavior**:
+
+1. SAGE identifies the ADR candidate while writing the plan.
+2. SAGE flags the candidate in its return message to ARTHUR.
+3. ARTHUR dispatches QUILL to write the polished ADR.
+4. QUIZ is not involved at any point.
+
+**Pass Criteria**:
+
+- [ ] **[1]** SAGE's return message contains an explicit ADR candidate flag
+- [ ] **[2]** ARTHUR dispatches QUILL (not QUIZ) to write the ADR
+- [ ] **[3]** QUIZ is not invoked
+
+**🤖 Automatable Portion**:
+- [ ] **[1]** SAGE’s return message contains an explicit ADR candidate flag — verifiable via LENS chat-log inspection
+- [ ] **[2]** ARTHUR’s tool calls show a `runSubagent` targeting QUILL (not QUIZ) — hook-log inspection
+- [ ] **[3]** No `runSubagent` call targeting QUIZ appears in the session — hook-log inspection
+
+**👤 Manual Portion**:
+- Workflow requires human to approve SAGE’s plan gate before ARTHUR can dispatch QUILL — multi-turn approval observation
+
+**Notes**: The universal ADR flagging rule applies to every Helm agent. Failure to flag when all three gate conditions are met is a constraint violation.
+
+---
+
+### TC-109 — ARTHUR Checkpoint: Three Options for Open Questions
+
+**Objective**: Verify that when a spec or plan contains open questions, ARTHUR reports count and classification summary at checkpoint, does not enumerate individual questions, offers exactly three options, and does not auto-invoke QUIZ.
+
+**Input / Prompt**:
+```
+SAGE returns a spec or plan that includes one or more unresolved open questions. ARTHUR presents the checkpoint.
+```
+
+**Expected Behavior**:
+
+1. ARTHUR states the open-question count and a classification summary by category at the checkpoint.
+2. ARTHUR does not enumerate or describe individual open questions in the checkpoint message.
+3. ARTHUR offers exactly three options: quiz / inline / defer.
+4. ARTHUR waits for the user's explicit choice before proceeding.
+5. ARTHUR does not auto-invoke QUIZ or assume/default any option.
+
+**Pass Criteria**:
+
+- [ ] **[1]** ARTHUR's checkpoint message includes open-question count and classification summary
+- [ ] **[2]** ARTHUR does not enumerate or describe individual open questions in checkpoint text
+- [ ] **[3]** Exactly three options are offered: quiz, inline, defer
+- [ ] **[4]** ARTHUR does not proceed past the checkpoint without an explicit user choice
+- [ ] **[5]** QUIZ is not invoked automatically and no default option is assumed
+
+**🤖 Automatable Portion**:
+- [ ] **[1]** ARTHUR's checkpoint message includes open-question count and classification summary — verifiable via LENS chat-log inspection
+- [ ] **[2]** ARTHUR's checkpoint message does not enumerate or describe individual open questions — LENS check
+- [ ] **[3]** Exactly three option tokens are present in ARTHUR's message: quiz, inline, defer — LENS check
+- [ ] **[5]** No `runSubagent` call targeting QUIZ appears without explicit user selection, and no default option language appears — hook-log/chat-log inspection
+
+**👤 Manual Portion**:
+- [ ] **[4]** Observe that ARTHUR does not proceed past the checkpoint without an explicit user choice — requires multi-turn review of whether ARTHUR waited
+
+**Notes**: Pre-selecting or defaulting to any option (especially `quiz`) without explicit user input is a constraint violation (FR-023).
+
+**LENS Signals**:
+
+- **[1]** Chat-log check: checkpoint message includes a numeric open-question count and a category-level classification summary
+- **[2]** Chat-log check: checkpoint message contains no individual open-question enumeration or descriptions
+- **[3]** Chat-log check: checkpoint message contains exactly the three option tokens `quiz`, `inline`, `defer`
+- **[5]** Hook-log/chat-log check: no `runSubagent(QUIZ)` before explicit user selection, and no default-option language
+
+---
+
 ## Summary Checklist
 
 Use this table as a quick pass/fail tracker across all test runs.
@@ -3045,6 +3520,8 @@ Use this table as a quick pass/fail tracker across all test runs.
 **Note**: Category N (TC-084 – TC-089) tests are 🤖/👤. The 🤖 portion (ARTHUR dispatching PROBE) is automated. The 👤 portion is a manual chat export step: after the PROBE run, use VS Code's **Export Chat** command to save the session as `chat-*.json` in `artifacts/testing/chats/` before dispatching LENS to audit.
 
 **Note**: Category O (TC-090 – TC-095) tests require fixture files in `artifacts/testing/fixtures/lens-test-fixtures/`. These fixtures must be created before category O can be run. See each TC for the required fixture filenames.
+
+**Note**: Category P (TC-096 – TC-109) tests cover QUIZ agent behavior. 🤖 criteria are file-system or LENS log checks. 🤖/👤 tests have split automatable/manual criteria documented in each TC body.
 
 | ID | Name | Mode | Agent | Status | Notes |
 |----|------|------|-------|--------|-------|
@@ -3141,6 +3618,20 @@ Use this table as a quick pass/fail tracker across all test runs.
 | TC-093 | LENS Detects MERLIN Skipping SCOOP | 🤖 | LENS | | Requires fixture tc093-log.md + tc093-probe-report.md |
 | TC-094 | LENS Produces Correct Report Truthfulness Summary Structure | 🤖 | LENS | | Requires fixture tc091 pair |
 | TC-095 | LENS Does Not Intercept Live Chat Streams | 🤖 | LENS | | |
+| TC-096 | QUIZ On-Demand Only: No Agent Auto-Invokes | 🤖 | QUIZ | | |
+| TC-097 | QUIZ Unknown Classification: All Five Categories | 🤖/👤 | QUIZ | | Handoff checks automatable; observing question order and exclusions requires LENS review |
+| TC-098 | QUIZ Assumable: Propose, Confirm, Record | 🤖/👤 | QUIZ | | Handoff content checks automatable; observing proposal format and unconfirmed handling requires human review |
+| TC-099 | QUIZ Discoverability Override: Resolve From Files | 🤖 | QUIZ | | |
+| TC-100 | QUIZ Required-Slot Convergence | 🤖/👤 | QUIZ | | Handoff status check automatable; observing QUIZ stops at the right time requires human review |
+| TC-101 | QUIZ Stop Conditions: All Six Trigger Handoff | 🤖/👤 | QUIZ | | SC6 handoff check automatable; 6-session coverage and no-skip verification require human review |
+| TC-102 | QUIZ Escape Hatch: Correct Status Returned | 🤖/👤 | QUIZ | | Handoff status and content checks automatable; observing QUIZ stops immediately requires human review |
+| TC-103 | QUIZ Register Lifecycle: Overwrite on New Invocation | 🤖 | QUIZ | | |
+| TC-104 | QUIZ Register Write Boundary | 🤖 | QUIZ | | |
+| TC-105 | DEFINITIONS.md Scope: Rejects Helm Vocabulary | 🤖/👤 | QUIZ | | DEFINITIONS.md file check automatable; observing excluded candidate noted in handoff requires human review |
+| TC-106 | DEFINITIONS.md Write Permissions: QUIZ Only | 🤖 | QUIZ | | |
+| TC-107 | ADR Gate: All Three Conditions Required | 🤖/👤 | QUIZ | | File-system checks automatable; observing failed candidates noted with conditions requires human review |
+| TC-108 | Universal ADR Flagging: Any Agent, Not Only QUIZ | 🤖/👤 | SAGE | | LENS checks automatable; approval gate observation during SAGE planning workflow requires human review |
+| TC-109 | ARTHUR Checkpoint: Three Options for Open Questions | 🤖/👤 | ARTHUR | | LENS checks automatable; observing ARTHUR waits for explicit user choice requires human review |
 
 ---
 
@@ -3189,3 +3680,6 @@ A new spec folder is created with a number already in use, overwriting existing 
 SCOOP creates files in the workspace instead of returning findings in-conversation. This violates SCOOP's updated constraint that it must never write files — all file persistence goes through QUILL.
 
 **Detection**: After any SCOOP invocation, check whether new files were created in the workspace. SCOOP should produce zero file system changes.
+
+---
+

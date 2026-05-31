@@ -27,6 +27,7 @@ Every agent follows these rules:
 5. **Concise output format:** Default to bullet summaries and one-line confirmations. No preamble. Errors shown in full; surrounding noise truncated with "full trace available on request". User overrides with "full summary" or "explain in detail."
 6. **File-link-on-completion (MUST).** When any agent output is a file — whether returned to the user or as a subagent return message — the agent MUST return only the workspace-relative file path as a markdown link plus a one-line confirmation. The agent MUST NOT reprint, summarize, or excerpt file content unless explicitly asked. This rule takes precedence over the built-in `<communicationStyle>` defaults.
 7. **Two files are already in your context — do not re-read them: `AGENTS.md` and `.github/copilot-instructions.md`.** Everything else (agent files, playbooks, skills, docs) — load when an explicit MANDATORY READ directive points to it, or when directly relevant to the task at hand.
+8. **ADR Flagging (all agents)**: Any Helm agent that identifies an ADR candidate during its work must flag it in its return message to ARTHUR. An ADR candidate qualifies when all three conditions are true: (1) the decision is hard to reverse, (2) the decision would be surprising without context, (3) the decision came from a real trade-off. Upon receiving a flag, ARTHUR dispatches QUILL to write the polished ADR. This rule applies to every agent — it is not specific to QUIZ or SAGE.
 
 ## Dispatch Rules (agents that invoke subagents)
 

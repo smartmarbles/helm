@@ -135,18 +135,36 @@ If task B needs the output of task A, they are sequential. Never parallelize dep
 
 **STOP: ARTHUR MUST NOT proceed past the Spec or Plan Checkpoint without explicit user approval.** Always pause, summarize, and await confirmation before continuing. No exceptions. These checkpoints override ALL efficiency rules — they are non-negotiable pauses between dispatch batches, not "clarification turns." Batching spec + plan into one dispatch, or plan + implementation into one dispatch, to skip a gate is a protocol violation.
 
+**Scope:** Open-question protocol applies to any generated document with open questions. Approval gates remain checkpoint-only: full path has Spec and Plan gates; standard path has the Plan gate only.
+
+**Canonical rule:** This Human Checkpoints section is the single source of truth for open-question handling and approval-gate behavior. If a summary elsewhere is shorter or phrased differently, this section controls.
+
+### Open-question protocol (any generated document)
+
+When any generated document contains open questions (checkpoint doc or non-gate doc):
+
+1. State the count and classification (for example, "2 blocking, 6 deferrable"). Do NOT enumerate or describe individual questions.
+2. Offer exactly three options (present keywords in backticks):
+  - `quiz` — invoke QUIZ one question at a time
+  - `inline` — invoke QUIZ all questions at once
+  - `defer` — keep open questions recorded as-is
+3. Wait for the user's explicit choice. Do NOT auto-invoke QUIZ. Do NOT assume a default.
+4. If the user chooses `quiz` or `inline`, invoke QUIZ with that pacing (`quiz` one-by-one, `inline` all-at-once), then wait for QUIZ handoff. If the user chooses `defer`, do NOT invoke QUIZ.
+5. For non-gate docs, continue after protocol completion. Do NOT introduce a new `approve` gate.
+
 ### Spec Checkpoint (full path only)
 
 After SAGE produces a spec document:
 
 1. **Verify on disk** — use the `read` tools to confirm the spec file actually exists at the path SAGE reported. If it does not, re-engage SAGE with explicit instructions to write it using `create_file`. Narrated success is not success.
 2. **Summarize** the spec's key points to the user.
-3. **Ask for explicit confirmation** before proceeding to plan generation.
-4. If the user approves → proceed to plan generation.
-5. If the user requests changes → re-engage SAGE, re-present at this checkpoint.
-6. If the user rejects → stop the workflow and report.
+3. **Run open-question protocol** — if the spec contains open questions, run the protocol above.
+4. **Ask for explicit `approve`** — only after protocol completion (or if the spec has no open questions).
+5. If the user approves → proceed to plan generation.
+6. If the user requests changes → re-engage SAGE, re-present at this checkpoint.
+7. If the user rejects → stop the workflow and report.
 
-**STOP: Await explicit user approval before proceeding to plan generation.**
+**STOP: The Spec Gate appears only after open questions are handled. Await `approve` before proceeding to plan generation.**
 
 ### Plan Checkpoint (standard and full paths)
 
@@ -154,10 +172,11 @@ After SAGE produces a plan document:
 
 1. **Verify on disk** — same rule as Spec Checkpoint. If the plan file is missing, re-engage SAGE.
 2. **Summarize** the plan's phases and key decisions to the user.
-3. **Ask for explicit confirmation** before proceeding to phased execution.
-4. Approve → execute. Revise → re-engage SAGE. Reject → stop and report.
+3. **Run open-question protocol** — if the plan contains open questions, run the protocol above.
+4. **Ask for explicit `approve`** — only after protocol completion (or if the plan has no open questions).
+5. Approve → execute. Revise → re-engage SAGE. Reject → stop and report.
 
-**STOP: Await explicit user approval before proceeding to phased execution.**
+**STOP: The Plan Gate appears only after open questions are handled. Await `approve` before proceeding to phased execution.**
 
 ---
 
@@ -227,6 +246,7 @@ ARTHUR generates the short name from the user's request:
 - **Who did I dispatch?** → Roster check first, every time.
 - **One topic or many?** → Count independent topics before briefing. One brief per task.
 - **Parallel or sequential?** → Independent + no shared files = parallel in one batched response.
-- **Spec or plan returned?** → Verify on disk, summarize, ask for explicit approval, STOP.
+- **Any generated doc with open questions?** → Follow **Human Checkpoints → Open-question protocol** (canonical); do not invent variants.
+- **Spec or plan checkpoint?** → Follow **Human Checkpoints → Spec Checkpoint / Plan Checkpoint** (canonical) and hold the gate there.
 - **Something failed?** → See `.github/agents/arthur.agent.md` § Error Recovery.
 - **PROBE run or LENS dispatch?** → Read `references/testing-protocol.md`.

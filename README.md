@@ -28,8 +28,9 @@ Helm is not a library or runtime. It's a set of conventions and agent definition
 | **SAGE** | Strategic Planner | *"A good plan makes implementation feel inevitable."* |
 | **QUILL** | Technical Documentation Writer | *"Clear docs are the shortest distance between a developer and a working feature."* |
 | **PROBE** | Test Runner | *"X/Y passed. Z failures."* |
+| **QUIZ** | Clarification & Readiness Agent | *"Ask less. Classify first. Converge fast."* |
 
-**ARTHUR** never produces deliverables directly — he routes every task to the right agent and tracks progress. **MERLIN** creates new agents by researching role requirements and designing purpose-built personas. **SCOOP** deep-dives into any topic, with every report including a "What Most People Miss" section. **SAGE** builds phased implementation plans with dependency analysis and risk identification. **QUILL** writes developer-facing documentation, running "The Confused Developer Test" on every section. **PROBE** runs automated behavioral tests against the agent system, evaluating pass/fail criteria and producing clean reports.
+**ARTHUR** never produces deliverables directly — he routes every task to the right agent and tracks progress. **MERLIN** creates new agents by researching role requirements and designing purpose-built personas. **SCOOP** deep-dives into any topic, with every report including a "What Most People Miss" section. **SAGE** builds phased implementation plans with dependency analysis and risk identification. **QUILL** writes developer-facing documentation, running "The Confused Developer Test" on every section. **PROBE** runs automated behavioral tests against the agent system, evaluating pass/fail criteria and producing clean reports. **QUIZ** is an on-demand clarification agent — it classifies prompt unknowns, resolves discoverables from existing project files, and returns a readiness handoff (READY, READY_WITH_ASSUMPTIONS, or NOT_READY) before work begins.
 
 > **Note:** The core team is deliberately infrastructure — orchestration, research, planning, hiring, and documentation. There are no implementation agents in the default roster. When a plan calls for a skillset not covered, ARTHUR engages MERLIN to hire the right specialist (e.g., a TypeScript engineer, a database migration expert, a social publisher) on the fly. This keeps the core team lean and ensures implementation agents are purpose-built for the actual work, not generic.
 
@@ -90,6 +91,7 @@ The current playbook set (loaded on-demand by the owning agent):
 | `audit-chat-log` | LENS | Chat log auditing and behavioral verification |
 | `design-test-rubric` | PROBE | Scorecard weighting, severity taxonomy, violation-log schema |
 | `run-test-plan` | PROBE | Test execution, stdout/stderr capture, pass/fail reporting |
+| `quizler` | QUIZ | Unknown classification, discoverability override, convergence, stop conditions, register lifecycle |
 
 Every skill must pass `validate_skill.py` (`.github/scripts/`) with zero errors. Run the validator after creating or modifying any skill.
 
@@ -141,6 +143,7 @@ AGENTS.md                  # Always-on shared context for all agents
     scoop.agent.md
     quill.agent.md
     probe.agent.md
+    quiz.agent.md
     temps/                 # Archived temporary agents
   skills/                  # Skills (semantic trigger; one SKILL.md per folder)
     orchestrate-delegation/
@@ -155,6 +158,7 @@ AGENTS.md                  # Always-on shared context for all agents
     audit-chat-log/
     design-test-rubric/
     run-test-plan/
+    quizler/
   templates/               # Plan and spec templates
   scripts/                 # Utility scripts
 artifacts/                 # Spec folders created per-effort (spec001-*, spec002-*, etc.)
@@ -203,9 +207,9 @@ Helm works with both reasoning models (e.g., Claude Opus 4.6, GPT-5.3-Codex) and
 
 ## Testing
 
-A comprehensive behavioral test plan is included at [`artifacts/testing/test-plan.md`](artifacts/testing/test-plan.md) with 92 test cases across 15 categories. Because Helm has no runtime, tests are conversational — you send a prompt, observe what the agents say and do, and verify the outcome. The plan covers all three execution paths, both approval gates, the dynamic hiring chain, parallel dispatch, constraint enforcement, memory behavior, error recovery, artifact naming, the temporary agent lifecycle, status-query handling, and workflow hygiene.
+A comprehensive behavioral test plan is included at [`artifacts/testing/test-plan.md`](artifacts/testing/test-plan.md) with 106 test cases across 16 categories. Because Helm has no runtime, tests are conversational — you send a prompt, observe what the agents say and do, and verify the outcome. The plan covers all three execution paths, both approval gates, the dynamic hiring chain, parallel dispatch, constraint enforcement, memory behavior, error recovery, artifact naming, the temporary agent lifecycle, status-query handling, workflow hygiene, and QUIZ agent behavior and artifact readiness.
 
-Of the 92 tests, 38 are marked 🤖 (fully automatable) and can be run by **PROBE**, the test runner agent. An additional 20 are marked 🤖/👤 — PROBE runs the automated criteria while the manual criteria require human observation in VS Code Copilot Chat. Use `@PROBE run all` to execute all automatable tests, or `@PROBE run TC-XXX` for a specific test. PROBE calls target agents as subagents, evaluates responses against pass criteria, checks file system side effects, and cleans up all artifacts. The remaining 34 tests are manual (👤) and require multi-turn interaction or environment changes.
+Of the 106 tests, 43 are marked 🤖 (fully automatable) and can be run by **PROBE**, the test runner agent. An additional 29 are marked 🤖/👤 — PROBE runs the automated criteria while the manual criteria require human observation in VS Code Copilot Chat. Use `@PROBE run all` to execute all automatable tests, or `@PROBE run TC-XXX` for a specific test. PROBE calls target agents as subagents, evaluates responses against pass criteria, checks file system side effects, and cleans up all artifacts. The remaining 34 tests are manual (👤) and require multi-turn interaction or environment changes.
 
 If you want to quickly verify the engine is working without running the full suite, the test plan opens with a **Smoke Test** section — 11 targeted prompts that exercise every critical system: routing, delegation, approval gates, nested agent calls, direct addressing, and constraint enforcement.
 
