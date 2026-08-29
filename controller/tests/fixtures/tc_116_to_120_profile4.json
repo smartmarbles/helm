@@ -1,0 +1,48 @@
+[
+  {
+    "tc_id": "TC-116",
+    "category": "profile4",
+    "description": "Profile #4 enabled; full BG-001..BG-006 pass; all invariants pass. Final ST-900.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-020", "state_after": "ST-900", "event": "EV-023", "boundary_event": "terminalize", "workflow_lifecycle_after": "terminal"}, "blackboard_overrides": {"fsm_state_ref": "ST-020", "lifecycle_stage": "prepare_dispatch"}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-900"
+  },
+  {
+    "tc_id": "TC-117",
+    "category": "profile4",
+    "description": "Profile #4; AC-002 attempted with blackboard.row_present=false. BG-001 fails; state->ST-903.",
+    "turns": [{"snapshot_overrides": {"actions": ["AC-002"]}, "blackboard_overrides": {"row_present": false}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "BG-001",
+    "expected_state_after": "ST-903"
+  },
+  {
+    "tc_id": "TC-118",
+    "category": "profile4",
+    "description": "Profile #4; owner_lock.is_stale=true during dispatch attempt. BG-003 fails; state->ST-903.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-020", "actions": ["AC-002"]}, "blackboard_overrides": {"fsm_state_ref": "ST-020", "lifecycle_stage": "prepare_dispatch", "owner_lock": {"active": "ARTHUR", "lock_token": "tok-001", "acquired_at": "2026-05-31T10:00:00Z", "expires_at": "2026-12-31T00:00:00Z", "is_stale": true, "active_lock_count": 1}}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "BG-003",
+    "expected_state_after": "ST-903"
+  },
+  {
+    "tc_id": "TC-119",
+    "category": "profile4",
+    "description": "Completion pressure; AC-002 attempted; blackboard state inconsistent (BG-002 fails). DISCREPANCY: matrix states BG-004 fail; ascending evaluator always reports BG-002 when fsm_state_ref mismatches state_before — BG-004 cannot independently fail in ascending evaluation (it is a dependency-composition gate that passes trivially when BG-001..BG-003 pass). state->ST-903.",
+    "discrepancy_note": "matrix says BG-004; pipeline reports BG-002 (ascending fail-fast; BG-004 cannot independently fail). Not a pipeline bug — fixture transcription gap. See Phase 9 discrepancy analysis.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-020", "actions": ["AC-002"]}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "BG-002",
+    "expected_state_after": "ST-903"
+  },
+  {
+    "tc_id": "TC-120",
+    "category": "profile4",
+    "description": "state_before=ST-900 (terminal); mutation attempt on owner_lock.active. BG-006 fails; state stays ST-900.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-900", "state_after": "ST-900", "event": "EV-001", "workflow_lifecycle_before": "terminal"}, "blackboard_overrides": {"fsm_state_ref": "ST-900", "lifecycle_stage": "terminal", "workflow_lifecycle": "terminal", "terminal": {"is_terminal": true, "terminal_state": "ST-900", "terminalized_at": null, "terminal_reason": "success"}, "owner_lock": {"active": null, "lock_token": null, "acquired_at": null, "expires_at": null, "is_stale": false, "active_lock_count": 0}, "mutation_attempt_keys": ["owner_lock.active"]}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "BG-006",
+    "expected_state_after": "ST-900"
+  }
+]

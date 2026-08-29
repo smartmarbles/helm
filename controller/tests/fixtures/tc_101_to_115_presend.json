@@ -1,0 +1,137 @@
+[
+  {
+    "tc_id": "TC-101",
+    "category": "regression",
+    "description": "Completion pressure; orchestrator emits deliverable_content. INV-001 fails first (before CHK-004).",
+    "turns": [{"snapshot_overrides": {"outbound_message_type": "deliverable_content"}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-001",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-102",
+    "category": "regression",
+    "description": "Owner=clarifier; orchestrator sends question_prompt. INV-009 fails.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-050", "owner_before": "clarifier", "outbound_message_type": "question_prompt"}, "blackboard_overrides": {"fsm_state_ref": "ST-050", "lifecycle_stage": "await_result", "owner_lock": {"active": "QUIZ", "lock_token": "tok-001", "acquired_at": "2026-05-31T10:00:00Z", "expires_at": "2026-12-31T00:00:00Z", "is_stale": false, "active_lock_count": 1}}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-009",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-103",
+    "category": "regression",
+    "description": "EV-002 (stop) but dispatch AC-002 proceeds; state_after not ST-901. INV-010 fails.",
+    "turns": [{"snapshot_overrides": {"event": "EV-002", "state_after": "ST-020", "actions": ["AC-002"], "pending_interrupt": "stop"}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-010",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-104",
+    "category": "regression",
+    "description": "EV-003 (process audit) with concurrent AC-002. INV-011 fails.",
+    "turns": [{"snapshot_overrides": {"event": "EV-003", "state_after": "ST-090", "actions": ["AC-007", "AC-002"], "pending_interrupt": "process_audit"}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-011",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-105",
+    "category": "regression",
+    "description": "presend.executed=false on outbound turn. INV-012 fails.",
+    "turns": [{"snapshot_overrides": {"presend": {"executed": false, "result": "pass", "failed_check": null}}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-012",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-106",
+    "category": "regression",
+    "description": "Gate doc spec; open questions unresolved; AC-005 sent. INV-006 fails.",
+    "turns": [{"snapshot_overrides": {"doc_type": "spec", "open_question_count": 1, "actions": ["AC-005"], "prompt_options": ["quiz", "inline", "defer"]}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-006",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-107",
+    "category": "regression",
+    "description": "Open questions present; AC-004 invoked without quiz/inline user_choice. INV-005 fails.",
+    "turns": [{"snapshot_overrides": {"open_question_count": 1, "actions": ["AC-004"], "prompt_options": ["quiz", "inline", "defer"]}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-005",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-108",
+    "category": "regression",
+    "description": "Open questions present; prompt_options missing 'defer'. INV-004 fails.",
+    "turns": [{"snapshot_overrides": {"open_question_count": 1, "prompt_options": ["quiz", "inline"]}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-004",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-109",
+    "category": "regression",
+    "description": "explicit_path=full, selected_path=standard — path mismatch. INV-003 fails.",
+    "turns": [{"snapshot_overrides": {"explicit_path": "full", "selected_path": "standard"}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-003",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-110",
+    "category": "regression",
+    "description": "delegation_claimed=true but runSubagent=0. INV-002 fails.",
+    "turns": [{"snapshot_overrides": {"delegation_claimed": true, "tool_calls": {"runSubagent": 0}}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-002",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-111",
+    "category": "regression",
+    "description": "AC-002 dispatch with missing expected_output key. INV-013 fails.",
+    "turns": [{"snapshot_overrides": {"actions": ["AC-002"], "dispatch_payload_keys": ["objective", "constraints", "inputs"]}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-013",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-112",
+    "category": "regression",
+    "description": "Parallel batch writes same output path twice. INV-014 fails.",
+    "turns": [{"snapshot_overrides": {"output_paths": ["artifacts/file.md", "artifacts/file.md"]}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-014",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-113",
+    "category": "regression",
+    "description": "state_before=ST-901 (terminal) with event != EV-001. INV-015 fails.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-901", "state_after": "ST-020", "event": "EV-004"}, "blackboard_overrides": {"fsm_state_ref": "ST-901", "lifecycle_stage": "terminal", "workflow_lifecycle": "terminal", "terminal": {"is_terminal": true, "terminal_state": "ST-901", "terminalized_at": null, "terminal_reason": "stop"}, "owner_lock": {"active": null, "lock_token": null, "acquired_at": null, "expires_at": null, "is_stale": false, "active_lock_count": 0}}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-015",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-114",
+    "category": "regression",
+    "description": "doc_type=non_gate, user_choice=defer, approval_prompted=true. INV-016 fails.",
+    "turns": [{"snapshot_overrides": {"doc_type": "non_gate", "user_choice": "defer", "approval_prompted": true}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-016",
+    "expected_state_after": null
+  },
+  {
+    "tc_id": "TC-115",
+    "category": "regression",
+    "description": "doc_type=spec, user_choice=defer, approval_prompted=false. INV-017 fails.",
+    "turns": [{"snapshot_overrides": {"doc_type": "spec", "user_choice": "defer", "approval_prompted": false}, "blackboard_overrides": {}}],
+    "expected_verdict": "FAIL",
+    "expected_failed_check": "INV-017",
+    "expected_state_after": null
+  }
+]

@@ -15,3 +15,22 @@ artifacts/docs/*
 __pycache__/
 *.pyc
 
+# helm-controller runtime state and local config (spec015 Task 1.1 / Watch Out #21)
+# The committed template is helm-controller.toml.example — the live file is local-only.
+.helm-controller.port
+.helm-controller.port.*
+.helm-controller.db
+helm-controller.toml
+# Hook resilience runtime state (spec015 Phase R2):
+# single-flight self-heal lock, durable unavailability/suspend log, and the
+# human-only suspend marker. None are committed; the suspend marker is created
+# and removed ONLY by the human, never by the wrappers or controller.
+.helm-controller.lock
+.helm-controller-unavailable.log
+.helm-suspend
+
+# Python test/coverage and build artifacts
+.coverage
+cov_annotate/
+*.egg-info/
+

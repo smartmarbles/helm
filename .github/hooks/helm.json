@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/pre-tool-use.py",
+        "windows": "py -3 .github/hooks/pre-tool-use.py",
+        "timeout": 10
+      }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/post-tool-use.py",
+        "windows": "py -3 .github/hooks/post-tool-use.py",
+        "timeout": 10
+      }
+    ],
+    "SubagentStart": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/subagent-start.py",
+        "windows": "py -3 .github/hooks/subagent-start.py",
+        "timeout": 10
+      }
+    ],
+    "SubagentStop": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/subagent-stop.py",
+        "windows": "py -3 .github/hooks/subagent-stop.py",
+        "timeout": 10
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/stop.py",
+        "windows": "py -3 .github/hooks/stop.py",
+        "timeout": 10
+      }
+    ],
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/session-start.py",
+        "windows": "py -3 .github/hooks/session-start.py",
+        "timeout": 10
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/user-prompt-submit.py",
+        "windows": "py -3 .github/hooks/user-prompt-submit.py",
+        "timeout": 10
+      }
+    ],
+    "PreCompact": [
+      {
+        "type": "command",
+        "command": "python3 .github/hooks/pre-compact.py",
+        "windows": "py -3 .github/hooks/pre-compact.py",
+        "timeout": 10
+      }
+    ]
+  }
+}

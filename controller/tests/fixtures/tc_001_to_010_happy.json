@@ -1,0 +1,74 @@
+[
+  {
+    "tc_id": "TC-001",
+    "category": "happy",
+    "description": "Research path: EV-001->EV-004(research)->EV-021->EV-005->EV-008+EV-010->EV-023. Final turn ST-020->ST-900.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-020", "state_after": "ST-900", "event": "EV-023", "boundary_event": "terminalize", "workflow_lifecycle_after": "terminal"}, "blackboard_overrides": {"fsm_state_ref": "ST-020", "lifecycle_stage": "prepare_dispatch"}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-900"
+  },
+  {
+    "tc_id": "TC-002",
+    "category": "happy",
+    "description": "Standard path: EV-001->EV-004(standard)->EV-021->EV-005->EV-007+EV-010->EV-015->EV-018->EV-019. Final turn ST-080->ST-900.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-080", "state_after": "ST-900", "event": "EV-019", "actions": ["AC-011"], "boundary_event": "terminalize", "workflow_lifecycle_after": "terminal"}, "blackboard_overrides": {"fsm_state_ref": "ST-080", "lifecycle_stage": "execution"}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-900"
+  },
+  {
+    "tc_id": "TC-003",
+    "category": "happy",
+    "description": "Full path with spec/plan open questions via quiz/inline; clarifier handoff; phase execution. Final turn ST-080->ST-900.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-080", "state_after": "ST-900", "event": "EV-019", "actions": ["AC-011"], "boundary_event": "terminalize", "workflow_lifecycle_after": "terminal", "selected_path": "full", "open_question_protocol_resolved": true}, "blackboard_overrides": {"fsm_state_ref": "ST-080", "lifecycle_stage": "execution"}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-900"
+  },
+  {
+    "tc_id": "TC-004",
+    "category": "happy",
+    "description": "Spec open questions deferred (EV-013); approval still prompted (INV-017 true). Final ST-900.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-080", "state_after": "ST-900", "event": "EV-019", "actions": ["AC-011"], "boundary_event": "terminalize", "workflow_lifecycle_after": "terminal", "doc_type": "spec", "user_choice": "defer", "approval_prompted": true, "open_question_protocol_resolved": true}, "blackboard_overrides": {"fsm_state_ref": "ST-080", "lifecycle_stage": "execution"}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-900"
+  },
+  {
+    "tc_id": "TC-005",
+    "category": "happy",
+    "description": "Non-gate doc open questions deferred; no approval prompt created (INV-016 true). Final ST-900.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-020", "state_after": "ST-900", "event": "EV-023", "boundary_event": "terminalize", "workflow_lifecycle_after": "terminal", "doc_type": "non_gate", "user_choice": "defer", "approval_prompted": false}, "blackboard_overrides": {"fsm_state_ref": "ST-020", "lifecycle_stage": "prepare_dispatch"}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-900"
+  },
+  {
+    "tc_id": "TC-006",
+    "category": "happy",
+    "description": "Process-audit interrupt: the audit response (AC-007) is performed in ST-090, the only state where the section 4 action matrix permits AC-007 (Y in ST-090, N elsewhere); CHK-003 evaluates action_matrix[state_before]. Section 11.2 defines no lifecycle stage for ST-090, so this turn carries no blackboard. CHK-002 and INV-011 (event=EV-003 -> state_after=ST-090, no AC-002/AC-006) hold.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-090", "state_after": "ST-090", "event": "EV-003", "actions": ["AC-007"], "pending_interrupt": "process_audit"}, "blackboard_overrides": null}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-090"
+  },
+  {
+    "tc_id": "TC-007",
+    "category": "happy",
+    "description": "User stop during ST-050; immediate ST-901; INV-010 true.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-050", "state_after": "ST-901", "event": "EV-002", "actions": ["AC-008", "AC-011"], "pending_interrupt": "stop", "boundary_event": "terminalize", "workflow_lifecycle_after": "terminal"}, "blackboard_overrides": {"fsm_state_ref": "ST-050", "lifecycle_stage": "await_result"}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-901"
+  },
+  {
+    "tc_id": "TC-008",
+    "category": "happy",
+    "description": "Terminal ST-901 then EV-001 starts new workflow (TR-031). INV-015 true (event=EV-001 exception).",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-901", "state_after": "ST-010", "event": "EV-001", "boundary_event": "new", "workflow_lifecycle_before": "terminal"}, "blackboard_overrides": {"fsm_state_ref": "ST-901", "lifecycle_stage": "terminal", "workflow_lifecycle": "terminal", "terminal": {"is_terminal": true, "terminal_state": "ST-901", "terminalized_at": null, "terminal_reason": "stop"}, "owner_lock": {"active": null, "lock_token": null, "acquired_at": null, "expires_at": null, "is_stale": false, "active_lock_count": 0}}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-010"
+  }
+]

@@ -1,0 +1,56 @@
+{
+  "version": "1.0",
+  "_comment": "Tool-identifier → policy-class mapping. Plan Task 4.2 / boundary contract Appendix B. Seven classes: read, workflow_state, agent_dispatch, file_mutation, web_external, vscode_system, execution. file_mutation entries carry path_fields annotations used by conditional_checks.scr_path_check and scoped_path_check.",
+  "classes": {
+    "read": [
+      "semantic_search",
+      "grep_search",
+      "file_search",
+      "read_file",
+      "list_dir",
+      "get_errors",
+      "vscode_listCodeUsages",
+      "copilot_getNotebookSummary",
+      "read_notebook_cell_output",
+      "terminal_selection",
+      "terminal_last_command",
+      "get_terminal_output",
+      "get_task_output",
+      "testFailure",
+      "view_image"
+    ],
+    "workflow_state": [
+      "session_store_sql"
+    ],
+    "agent_dispatch": [
+      "runSubagent"
+    ],
+    "file_mutation": [
+      {"name": "create_file", "path_fields": ["filePath"]},
+      {"name": "replace_string_in_file", "path_fields": ["filePath"]},
+      {"name": "multi_replace_string_in_file", "path_fields": ["replacements[*].filePath"]},
+      {"name": "edit_notebook_file", "path_fields": ["filePath"]},
+      {"name": "vscode_renameSymbol", "path_fields": ["filePath"]},
+      {"name": "create_directory", "path_fields": ["dirPath"]},
+      {"name": "create_new_jupyter_notebook", "path_fields": []}
+    ],
+    "web_external": [
+      "browser",
+      "web_search",
+      "fetch_webpage"
+    ],
+    "vscode_system": [
+      "create_and_run_task",
+      "run_task",
+      "run_vscode_command",
+      "install_extension",
+      "vscode_askQuestions"
+    ],
+    "execution": [
+      "run_in_terminal",
+      "send_to_terminal",
+      "kill_terminal",
+      "run_notebook_cell"
+    ]
+  }
+}

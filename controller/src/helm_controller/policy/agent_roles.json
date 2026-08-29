@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "_comment": "Agent-to-role registry. Source of truth for boundary contract §5.0. Edit to onboard new agents — no code change required.",
+  "roles": {
+    "ARTHUR": "orchestrator",
+    "QUIZ": "clarifier",
+    "SAGE": "planner",
+    "SCOOP": "researcher",
+    "QUILL": "writer",
+    "MERLIN": "recruiter",
+    "PROBE": "tester",
+    "LENS": "auditor",
+    "FORGE": "implementer"
+  }
+}

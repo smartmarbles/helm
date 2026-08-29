@@ -1,0 +1,57 @@
+# helm-controller.toml — EXAMPLE configuration (committed template)
+#
+# Copy this file to `helm-controller.toml` in your workspace root and uncomment
+# any values you wish to override. Every value shown is the built-in default, so
+# the controller runs entirely on defaults if no live file is present.
+#
+# This `.example` file IS committed. Your live `helm-controller.toml` is
+# environment-specific and MUST NOT be committed — it is listed in .gitignore.
+#
+# Precedence: CLI args > config file > built-in defaults.
+
+# [server]
+# bind_address = "127.0.0.1"   # Change only if the controller must bind to a non-default loopback address
+# port = 0                     # 0 = OS-assigned; set to a fixed value to keep the port stable across restarts
+# port_file = ".helm-controller.port"
+
+# [store]
+# db_path = ".helm-controller.db"     # relative to workspace root
+# busy_timeout_ms = 5000              # PRAGMA busy_timeout — increase if you see SQLite lock-contention warnings
+# fallback_timeout_ms = 100           # trigger in-memory fallback if any store op exceeds this threshold (ms)
+
+# [locking]
+# lock_ttl_seconds = 1800             # default: 30 minutes
+# # Increase for slow OSS or local models. Rule 6 (mid-op lock expiry) fires when:
+# # current_time > lock.acquired_at + lock_ttl_seconds
+# # A session running a slow local model for 2 hours needs at least 7200 here.
+# # Example values: 3600 = 1h, 7200 = 2h, 14400 = 4h
+
+# [scr]
+# root_dir = ".scr"                   # relative to workspace root
+
+# [pipeline]
+# log_level = "INFO"                  # DEBUG | INFO | WARNING | ERROR
+
+# [resilience]
+# Hook-wrapper resilience behavior (spec015 Phase R2). Read by the stdlib-only
+# hook wrappers AND mirrored here so the controller logs the active mode at
+# startup. Every value below is the secure default — the human is never bricked,
+# and an agent (Class-B) action against an unavailable controller is denied
+# (never silently allowed). All four keys collapse to these defaults if the file
+# is absent, unreadable, malformed, or the [resilience] section is missing.
+# class_b_unavailable = "actionable_deny"  # "actionable_deny" (emit a recoverable
+#                                          #   [HELM-CONTROLLER-UNAVAILABLE] deny ARTHUR
+#                                          #   can offer to fix) | "strict_deny" (plain
+#                                          #   unavailability deny, no auto-start offer)
+# auto_start = true                        # true = attempt one bounded single-flight
+#                                          #   controller self-heal before denying;
+#                                          #   false = skip the spawn, deny immediately
+# heal_budget_seconds = 6.0                # total self-heal budget; MUST stay well
+#                                          #   inside the hook timeout (helm.json: 10s)
+# poll_interval_seconds = 0.25             # port-file poll interval during self-heal
+#
+# Human-initiated SUSPEND escape hatch (NOT a config key): create a `.helm-suspend`
+# marker file at the workspace root to deliberately pause workflow enforcement —
+# every event short-circuits to a PASS and emits a [HELM-ENFORCEMENT-SUSPENDED]
+# notice. Delete the file to resume. `.helm-suspend` is gitignored and is NEVER
+# created or removed by the wrappers or controller — only by you.

@@ -1,0 +1,38 @@
+[
+  {
+    "tc_id": "TC-121",
+    "category": "lifecycle",
+    "description": "Active workflow EV-024 suspend; ST-020->ST-000; boundary=suspend. All invariants and BG gates pass.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-020", "state_after": "ST-000", "event": "EV-024", "boundary_event": "suspend", "workflow_lifecycle_after": "non_terminal_suspended", "session_active_workflow_id": null}, "blackboard_overrides": {"fsm_state_ref": "ST-020", "lifecycle_stage": "prepare_dispatch"}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-000"
+  },
+  {
+    "tc_id": "TC-122",
+    "category": "lifecycle",
+    "description": "Suspended workflow EV-025 resume; ST-000->ST-020; boundary=resume; prior_non_terminal_fsm_state=ST-020.",
+    "turns": [{"snapshot_overrides": {"state_before": "ST-000", "state_after": "ST-020", "event": "EV-025", "boundary_event": "resume", "workflow_lifecycle_before": "non_terminal_suspended", "workflow_lifecycle_after": "non_terminal_active", "prior_non_terminal_fsm_state": "ST-020", "session_active_workflow_id": "wf-001"}, "blackboard_overrides": {"fsm_state_ref": "ST-000", "lifecycle_stage": "suspended", "workflow_lifecycle": "non_terminal_suspended", "owner_lock": {"active": null, "lock_token": null, "acquired_at": null, "expires_at": null, "is_stale": false, "active_lock_count": 0}}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-020"
+  },
+  {
+    "tc_id": "TC-123",
+    "category": "lifecycle",
+    "description": "Concurrent workflow wf-002 starts via EV-001; session_active_workflow_id=wf-002; boundary=new.",
+    "turns": [{"snapshot_overrides": {"workflow_id": "wf-002", "session_active_workflow_id": "wf-002", "state_before": "ST-000", "state_after": "ST-010", "event": "EV-001", "boundary_event": "new"}, "blackboard_overrides": {"workflow_id": "wf-002", "row_id": "BBR-000002", "fsm_state_ref": "ST-000", "lifecycle_stage": "intake"}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-010"
+  },
+  {
+    "tc_id": "TC-124",
+    "category": "lifecycle",
+    "description": "wf-002 supersedes wf-001; boundary=supersede; predecessor recorded.",
+    "turns": [{"snapshot_overrides": {"workflow_id": "wf-002", "predecessor_workflow_id": "wf-001", "session_active_workflow_id": "wf-002", "state_before": "ST-010", "state_after": "ST-010", "event": "EV-001", "boundary_event": "supersede"}, "blackboard_overrides": {"workflow_id": "wf-002", "row_id": "BBR-000002", "predecessor_workflow_id": "wf-001", "fsm_state_ref": "ST-010", "lifecycle_stage": "route"}}],
+    "expected_verdict": "PASS",
+    "expected_failed_check": null,
+    "expected_state_after": "ST-010"
+  }
+]

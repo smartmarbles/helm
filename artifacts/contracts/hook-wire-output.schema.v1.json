@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://helm.local/contracts/hook-wire-output.schema.v1.json",
+  "version": "1.0.0",
+  "title": "VS Code Hook Wire Output",
+  "description": "VS Code-native wire shape emitted by the Python controller for a hook event (spec015 Task 8.2). This is a SEPARATE contract from decision-output.schema.v1.json (the internal allow|deny|ask vocabulary). It models the three native output families: permission (PreToolUse: hookSpecificOutput.permissionDecision), block (PostToolUse/Stop/SubagentStop: top-level decision='block' + reason), and common (SessionStart/SubagentStart/UserPromptSubmit/PreCompact: continue/stopReason/systemMessage). The token 'deny' is NOT a permitted top-level decision value here: emitting a bare top-level {\"decision\":\"deny\"} for a PreToolUse event fails OPEN in VS Code and is the cardinal sin this schema rejects. The only legal top-level decision value is 'block'. UNRECOGNIZED EVENTS: an unrecognized or non-string hookEventName is handled fail-closed as a cross-family deny — the adapter emits BOTH a top-level decision='block' AND hookSpecificOutput.permissionDecision='deny', and deliberately OMITS continue=false (which would brick the human chat) — so a deny is honored whichever native family the unknown event belongs to.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "hookSpecificOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hookEventName"],
+      "properties": {
+        "hookEventName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "permissionDecision": {
+          "type": "string",
+          "description": "PreToolUse permission family verdict. 'deny' here is event-scoped (denies the single tool call); it is NOT the forbidden top-level 'deny'.",
+          "enum": ["allow", "deny", "ask"]
+        },
+        "permissionDecisionReason": {
+          "type": "string"
+        },
+        "updatedInput": {
+          "type": "object"
+        },
+        "additionalContext": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string",
+          "const": "block"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "decision": {
+      "type": "string",
+      "description": "Top-level block-family verdict. 'block' is the ONLY legal value; 'deny' here fails open and is rejected by this schema.",
+      "const": "block"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "continue": {
+      "type": "boolean",
+      "description": "Common/block behavioral modifier. continue=false signals a non-recoverable stop (session MUST NOT continue)."
+    },
+    "stopReason": {
+      "type": "string"
+    },
+    "systemMessage": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "A top-level decision='block' MUST carry a reason.",
+      "if": {
+        "required": ["decision"]
+      },
+      "then": {
+        "required": ["reason"]
+      }
+    }
+  ]
+}

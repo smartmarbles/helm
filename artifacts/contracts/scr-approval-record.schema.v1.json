@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scr-approval-record.schema.v1.json",
+  "version": "1.0.0",
+  "title": "SCR Approval Record v1",
+  "description": "Durable approval record written by the controller when an agent action passes a gate check.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scr_schema_version",
+    "record_class",
+    "record_id",
+    "workflow_id",
+    "session_id",
+    "turn_id",
+    "created_at",
+    "approved_by",
+    "decision",
+    "tool_name",
+    "tool_use_id"
+  ],
+  "properties": {
+    "scr_schema_version": {
+      "type": "string",
+      "const": "1"
+    },
+    "record_class": {
+      "type": "string",
+      "const": "approval"
+    },
+    "record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflow_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "turn_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "approved_by": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["allow", "deny", "ask"]
+    },
+    "tool_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tool_use_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
