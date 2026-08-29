@@ -33,15 +33,12 @@ _None._
 ## ADR Candidates
 
 <!-- Architectural decisions that have enough context for QUILL to write a full ADR.
-A decision qualifies only when all three ADR Gate conditions are true:
-  (1) Hard to reverse — the decision, once made, is difficult or costly to undo
-  (2) Surprising without context — a future reader would not understand why this choice was made without documentation
-  (3) Real trade-off — at least one alternative was considered and rejected for specific reasons
+A decision qualifies only when it meets the ADR-candidate criteria defined in AGENTS.md (item 8, "ADR Flagging (all agents)") — see that rule for the authoritative gate conditions.
 
 Use the format below for each entry:
 
 - **Decision**: [one-sentence summary of the decision made]
-  **Gate**: [one-line confirmation that all three conditions pass]
+  **Gate**: [one-line confirmation that the AGENTS.md item 8 ADR-candidate conditions pass]
   **Alternatives considered**: [what was rejected and why]
   **Rationale**: [why this option was chosen over the alternatives]
   **Recommended next action**: ARTHUR dispatches QUILL to write the ADR

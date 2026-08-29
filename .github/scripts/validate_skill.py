@@ -284,10 +284,6 @@ def find_skills(base_dir: str) -> list:
                 skills.append(entry_path)
     return skills
 
-
-_KNOWN_AGENTS = {"ARTHUR", "MERLIN", "SCOOP", "SAGE", "QUILL", "PROBE"}
-
-
 def main():
     parser = argparse.ArgumentParser(description="Validate agentskills.io skill directories")
     parser.add_argument("path", help="Skill directory or parent directory (with --all)")

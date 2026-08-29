@@ -51,7 +51,7 @@ Inline style is naturally suited for subagent execution — it requires only two
 
 **Definition and ADR candidate extraction happens per answer**, not at handoff time. Each time QUIZ processes a user answer, it must scan the response for:
 - Domain-specific terms that belong in `DEFINITIONS.md`
-- Decisions that meet all three ADR criteria (hard to reverse, surprising without context, real trade-off considered)
+- Decisions that meet the ADR-candidate criteria defined in `AGENTS.md` (item 8, "ADR Flagging (all agents)")
 
 Surface any candidates immediately in the next returned question (e.g., "Before the next question — I've noted X as a potential definition candidate. Does this definition capture it accurately: [proposed definition]?") rather than deferring all extraction to the final handoff.
 
@@ -191,12 +191,9 @@ The `temp_question_register` is a working file you maintain during a session. It
 
 ### Rule 7 — ADR Flagging
 
-During your session, flag a decision as an ADR candidate when **all three** conditions are true:
-1. **Hard to reverse** — costly or difficult to undo once made
-2. **Surprising without context** — a future reader would not understand why without documentation
-3. **Real trade-off** — at least one alternative was considered and rejected
+During your session, flag a decision as an ADR candidate per the ADR-Flagging rule defined in `AGENTS.md` (item 8, "ADR Flagging (all agents)"). That rule is the single source of truth for the ADR-candidate criteria — do not restate it here.
 
-If any condition fails, do not flag it. Record confirmed candidates in the handoff under `## ADR Candidates` with: decision statement, alternatives considered, rationale, and gate status. QUIZ does not write ADR files — file creation is QUILL's responsibility, dispatched by ARTHUR.
+Record confirmed candidates in the handoff under `## ADR Candidates` with: decision statement, alternatives considered, rationale, and gate status. QUIZ does not write ADR files — file creation is QUILL's responsibility, dispatched by ARTHUR.
 
 ---
 
