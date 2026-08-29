@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://helm.local/contracts/decision-output.schema.v1.json",
+  "version": "1.0.0",
+  "title": "Python Decision Output",
+  "description": "Decision returned by the Python policy controller for a hook event (boundary contract \u00a74.3). The decision vocabulary is exactly allow|deny|ask; the token 'block' is not a permitted value anywhere. 'continue' is a behavioral modifier permitted only on a 'deny' response (non-recoverable Stop/SubagentStop).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision", "reason_id", "reason"],
+  "properties": {
+    "decision": {
+      "type": "string",
+      "description": "Single canonical enforcement outcome. 'deny' is the only blocking term; 'block' is not part of the contract.",
+      "enum": ["allow", "deny", "ask"]
+    },
+    "reason_id": {
+      "type": "string",
+      "description": "Deterministic reason ID from a canonical family (CHK/INV/BG/POL) or boundary-only PC family.",
+      "pattern": "^(CHK|INV|BG|POL|PC)-[0-9]{3}$"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "state_after": {
+      "type": ["string", "null"],
+      "pattern": "^ST-[0-9]{3}$"
+    },
+    "suppressed_action_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^AC-[0-9]{3}$"
+      }
+    },
+    "additional_context": {
+      "type": ["string", "null"]
+    },
+    "updated_input": {
+      "type": ["object", "null"]
+    },
+    "continue": {
+      "type": "boolean",
+      "description": "Behavioral modifier (NOT a decision value). When false on a 'deny' for Stop/SubagentStop, signals a non-recoverable failure: the session MUST NOT continue. Permitted only alongside decision='deny'."
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "'continue' is permitted only when decision is 'deny'.",
+      "if": {
+        "not": {
+          "properties": {
+            "decision": { "const": "deny" }
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": ["continue"]
+        }
+      }
+    }
+  ]
+}

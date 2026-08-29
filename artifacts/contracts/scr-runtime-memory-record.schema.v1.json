@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scr-runtime-memory-record.schema.v1.json",
+  "version": "1.0.0",
+  "title": "SCR Runtime Memory Record v1",
+  "description": "Durable runtime-memory record capturing agent-authored knowledge for the current workflow.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scr_schema_version",
+    "record_class",
+    "record_id",
+    "workflow_id",
+    "session_id",
+    "turn_id",
+    "created_at",
+    "content",
+    "agent_id"
+  ],
+  "properties": {
+    "scr_schema_version": {
+      "type": "string",
+      "const": "1"
+    },
+    "record_class": {
+      "type": "string",
+      "const": "runtime_memory"
+    },
+    "record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflow_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "turn_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "content": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agent_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

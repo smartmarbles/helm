@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://helm.local/contracts/runtime-snapshot.schema.v1.json",
+  "version": "1.0.0",
+  "title": "Helm Per-Turn Runtime Snapshot",
+  "description": "Versioned v1 contract for the per-turn runtime snapshot defined by POL-009 (canonical FSM policy matrix), extended with the GAP-011 `prior_non_terminal_fsm_state` field. Every evaluated turn MUST produce one conforming snapshot (POL-009); snapshot-generation failure is an automatic FAIL (POL-010). Each property carries an `x-storage-tier` annotation per spec015 §5.1. DRIFT CAVEAT (Watch Out #7 / spec §5.1): fields tiered `workflow-persistent` or `session-routing` have their authoritative home in the workflow-scoped runtime store, NOT in this snapshot. Their values are read from the store at evaluation time and reflected here for machine input only — the snapshot is never the source of truth for persistent-tier state.",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "stateId": {
+      "type": "string",
+      "pattern": "^ST-[0-9]{3}$"
+    },
+    "eventId": {
+      "type": "string",
+      "pattern": "^EV-[0-9]{3}$"
+    },
+    "actionId": {
+      "type": "string",
+      "pattern": "^AC-[0-9]{3}$"
+    },
+    "checkId": {
+      "type": "string",
+      "pattern": "^CHK-[0-9]{3}$"
+    }
+  },
+  "required": [
+    "session_id",
+    "workflow_id",
+    "session_active_workflow_id",
+    "predecessor_workflow_id",
+    "successor_workflow_id",
+    "workflow_lifecycle_before",
+    "workflow_lifecycle_after",
+    "turn_id",
+    "state_before",
+    "state_after",
+    "prior_non_terminal_fsm_state",
+    "owner_before",
+    "owner_after",
+    "event",
+    "boundary_event",
+    "selected_path",
+    "explicit_path",
+    "doc_type",
+    "open_question_count",
+    "pending_interrupt",
+    "actions",
+    "outbound_sender",
+    "outbound_message_type",
+    "prompt_options",
+    "user_choice",
+    "approval_prompted",
+    "open_question_protocol_resolved",
+    "delegation_claimed",
+    "dispatch_payload_keys",
+    "phase_execution_started",
+    "suppressed_action_ids",
+    "tool_calls",
+    "presend",
+    "output_paths"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "minLength": 1,
+      "x-storage-tier": "workflow-persistent",
+      "description": "Stable identifier for the chat session boundary. Composite-identity key component."
+    },
+    "workflow_id": {
+      "type": "string",
+      "minLength": 1,
+      "x-storage-tier": "workflow-persistent",
+      "description": "Workflow-scoped identifier. Composite-identity key component."
+    },
+    "session_active_workflow_id": {
+      "type": ["string", "null"],
+      "x-storage-tier": "session-routing",
+      "description": "Session-level pointer to the active workflow. Routing and audit metadata only (POL-010A); MUST NOT override FSM or blackboard legality."
+    },
+    "predecessor_workflow_id": {
+      "type": ["string", "null"],
+      "x-storage-tier": "workflow-persistent",
+      "description": "Linkage to the superseded workflow on a `supersede` boundary."
+    },
+    "successor_workflow_id": {
+      "type": ["string", "null"],
+      "x-storage-tier": "workflow-persistent",
+      "description": "Linkage to the superseding workflow on a `supersede` boundary."
+    },
+    "workflow_lifecycle_before": {
+      "type": "string",
+      "enum": ["non_terminal_active", "non_terminal_suspended", "terminal"],
+      "x-storage-tier": "workflow-persistent"
+    },
+    "workflow_lifecycle_after": {
+      "type": "string",
+      "enum": ["non_terminal_active", "non_terminal_suspended", "terminal"],
+      "x-storage-tier": "workflow-persistent"
+    },
+    "turn_id": {
+      "type": "string",
+      "minLength": 1,
+      "x-storage-tier": "workflow-persistent",
+      "description": "Per-turn identifier. Composite-identity key component (session_id + workflow_id + turn_id). Its authoritative home is the workflow-scoped runtime store current-prompt turn counter (spec015 Task 3.2 / Watch Out #18); the snapshot reflects it for machine input only. Tiered workflow-persistent for consistency with the other two composite-identity key components, which are both workflow-persistent."
+    },
+    "state_before": {
+      "$ref": "#/$defs/stateId",
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "state_after": {
+      "$ref": "#/$defs/stateId",
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "prior_non_terminal_fsm_state": {
+      "oneOf": [
+        { "$ref": "#/$defs/stateId" },
+        { "type": "null" }
+      ],
+      "x-storage-tier": "workflow-persistent",
+      "description": "GAP-011 / POL-014C. Persisted non-terminal FSM state captured on interrupt/suspend entry (TR-002, TR-033) and cleared on return/resume (TR-003, TR-034). TR-003 and TR-034 resolve their destination to this value. Authoritative home is the runtime store record; this field is authoritative state and MUST NOT be derived from elsewhere."
+    },
+    "owner_before": {
+      "type": "string",
+      "enum": ["orchestrator", "clarifier"],
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "owner_after": {
+      "type": "string",
+      "enum": ["orchestrator", "clarifier"],
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "event": {
+      "$ref": "#/$defs/eventId",
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "boundary_event": {
+      "type": ["string", "null"],
+      "enum": ["new", "supersede", "suspend", "resume", "terminalize", null],
+      "x-storage-tier": "workflow-persistent"
+    },
+    "selected_path": {
+      "type": ["string", "null"],
+      "enum": ["research", "standard", "full", null],
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "explicit_path": {
+      "type": ["string", "null"],
+      "enum": ["research", "standard", "full", null],
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "doc_type": {
+      "type": ["string", "null"],
+      "enum": ["spec", "plan", "non_gate", null],
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "open_question_count": {
+      "type": "integer",
+      "minimum": 0,
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "pending_interrupt": {
+      "type": "string",
+      "enum": ["none", "stop", "process_audit"],
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/actionId" },
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "outbound_sender": {
+      "type": "string",
+      "enum": ["orchestrator", "clarifier"],
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "outbound_message_type": {
+      "type": "string",
+      "enum": [
+        "status",
+        "question_prompt",
+        "approval_prompt",
+        "audit_response",
+        "dispatch_notice",
+        "deliverable_content",
+        "stop_ack"
+      ],
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "prompt_options": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "user_choice": {
+      "type": ["string", "null"],
+      "enum": ["quiz", "inline", "defer", null],
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "approval_prompted": {
+      "type": "boolean",
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "open_question_protocol_resolved": {
+      "type": "boolean",
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "delegation_claimed": {
+      "type": "boolean",
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "dispatch_payload_keys": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "phase_execution_started": {
+      "type": "boolean",
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "suppressed_action_ids": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/actionId" },
+      "x-storage-tier": "turn-ephemeral"
+    },
+    "tool_calls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runSubagent"],
+      "x-storage-tier": "turn-ephemeral",
+      "properties": {
+        "runSubagent": {
+          "type": "integer",
+          "minimum": 0,
+          "x-storage-tier": "turn-ephemeral"
+        }
+      }
+    },
+    "presend": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["executed", "result", "failed_check"],
+      "x-storage-tier": "turn-ephemeral",
+      "properties": {
+        "executed": {
+          "type": "boolean",
+          "x-storage-tier": "turn-ephemeral"
+        },
+        "result": {
+          "type": "string",
+          "enum": ["pass", "fail"],
+          "x-storage-tier": "turn-ephemeral"
+        },
+        "failed_check": {
+          "oneOf": [
+            { "$ref": "#/$defs/checkId" },
+            { "type": "null" }
+          ],
+          "x-storage-tier": "turn-ephemeral"
+        }
+      }
+    },
+    "output_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "x-storage-tier": "turn-ephemeral"
+    }
+  }
+}
