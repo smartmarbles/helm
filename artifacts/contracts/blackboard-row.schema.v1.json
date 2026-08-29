@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://helm.local/contracts/blackboard-row.schema.v1.json",
+  "title": "Profile #4 Blackboard Row",
+  "description": "Canonical machine-checkable control-plane record for a single workflow-scoped blackboard row in Profile #4 (Blackboard + FSM + hard gates). Source of truth for lifecycle stage, gate status, and owner lock. Conforms to POL-051/POL-052 in orchestration-fsm-policy-and-test-matrix.md §11.2.",
+  "version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "row_present",
+    "row_schema_valid",
+    "row_id",
+    "session_id",
+    "workflow_id",
+    "predecessor_workflow_id",
+    "successor_workflow_id",
+    "item_id",
+    "lifecycle_stage",
+    "workflow_lifecycle",
+    "fsm_state_ref",
+    "prior_non_terminal_fsm_state",
+    "owner_lock",
+    "gates",
+    "required_gates_passed",
+    "terminal",
+    "audit",
+    "mutation_attempt_keys"
+  ],
+  "properties": {
+    "row_present": {
+      "type": "boolean",
+      "description": "Evaluator-input flag asserting the blackboard row exists for the current turn (BG-001)."
+    },
+    "row_schema_valid": {
+      "type": "boolean",
+      "description": "Evaluator-input flag asserting the row validated against this schema (BG-001)."
+    },
+    "row_id": {
+      "type": "string",
+      "pattern": "^BBR-[0-9]{6}$",
+      "description": "Blackboard row identifier (POL-052)."
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflow_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "predecessor_workflow_id": {
+      "type": ["string", "null"],
+      "description": "Set on supersede linkage; null otherwise."
+    },
+    "successor_workflow_id": {
+      "type": ["string", "null"],
+      "description": "Set on supersede linkage; null otherwise."
+    },
+    "item_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lifecycle_stage": {
+      "type": "string",
+      "enum": [
+        "intake",
+        "route",
+        "prepare_dispatch",
+        "dispatch",
+        "await_result",
+        "approval",
+        "execution",
+        "suspended",
+        "terminal"
+      ]
+    },
+    "workflow_lifecycle": {
+      "type": "string",
+      "enum": [
+        "non_terminal_active",
+        "non_terminal_suspended",
+        "terminal"
+      ]
+    },
+    "fsm_state_ref": {
+      "type": "string",
+      "pattern": "^ST-[0-9]{3}$"
+    },
+    "prior_non_terminal_fsm_state": {
+      "type": ["string", "null"],
+      "pattern": "^ST-[0-9]{3}$",
+      "description": "Persisted prior non-terminal FSM state. Set on TR-002/TR-033; cleared on TR-003/TR-034 (GAP-011)."
+    },
+    "owner_lock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "active",
+        "lock_token",
+        "acquired_at",
+        "expires_at",
+        "is_stale",
+        "active_lock_count"
+      ],
+      "properties": {
+        "active": {
+          "type": ["string", "null"],
+          "description": "AUDIT IDENTITY: the agent NAME holding the lock (e.g., ARTHUR, QUIZ), not a role. null when no lock is held. Policy enforcement (INV-021, POL-053) evaluates registry_role(active) — the name is preserved here for audit fidelity and MUST NOT be collapsed to a role."
+        },
+        "lock_token": {
+          "type": ["string", "null"]
+        },
+        "acquired_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "is_stale": {
+          "type": "boolean"
+        },
+        "active_lock_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "propertyNames": {
+        "pattern": "^BG-[0-9]{3}$"
+      },
+      "required": [
+        "BG-001",
+        "BG-002",
+        "BG-003",
+        "BG-004",
+        "BG-005",
+        "BG-006"
+      ],
+      "properties": {
+        "BG-001": { "$ref": "#/$defs/gateOutcome" },
+        "BG-002": { "$ref": "#/$defs/gateOutcome" },
+        "BG-003": { "$ref": "#/$defs/gateOutcome" },
+        "BG-004": { "$ref": "#/$defs/gateOutcome" },
+        "BG-005": { "$ref": "#/$defs/gateOutcome" },
+        "BG-006": { "$ref": "#/$defs/gateOutcome" }
+      }
+    },
+    "required_gates_passed": {
+      "type": "boolean"
+    },
+    "terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "is_terminal",
+        "terminal_state",
+        "terminalized_at",
+        "terminal_reason"
+      ],
+      "properties": {
+        "is_terminal": {
+          "type": "boolean"
+        },
+        "terminal_state": {
+          "type": ["string", "null"],
+          "enum": ["ST-900", "ST-901", "ST-902", null]
+        },
+        "terminalized_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "terminal_reason": {
+          "type": ["string", "null"],
+          "enum": ["success", "stop", "reject", "superseded", null]
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "created_at",
+        "created_by",
+        "revision",
+        "immutable_fields_hash",
+        "audit_fields_mutated"
+      ],
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_by": {
+          "type": "string",
+          "minLength": 1,
+          "description": "AUDIT IDENTITY: the agent NAME that created the row (e.g., ARTHUR) or the literal SYSTEM. This is an identity record, not a role, and MUST NOT be collapsed to a role."
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Monotonic compare-and-swap revision counter (spec §5.3)."
+        },
+        "immutable_fields_hash": {
+          "type": "string",
+          "minLength": 1
+        },
+        "audit_fields_mutated": {
+          "type": "boolean"
+        }
+      }
+    },
+    "mutation_attempt_keys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Field keys a turn attempted to mutate. Evaluated by BG-006 to reject post-terminal mutation."
+    }
+  },
+  "$defs": {
+    "gateOutcome": {
+      "type": "string",
+      "enum": ["pass", "fail", "blocked", "not_evaluated"],
+      "description": "Hard-gate evaluation outcome (BG-001..BG-006, POL-054)."
+    }
+  }
+}

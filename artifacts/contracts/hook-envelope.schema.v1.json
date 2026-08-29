@@ -1,0 +1,223 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://helm.local/contracts/hook-envelope.schema.v1.json",
+  "version": "1.0.0",
+  "title": "Normalized Hook Envelope",
+  "description": "Normalized input envelope passed to the Python policy controller for every hook event (boundary contract \u00a74.2).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_version",
+    "hook_event",
+    "timestamp",
+    "session_id",
+    "workspace_root",
+    "transcript_path",
+    "actor",
+    "tool_attempt",
+    "workflow",
+    "blackboard"
+  ],
+  "properties": {
+    "policy_version": {
+      "type": "string"
+    },
+    "hook_event": {
+      "type": "string",
+      "enum": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "SubagentStart",
+        "SubagentStop",
+        "Stop",
+        "PreCompact"
+      ]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "workspace_root": {
+      "type": "string"
+    },
+    "transcript_path": {
+      "type": ["string", "null"]
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active_agent", "active_role", "subagent_id"],
+      "properties": {
+        "active_agent": {
+          "type": "string",
+          "description": "Raw agent name from the hook payload."
+        },
+        "active_role": {
+          "type": "string",
+          "description": "Role resolved via the \u00a75.0 agent-to-role registry.",
+          "enum": [
+            "orchestrator",
+            "clarifier",
+            "planner",
+            "researcher",
+            "writer",
+            "recruiter",
+            "tester",
+            "auditor",
+            "implementer",
+            "reviewer",
+            "UNKNOWN"
+          ]
+        },
+        "subagent_id": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "tool_attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool_name", "tool_use_id", "tool_input", "tool_response"],
+      "properties": {
+        "tool_name": {
+          "type": ["string", "null"]
+        },
+        "tool_use_id": {
+          "type": ["string", "null"]
+        },
+        "tool_input": {
+          "type": ["object", "null"]
+        },
+        "tool_response": {
+          "type": ["object", "null"]
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workflow_id",
+        "turn_id",
+        "state_before",
+        "selected_path",
+        "explicit_path",
+        "doc_type",
+        "open_question_count",
+        "user_choice",
+        "approval_prompted"
+      ],
+      "properties": {
+        "workflow_id": {
+          "type": ["string", "null"]
+        },
+        "turn_id": {
+          "type": ["string", "null"]
+        },
+        "state_before": {
+          "type": ["string", "null"],
+          "pattern": "^ST-[0-9]{3}$"
+        },
+        "selected_path": {
+          "type": ["string", "null"],
+          "enum": ["research", "standard", "full", null]
+        },
+        "explicit_path": {
+          "type": ["string", "null"],
+          "enum": ["research", "standard", "full", null]
+        },
+        "doc_type": {
+          "type": ["string", "null"],
+          "enum": ["spec", "plan", "non_gate", null]
+        },
+        "open_question_count": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "user_choice": {
+          "type": ["string", "null"],
+          "enum": ["quiz", "inline", "defer", null]
+        },
+        "approval_prompted": {
+          "type": ["boolean", "null"]
+        }
+      }
+    },
+    "blackboard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_present",
+        "row_schema_valid",
+        "row_id",
+        "lifecycle_stage",
+        "fsm_state_ref",
+        "required_gates_passed",
+        "gates"
+      ],
+      "properties": {
+        "row_present": {
+          "type": ["boolean", "null"]
+        },
+        "row_schema_valid": {
+          "type": ["boolean", "null"]
+        },
+        "row_id": {
+          "type": ["string", "null"]
+        },
+        "lifecycle_stage": {
+          "type": ["string", "null"],
+          "enum": [
+            "intake",
+            "route",
+            "prepare_dispatch",
+            "dispatch",
+            "await_result",
+            "approval",
+            "execution",
+            "terminal",
+            null
+          ]
+        },
+        "fsm_state_ref": {
+          "type": ["string", "null"],
+          "pattern": "^ST-[0-9]{3}$"
+        },
+        "required_gates_passed": {
+          "type": ["boolean", "null"]
+        },
+        "gates": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "BG-001",
+            "BG-002",
+            "BG-003",
+            "BG-004",
+            "BG-005",
+            "BG-006"
+          ],
+          "properties": {
+            "BG-001": { "$ref": "#/$defs/gateStatus" },
+            "BG-002": { "$ref": "#/$defs/gateStatus" },
+            "BG-003": { "$ref": "#/$defs/gateStatus" },
+            "BG-004": { "$ref": "#/$defs/gateStatus" },
+            "BG-005": { "$ref": "#/$defs/gateStatus" },
+            "BG-006": { "$ref": "#/$defs/gateStatus" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "gateStatus": {
+      "type": ["string", "null"],
+      "enum": ["pass", "fail", "blocked", "not_evaluated", null]
+    }
+  }
+}
