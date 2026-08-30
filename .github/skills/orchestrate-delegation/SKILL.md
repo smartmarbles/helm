@@ -249,4 +249,3 @@ ARTHUR generates the short name from the user's request:
 - **Any generated doc with open questions?** → Follow **Human Checkpoints → Open-question protocol** (canonical); do not invent variants.
 - **Spec or plan checkpoint?** → Follow **Human Checkpoints → Spec Checkpoint / Plan Checkpoint** (canonical) and hold the gate there.
 - **Something failed?** → See `.github/agents/arthur.agent.md` § Error Recovery.
-- **PROBE run or LENS dispatch?** → Read `references/testing-protocol.md`.

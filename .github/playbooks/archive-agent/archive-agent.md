@@ -86,7 +86,7 @@ Good triggers are concrete and observable:
 
 - "Re-archive SPLICE before spec002 completion, once the final Python development task lands."
 - "Re-archive FORGE after the migration script's final run in production."
-- "Re-archive HELIX when the last P9b task is verified by PROBE."
+- "Re-archive HELIX when the last P9b task is verified by the test runner."
 
 Bad triggers are vague or open-ended:
 
@@ -127,7 +127,7 @@ The only cleanup MERLIN performs during archival is the roster update described 
 
 ## Permanent Agents
 
-Permanent team members (ARTHUR, SAGE, SCOOP, QUILL, MERLIN, PROBE, and any other row in the **Permanent Team** table) **do not archive**. The Permanent Team table has no `Status` column; there is no lifecycle-end field to flip.
+Permanent team members (ARTHUR, SAGE, SCOOP, QUILL, MERLIN, and any other row in the **Permanent Team** table) **do not archive**. The Permanent Team table has no `Status` column; there is no lifecycle-end field to flip.
 
 If a user asks to archive a permanent agent, decline and explain the distinction:
 

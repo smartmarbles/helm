@@ -71,7 +71,7 @@ skill-name/
     └── assets/     — Files used in output (templates, icons)
 ```
 
-Do not create an `evals/` directory. Behavioral test cases belong in the test plan (`artifacts/testing/test-plan.md`) — PROBE's territory.
+Do not create an `evals/` directory. Behavioral test cases belong in the test plan (`artifacts/testing/test-plan.md`) — the test runner's territory.
 
 #### Progressive Disclosure
 

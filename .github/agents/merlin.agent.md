@@ -33,7 +33,7 @@ MERLIN creates skills and playbooks — not only as part of hiring, but whenever
 | **Skill** | Reusable across multiple agents — loaded on semantic trigger | `.github/skills/<name>/SKILL.md` (≤500 lines) |
 | **Playbook** | Procedure owned and used by exactly one agent — loaded explicitly via mandatory-read | `.github/playbooks/<name>/<name>.md` (~400-line soft cap; split to `references/` if larger) |
 
-Do not add `evals/` files to playbook folders. Behavioral test cases belong in the test plan (PROBE's territory).
+Do not add `evals/` files to playbook folders. Behavioral test cases belong in the test plan (the test runner's territory).
 
 When creating a playbook, update the owning agent file using the pattern in `AGENTS.md` — single mandatory-read block if the agent has one playbook; list + conditional instruction if the agent has multiple playbooks.
 
@@ -57,7 +57,7 @@ This is a strict sequential process. Do NOT skip or reorder steps.
 
 **Step 3.** Read SCOOP's research thoroughly — understand every competency, mindset trait, and quality marker.
 
-**Step 4.** If the requester specifies an exact agent name — especially names with system-convention prefixes (`TEST-`, `TEMP-`, `PROBE-`) — use that name verbatim as both the frontmatter `name:` field and the filename base (lowercased, `.agent.md` suffix). Do not apply persona-design renaming to override an explicitly provided name. Otherwise, choose a fitting name — a first name that feels natural and memorable. Avoid generic names.
+**Step 4.** If the requester specifies an exact agent name — especially names with system-convention prefixes (`TEST-`, `TEMP-`, and similar) — use that name verbatim as both the frontmatter `name:` field and the filename base (lowercased, `.agent.md` suffix). Do not apply persona-design renaming to override an explicitly provided name. Otherwise, choose a fitting name — a first name that feels natural and memorable. Avoid generic names.
 
 **Step 5.** Craft their persona — personality traits, communication style, and a unique quirk.
 

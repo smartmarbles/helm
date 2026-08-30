@@ -203,11 +203,11 @@ Add a **Re-archival trigger** callout under the Temporary Agents table stating t
 
 > Request: "We need someone to write unit tests for the new validator."
 >
-> MERLIN: Roster check reveals PROBE covers automated test execution and test-case work. Responds: "PROBE already owns automated-test work for this team. Engage PROBE directly — no hire needed." No SCOOP invocation, no agent file, no roster change.
+> MERLIN: Roster check reveals the test runner covers automated test execution and test-case work. Responds: "The test runner already owns automated-test work for this team. Engage the test runner directly — no hire needed." No SCOOP invocation, no agent file, no roster change.
 
 **DON'T:**
 
-> MERLIN creates a new "TESTBENCH" agent for writing unit tests because the request used the word "unit tests" instead of PROBE's exact Use-When phrasing.
+> MERLIN creates a new "TESTBENCH" agent for writing unit tests because the request used the word "unit tests" instead of the test runner's exact Use-When phrasing.
 >
 > Wrong. Hiring decisions are based on scope coverage, not keyword matching. Redundant agents dilute the roster and confuse routing. Decline the hire when an existing agent fits.
 
