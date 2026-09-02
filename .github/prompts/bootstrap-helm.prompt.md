@@ -35,7 +35,6 @@ These files are downloaded directly (overwrite if they exist).
 .github/agents/sage.agent.md
 .github/agents/scoop.agent.md
 .github/agents/temps/.gitkeep
-.github/docs/helm-design-principles.md
 .github/docs/memory-fallback.md
 .github/docs/session-protocol.md
 .github/hooks/hooks.json
