@@ -33,6 +33,22 @@ Helm is not a library or runtime. It's a set of conventions and agent definition
 
 > **Note:** The core team is deliberately infrastructure — orchestration, research, planning, hiring, and documentation. There are no implementation agents in the default roster. When a plan calls for a skillset not covered, ARTHUR engages MERLIN to hire the right specialist (e.g., a TypeScript engineer, a database migration expert, a social publisher) on the fly. This keeps the core team lean and ensures implementation agents are purpose-built for the actual work, not generic.
 
+## Installation
+
+Helm has no build step, no dependencies, and no runtime — it runs entirely inside VS Code's Copilot agent infrastructure. Setup is three steps:
+
+1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active.
+
+   **Required VS Code setting** (set in your User or Workspace settings JSON):
+
+   | Setting | Value | Why |
+   |---------|-------|-----|
+   | `chat.subagents.allowInvocationsFromSubagents` | `true` | Enables nested agent calls (e.g., MERLIN → SCOOP). Without this, subagents silently cannot invoke other subagents and fall back to doing the work themselves. |
+
+   Without this setting, multi-agent routing silently fails. Set it before your first conversation.
+2. **Run the bootstrap prompt** — In the Copilot chat input, type `#` and select **bootstrap-helm** (`.github/prompts/bootstrap-helm.prompt.md`). Running it downloads all of Helm's files from GitHub into your workspace — agent definitions, playbooks, skills, templates, scripts, and the OS-specific hook — and merge-safely installs `AGENTS.md` and `.github/copilot-instructions.md`: existing copies are backed up and wrapped in `<!-- HELM BEGIN -->` / `<!-- HELM END -->` markers so your local content survives future updates. The prompt finishes by verifying every file and printing a summary.
+3. **Start a conversation to test ARTHUR** — Open a Copilot chat, address ARTHUR (the default) or select him in the agent picker, and send a simple test prompt such as "Arthur, who's on the team?" He should respond in his orchestrator persona and route the request rather than answering as a generic assistant — that confirms the install is working. See [How It Works](#how-it-works) for what happens next.
+
 ## How It Works
 
 ARTHUR routes every task through one of three complexity tiers:
@@ -162,9 +178,15 @@ artifacts/                 # Spec folders created per-effort (spec001-*, spec002
 
 > **Note:** Active temporary agents (hired for specific tasks) also appear in `.github/agents/` while they are in use. Check the [team roster](.github/team-roster.md) for the current list.
 
-## Recommended Setup
+## Getting Started
 
-For best results — especially if you use open-source or smaller orchestrators — **select ARTHUR in the VS Code Copilot chat agent picker** rather than using the default agent.
+Helm is installed — here's how to start using it:
+
+1. **Start a Copilot chat** and select ARTHUR in the agent picker, or address ARTHUR by name at the start of your prompt (e.g., "Arthur, let's do X").
+2. **Describe your task** in plain language — research a topic, plan a feature, write docs, hire an agent.
+3. **ARTHUR routes it** through one of three complexity paths (Research, Standard, Full). See [How It Works](#how-it-works) for what each path does and where the approval gates are.
+
+**Why select ARTHUR directly?** For best results — especially if you use open-source or smaller orchestrators — **select ARTHUR in the VS Code Copilot chat agent picker** rather than using the default agent.
 
 **Why this matters:**
 - When ARTHUR is selected directly, his full `arthur.agent.md` persona is loaded immediately and reliably, even on smaller models.
@@ -174,39 +196,17 @@ For best results — especially if you use open-source or smaller orchestrators 
 
 This is a recommendation, not a requirement. The safety floor in `copilot-instructions.md` (forbidden tools list, delegation mandate, MUST-read pointer) keeps the system functional for users who do not follow this recommendation.
 
-## Getting Started
-
-Helm is a VS Code Copilot agent orchestration system. To use it:
-
-1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active.
-
-   **Required VS Code settings** (set in your User or Workspace settings JSON):
-
-   | Setting | Value | Why |
-   |---------|-------|-----|
-   | `chat.subagents.allowInvocationsFromSubagents` | `true` | Enables nested agent calls (e.g., MERLIN → SCOOP). Without this, subagents silently cannot invoke other subagents and fall back to doing the work themselves. |
-
-   Without the required setting, multi-agent routing silently fails. Set it before your first conversation.
-2. **Add to workspace** — Copy the `.github` folder into your project workspace. The `.github/copilot-instructions.md` file bootstraps the orchestration system automatically when Copilot reads the workspace.
-3. **Start a conversation** — Address ARTHUR (the default) or select a specific agent. Describe your task and ARTHUR routes it through the appropriate complexity path.
+## How to maintain Helm in your project
 
 **About the safety floor:** `copilot-instructions.md` contains a forbidden-tools list, delegation mandate, identity assertion for ARTHUR, and a MUST-read pointer to `arthur.agent.md`. This floor exists to protect users who don't select ARTHUR directly in the agent picker — it ensures the default agent still behaves approximately as ARTHUR even when the full agent file hasn't loaded. Do not remove it.
 
 For the periodic procedure to keep the safety floor aligned with VS Code's evolving default-agent prompt, run [`.github/prompts/audit-default-agent.prompt.md`](.github/prompts/audit-default-agent.prompt.md).
 
-No build steps, no dependencies, no installation. The agent definitions are the product.
+> **Note:** No build steps, no dependencies, no installation. The agent definitions are the product.
 
 ## Model Compatibility
 
 Helm works with both reasoning models (e.g., Claude Opus 4.6, GPT-5.3-Codex) and non-reasoning models (e.g., GPT-4.1). Since Copilot users often have limited premium requests, the orchestration system is designed to function across model tiers without breaking down. Non-reasoning models may require more explicit prompting to output similar quality results.
-
-## Testing
-
-A comprehensive behavioral test plan is included at [`artifacts/testing/test-plan.md`](artifacts/testing/test-plan.md) with 106 test cases across 16 categories. Because Helm has no runtime, tests are conversational — you send a prompt, observe what the agents say and do, and verify the outcome. The plan covers all three execution paths, both approval gates, the dynamic hiring chain, parallel dispatch, constraint enforcement, memory behavior, error recovery, artifact naming, the temporary agent lifecycle, status-query handling, workflow hygiene, and QUIZ agent behavior and artifact readiness.
-
-Of the 106 tests, 43 are marked 🤖 (fully automatable) and can be run by the test runner agent. An additional 29 are marked 🤖/👤 — the test runner runs the automated criteria while the manual criteria require human observation in VS Code Copilot Chat. The test runner can execute all automatable tests at once, or a specific test case. It calls target agents as subagents, evaluates responses against pass criteria, checks file system side effects, and cleans up all artifacts. The remaining 34 tests are manual (👤) and require multi-turn interaction or environment changes.
-
-If you want to quickly verify the engine is working without running the full suite, the test plan opens with a **Smoke Test** section — 11 targeted prompts that exercise every critical system: routing, delegation, approval gates, nested agent calls, direct addressing, and constraint enforcement.
 
 ## Portability
 
