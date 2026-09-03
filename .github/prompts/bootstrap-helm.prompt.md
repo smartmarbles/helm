@@ -38,6 +38,7 @@ These files are downloaded directly (overwrite if they exist).
 .github/docs/memory-fallback.md
 .github/docs/session-protocol.md
 .github/hooks/hooks.json
+.github/hooks/scripts/hook.py
 .github/playbooks/archive-agent/archive-agent.md
 .github/playbooks/conduct-research/conduct-research.md
 .github/playbooks/create-plan/create-plan.md
@@ -62,13 +63,7 @@ artifacts/.gitkeep
 artifacts/docs/.gitkeep
 ```
 
-### OS-specific files
-Download only the file matching `OS_NAME`:
-
-| OS | File |
-|---|---|
-| Windows | `.github/hooks/scripts/hook.ps1` |
-| macOS / Linux | `.github/hooks/scripts/hook.sh` |
+The hook script (`hook.py`) is a single cross-platform Python 3 file used unchanged on Windows, macOS, and Linux — `hooks.json` selects the right launcher (`python` vs `python3`) per OS, not a different script.
 
 ---
 
@@ -85,7 +80,7 @@ Run a quick detection command (e.g., `uname` on bash, or check `$env:OS` on Powe
 
 ## Step 2: Create directories
 
-Extract the parent directory of every file in the manifest (all three categories) and create each unique directory. If a directory already exists, skip it silently.
+Extract the parent directory of every file in the manifest (both categories) and create each unique directory. If a directory already exists, skip it silently.
 
 **Derivation rule:** For each file path in the manifest, take its parent directory. Deduplicate the list. Create all directories.
 
@@ -271,32 +266,9 @@ Write-Host "Downloaded $($files.Count) files."
 
 ---
 
-## Step 5: Download OS-specific hook script
-
-Download the file listed under **OS-specific files** in the File Manifest that matches `OS_NAME`.
-
-### bash (macOS / Linux)
-
-```bash
-curl -fsSL "https://raw.githubusercontent.com/smartmarbles/helm/main/.github/hooks/scripts/hook.sh" \
-  -o ".github/hooks/scripts/hook.sh"
-chmod +x ".github/hooks/scripts/hook.sh"
-echo "Downloaded hook.sh"
-```
-
-### PowerShell (Windows)
-
-```powershell
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/smartmarbles/helm/main/.github/hooks/scripts/hook.ps1" `
-  -OutFile ".github/hooks/scripts/hook.ps1" -UseBasicParsing
-Write-Host "Downloaded hook.ps1"
-```
-
----
-
 ## Step 6: Validate installation
 
-Verify that every file and directory from the **File Manifest** exists on disk. This covers all three categories (merge-safe, regular, and the OS-specific file matching `OS_NAME`). Directories are derived from file paths (same as Step 2).
+Verify that every file and directory from the **File Manifest** exists on disk. This covers both categories (merge-safe and regular, including `hook.py`). Directories are derived from file paths (same as Step 2).
 
 Collect any missing items and report pass/fail.
 
@@ -312,7 +284,7 @@ for d in <space-separated unique parent directories>; do
   [ -d "$d" ] || missing+=("DIR $d")
 done
 
-# Validate all files (merge-safe + regular + OS-specific)
+# Validate all files (merge-safe + regular)
 for f in <space-separated list of all expected files>; do
   [ -f "$f" ] || missing+=("FILE $f")
 done
@@ -342,7 +314,7 @@ foreach ($d in $expectedDirs) {
   }
 }
 
-# Validate all files (merge-safe + regular + OS-specific)
+# Validate all files (merge-safe + regular)
 $expectedFiles = @(<list>)
 foreach ($f in $expectedFiles) {
   if (-not (Test-Path -Path $f -PathType Leaf)) {
@@ -370,6 +342,5 @@ After all steps complete, print a summary including:
 - Total files downloaded
 - The merge action taken for `AGENTS.md` (CREATED / UPDATED / APPENDED)
 - The merge action taken for `.github/copilot-instructions.md` (CREATED / UPDATED / APPENDED)
-- Which hook script was installed (`hook.sh` or `hook.ps1`)
 - Validation result from Step 6 (PASSED / FAILED with count of missing items)
 - A confirmation line: **"Helm bootstrap complete."**
