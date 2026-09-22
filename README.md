@@ -166,7 +166,6 @@ AGENTS.md                  # Always-on shared context for all agents
     hire-agent/
     archive-agent/
     skill-creator/
-    audit-chat-log/
     design-test-rubric/
     run-test-plan/
     quizler/
