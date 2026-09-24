@@ -71,25 +71,27 @@ Standalone documentation lives in `artifacts/docs/`.
 
 ## Memory Scope
 
-Memory scopes follow built-in `<memoryInstructions>`. **DEFAULT to `/memories/repo/`** for project knowledge; `/memories/` only for genuinely cross-project content.
+Two kinds of memory matter here. The **durable store** is repo-tracked and version-controlled — project docs (`artifacts/docs/`), spec-scoped records (`artifacts/spec###-*/`), and, rarely, an ADR. Anything that changes how an agent behaves — an operating rule, an agent identity, or playbook content — must live here, not only in a private working store, so every teammate and every host can see it and no divergence goes uncaught.
+
+The **working store** is each host's own memory or scratch mechanism for in-progress task state, not for behavior-changing content. Where a host provides one, it typically separates state that persists across all work on this host (user-scoped), state scoped to the current task or conversation (session-scoped), and state scoped to the current repository (repo-scoped) — use whichever scope matches how long the information needs to live. On hosts with the built-in memory tool, this working store is realized as `/memories/` (user), `/memories/session/` (session), and `/memories/repo/` (repo); **DEFAULT to the repo scope** for project knowledge, reserving the user scope for genuinely cross-project content. Other hosts realize the working store differently, or not at all — see the Memory-less Operation section below for the recovery path.
 
 ## Session Resumption Protocol
 
 BEFORE STARTING ANY TASK — complete all steps that apply to your role:
 
-1. Check `/memories/session/<your-agent>-*.md` for a prior checkpoint. If found, resume from it.
-2. Check `/memories/repo/` for project conventions relevant to your task.
+1. Check your working store's session scope for a prior checkpoint (e.g. `/memories/session/<your-agent>-*.md` on hosts with the built-in memory tool). If found, resume from it.
+2. Check your working store's repo scope for project conventions relevant to your task.
 3. ARTHUR only: Check `artifacts/` for active spec work. Ask user: continue or start fresh.
 4. ARTHUR only: Check the team roster for completed temps. Engage MERLIN to archive.
 
-WHILE WORKING: After each major unit of completed work, write a checkpoint to `/memories/session/<agent>-<slug>.md`. Record: what is complete, what remains, key decisions made.
+WHILE WORKING: After each major unit of completed work, write a checkpoint to your working store's session scope (e.g. `/memories/session/<agent>-<slug>.md`). Record: what is complete, what remains, key decisions made.
 
-AFTER COMPLETING: Delete your session checkpoint file. Move any worth-keeping notes to `/memories/repo/` first.
+AFTER COMPLETING: Delete your session checkpoint. Move any worth-keeping notes to the durable store, or your working store's repo scope, first.
 
 Read `.github/docs/session-protocol.md` for full checkpoint detail, per-agent requirements, and orchestrator relay.
 
 ## Memory-less Operation
 
-If the memory tool probe fails at startup (`view /memories/session/`), switch to `.agent-memory/` as the root for all reads and writes, and prepend `[no-memory]` to your first reply this session.
+Absence of a working store is a normal condition, not an error. If your host has no working-store mechanism, or a probe of it fails at startup (e.g. `view /memories/session/` on hosts with the built-in memory tool), fall back to `.agent-memory/` as the root for all reads and writes, prepend `[no-memory]` to your first reply this session, and reconstruct any needed context from the durable store instead.
 
 Read `.github/docs/memory-fallback.md` for full detail.

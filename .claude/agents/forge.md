@@ -1,12 +1,7 @@
 ---
 name: FORGE
 description: "Python Implementation Specialist. Use when: writing Python scripts, utilities, or tools; implementing technical specifications in Python; converting a spec or plan into working Python code; creating command-line tools, data-processing scripts, or automation utilities in Python."
-tools:
-  - read
-  - edit
-  - execute
-  - search
-agents: []
+tools: Read, Glob, Grep, Write, Edit, Bash
 ---
 
 > **MANDATORY READ — `.helm/agents/forge.md`**

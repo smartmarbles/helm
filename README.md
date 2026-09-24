@@ -6,15 +6,15 @@
 
 # Helm
 
-**Extensible agent orchestration engine for VS Code Copilot.**
+**Extensible agent orchestration engine for VS Code Copilot, Claude Code, Devin Desktop, and Cursor.**
 
 ## What is Helm?
 
-Helm transforms VS Code Copilot from a single monolithic AI into a coordinated team of specialized agents. It's a framework of agent definition files (`.agent.md`) and orchestration rules that implement hierarchical, generative multi-agent orchestration — where tasks are routed to the right specialist, executed in structured phases, and new agents are created on demand when no existing role fits.
+Helm transforms a single monolithic AI coding assistant into a coordinated team of specialized agents — on VS Code Copilot, Claude Code, Devin Desktop, or Cursor. It's a framework of agent definition files and orchestration rules that implement hierarchical, generative multi-agent orchestration — where tasks are routed to the right specialist, executed in structured phases, and new agents are created on demand when no existing role fits.
 
 Each agent has a defined identity, expertise, constraints, and communication style. ARTHUR, the chief orchestrator, dispatches work, enforces delegation protocols, and ensures research happens before planning, and planning before execution. The result is structured, repeatable AI-assisted development with clear accountability at every step.
 
-Helm is not a library or runtime. It's a set of conventions and agent definitions that run entirely within VS Code's Copilot agent infrastructure.
+Helm is not a library or runtime. It's a set of conventions and agent definitions that run natively within each supported host's own agent infrastructure — VS Code Copilot, Claude Code, Devin Desktop, and Cursor — with no separate runtime of its own.
 
 > **Theme:** The default team uses an Arthurian theme — ARTHUR, MERLIN, SCOOP, SAGE, QUILL. These are just names. You can rename any agent to fit your team's personality by editing their `.agent.md` file and the roster.
 
@@ -35,7 +35,7 @@ Helm is not a library or runtime. It's a set of conventions and agent definition
 
 ## Installation
 
-Helm has no build step, no dependencies, and no runtime — it runs entirely inside VS Code's Copilot agent infrastructure. Setup is three steps:
+Helm has no build step, no dependencies, and no separate runtime — it runs natively inside each supported host's own agent infrastructure. VS Code Copilot currently has the most complete installation path; see [Portability](#portability) below for Claude Code, Devin Desktop, and Cursor. Setup for VS Code Copilot is three steps:
 
 1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active.
 
@@ -209,7 +209,20 @@ Helm works with both reasoning models (e.g., Claude Opus 4.6, GPT-5.3-Codex) and
 
 ## Portability
 
-Helm is built for VS Code Copilot's agent infrastructure, specifically its subagent dispatch system. The orchestration patterns — research before planning, planning before execution, human checkpoints, dynamic hiring — are transferable concepts, but the implementation depends on Copilot's `runSubagent` capability. Other tools (Claude Code, Codex CLI, Gemini) can use the instruction files and agent personas, but multi-agent routing will need to be adapted to each platform's capabilities.
+Helm supports four hosts as first-class targets, each with its own native agent-wrapper files that point back to a single authored source of truth under `.helm/agents/` — so agent identity, constraints, and behavior stay in sync without duplicating content per host:
+
+| Host | Wrapper location |
+|------|-------------------|
+| VS Code Copilot | `.github/agents/*.agent.md` |
+| Claude Code | `.claude/agents/*.md` |
+| Devin Desktop | `.devin/agents/*.md` |
+| Cursor | `.cursor/agents/*.md` |
+
+The orchestration patterns — research before planning, planning before execution, human checkpoints, dynamic hiring — are implemented per host using each platform's own subagent-dispatch capability, not a single shared runtime.
+
+**Verification status:** VS Code Copilot, Claude Code, and Devin Desktop were directly tested this pass and confirmed passing for `.helm/` inertness and wrapper-loading behavior. Cursor could not be tested directly in this pass; per an explicit user decision, it ships with the same wrapper treatment as the other three hosts and is treated as passing by assumption, pending a follow-up manual check on Cursor itself.
+
+Codex (the CLI) is not a supported host today — it was evaluated as design input only and ships no wrapper files. It may be considered for support in the future.
 
 ## License
 
