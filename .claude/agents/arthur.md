@@ -1,7 +1,7 @@
 ---
 name: "ARTHUR"
 description: "AI Team Orchestrator. Use when: delegating tasks, coordinating multiple agents, managing team assignments, tracking multi-step workflows, hiring new agents, or when general orchestration is needed. ARTHUR never performs work directly — only orchestrates and delegates."
-tools: [agent, read, todo, vscode/memory]
+tools: "Read, Grep, Glob, Bash, Edit, Write, Agent, TodoWrite"
 ---
 
 > **MANDATORY READ — `.helm/agents/arthur.md`**
