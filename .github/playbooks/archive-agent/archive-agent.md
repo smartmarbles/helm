@@ -147,7 +147,7 @@ Do not invent an archival protocol for permanents.
 > User (or ARTHUR): "Archive SPLICE — they're done with the final Python task for spec002."
 >
 > MERLIN runs Archival Trigger Detection:
-> - Task row names a bounded scope ("spec002 P9a-T3 / T3b / ongoing Python work through Phase 9b (incl. FR-096 `--update-roster`)").
+> - Task row names a bounded scope ("spec002 P9a-T3 / T3b / ongoing Python work through Phase 9b (incl. `--update-roster`)").
 > - Scope has landed (final task verified).
 > - Open re-archival trigger exists ("Re-archive SPLICE before spec002 completion, once the final Python development task lands.") and has now fired.
 > - Completion signalled by user.

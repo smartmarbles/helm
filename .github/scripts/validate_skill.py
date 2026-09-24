@@ -197,7 +197,7 @@ def validate_skill(skill_dir: str) -> dict:
             if f.endswith(".py") and not f.startswith("__")
         ]
         if not py_scripts:
-            errors.append("FR-093: scripts/ directory exists but contains no .py files")
+            errors.append("E-EMPTY-SCRIPTS-DIR: scripts/ directory exists but contains no .py files")
 
     # 9. __main__ blocks + shebang in CLI scripts (library files exempt — Change A)
     for script_name in py_scripts:
@@ -213,19 +213,19 @@ def validate_skill(skill_dir: str) -> dict:
         if first_line != "#!/usr/bin/env python3":
             warnings.append(f"W-MISSING-SHEBANG: scripts/{script_name} missing `#!/usr/bin/env python3` shebang line")
 
-    # 10. evals/evals.json (FR-093: absence is now an error) — skipped for third-party
+    # 10. evals/evals.json (absence is an error) — skipped for third-party
     if not is_third_party:
         evals_path = os.path.join(skill_dir, "evals", "evals.json")
         if not os.path.isfile(evals_path):
-            errors.append("FR-093: evals/evals.json not found — skill has no test cases")
+            errors.append("E-MISSING-EVALS: evals/evals.json not found — skill has no test cases")
         else:
             try:
                 evals_data = json.loads(_read_file(evals_path))
                 evals_list = evals_data.get("evals", [])
                 if len(evals_list) < 1:
-                    errors.append("FR-093: evals/evals.json has no test cases")
+                    errors.append("E-EMPTY-EVALS: evals/evals.json has no test cases")
                 elif len(evals_list) < 3:
-                    warnings.append(f"FR-034: evals/evals.json has only {len(evals_list)} test cases (recommend 3+)")
+                    warnings.append(f"W-FEW-EVALS: evals/evals.json has only {len(evals_list)} test cases (recommend 3+)")
             except (json.JSONDecodeError, AttributeError):
                 errors.append("E-EVALS-JSON: evals/evals.json is not valid JSON")
 
@@ -234,14 +234,14 @@ def validate_skill(skill_dir: str) -> dict:
     if body_lines > MAX_BODY_LINES:
         warnings.append(f"W-BODY-LENGTH: SKILL.md body is {body_lines} lines (recommended max {MAX_BODY_LINES})")
 
-    # 12. "NOT for:" clause presence (FR-094) — skipped for third-party
+    # 12. "NOT for:" clause presence — skipped for third-party
     if not is_third_party:
         desc_text = fm.get("description", "") if fm else ""
         has_not_for = "not for:" in desc_text.lower() or "not for:" in body.lower()
         if not has_not_for:
             warnings.append("W-MISSING-NOT-FOR: SKILL.md has no \"NOT for:\" clause in description or body")
 
-    # 13. Progressive-disclosure heuristic (FR-094): warn on unresolved skill-relative file refs — skipped for third-party
+    # 13. Progressive-disclosure heuristic: warn on unresolved skill-relative file refs — skipped for third-party
     if not is_third_party:
         # Strip fenced code blocks to reduce false positives; leave inline code spans intact
         stripped_body = re.sub(r"```[^\n]*\n.*?```", "", body, flags=re.DOTALL)

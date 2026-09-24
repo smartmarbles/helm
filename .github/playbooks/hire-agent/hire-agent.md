@@ -29,20 +29,20 @@ Strict sequential protocol. Do not reorder. Do not merge steps.
 8. **Map the expertise.** Translate SCOOP's research into concrete agent capabilities.
 9. **Set the tools.** Minimal set from the available aliases the role actually needs. Less is more; do not over-provision.
 
-   **Memory-access decision (FR-013):** Default: permanent agents receive `vscode/memory` in frontmatter; temp agents do not. Record the decision and rationale when deviating from the default. The criterion is cross-dispatch continuity need, not output type.
+   **Memory-access decision:** Default: permanent agents receive `vscode/memory` in frontmatter; temp agents do not. Record the decision and rationale when deviating from the default. The criterion is cross-dispatch continuity need, not output type.
 
 10. **Decide placement.** Permanent (`.github/agents/<name>.agent.md`) vs temporary (`.github/agents/temps/<name>.agent.md`). Use the Placement Decision table.
 11. **Author the agent file.** Follow the Agent File Schema. The `## Research Foundation` section is REQUIRED — if missing, the file is invalid.
 12. **Update the roster.** Append a row to `.github/team-roster.md` in the correct table (Permanent or Temporary) with the tagline and hired date.
 13. **Announce.** Present name, role, tagline, key capabilities, and when to engage the agent.
-14. **Draft SKILL.md (FR-080, Step 9a).** When the new agent has a skill to create, read `.github/playbooks/skill-creator/skill-creator.md` as structural reference. Draft the skill's `SKILL.md` with proper frontmatter (`name`, `description` with trigger language and "NOT for:" clause), body content.
+14. **Draft SKILL.md.** When the new agent has a skill to create, read `.github/playbooks/skill-creator/skill-creator.md` as structural reference. Draft the skill's `SKILL.md` with proper frontmatter (`name`, `description` with trigger language and "NOT for:" clause), body content.
 
    **Skill size limit (≤500 lines):** The `SKILL.md` body must be under 500 lines. This is a hard limit — skills load in full on every trigger, and oversized bodies degrade instruction-following reliability on weaker models. If the content would exceed 500 lines, apply this split strategy:
    - **Keep in SKILL.md:** procedural steps the agent must execute (the workflow), constraints, decision tables, and output format rules
    - **Move to `references/`:** worked examples, lookup tables, scoring templates, appendix material — reference with a link and one-line description in the skill body
    The skill body is the *executor*; `references/` files are the *lookup library*. The agent follows the skill and reads references only when needed.
-15. **Run validator (FR-080, Step 9b).** Run `python .github/scripts/validate_skill.py <skill-dir>`. Fix all errors. Report any warnings. A skill is not complete until the validator passes with zero errors.
-16. **Minimum-viable eval (FR-080, Step 9c).** Ensure `evals/evals.json` exists with at least 1 test case (3+ recommended). Deliver the eval alongside the agent file.
+15. **Run validator.** Run `python .github/scripts/validate_skill.py <skill-dir>`. Fix all errors. Report any warnings. A skill is not complete until the validator passes with zero errors.
+16. **Minimum-viable eval.** Ensure `evals/evals.json` exists with at least 1 test case (3+ recommended). Deliver the eval alongside the agent file.
 
 ### Validation Contract
 

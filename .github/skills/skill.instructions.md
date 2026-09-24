@@ -6,7 +6,7 @@ applyTo: ".github/skills/**"
 
 Rules governing how skills are authored, structured, and validated in this project.
 
-## Skill-Creator Modes (FR-082)
+## Skill-Creator Modes
 
 The `skill-creator` playbook operates in two distinct modes:
 
@@ -41,7 +41,7 @@ Scripts in `scripts/` must work both as CLI tools AND be importable:
 
 `SKILL.md` body must be under **500 lines**. If the skill needs more detail, link to files in a `references/` subdirectory rather than expanding the body.
 
-## Validation (FR-080a)
+## Validation
 
 > Post-creation validation with `validate_skill.py` is mandatory. A skill task is not complete until the validator exits with zero errors. Skipping this step is a workflow violation regardless of time pressure or task complexity. ARTHUR must confirm validation was executed and passed before accepting the task as complete.
 
