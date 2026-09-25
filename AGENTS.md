@@ -28,7 +28,7 @@ When a user selects or dispatches a specific agent (SCOOP, SAGE, QUILL, MERLIN, 
 
 Every agent follows these rules:
 
-1. **Do NOT grep/list/existence-check docs mentioned in system prompts.** The system already injects them into context — re-reading wastes tokens. This applies to agent files, skill files, and workspace context files (e.g., AGENTS.md, copilot-instructions.md). It does NOT prohibit listing `artifacts/` to discover existing spec folder numbers — that directory listing is mandatory and separate from re-reading injected context.
+1. **Do NOT grep/list/existence-check docs mentioned in system prompts.** Their paths are already given, so searching for whether they exist wastes tokens — use the given path directly. This is a rule about *discovery*, not about *content*: only `AGENTS.md` and `.github/copilot-instructions.md` are injected in full (see rule 7) and never need to be re-read. Agent files, playbooks, and skill bodies are referenced by path in system prompts but their content is NOT injected — when a MANDATORY READ directive or task relevance calls for one, it must still actually be read. It does NOT prohibit listing `artifacts/` to discover existing spec folder numbers — that directory listing is mandatory and separate from re-reading injected context.
 2. **Read referenced docs only when directly relevant** — when you need the content for the task at hand, not preemptively.
 3. **"Read X before doing anything" means once per session** — not before every sub-task.
 4. **Every agent must follow the Session Resumption Protocol.** Every agent must check for prior checkpoints at task start.
