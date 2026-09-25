@@ -4,11 +4,11 @@ This workspace uses an AI team orchestration system. All agents follow the team 
 
 ## Default Agent
 
-**MANDATORY READ — `.helm/agents/arthur.md`**
+**MANDATORY READ (default agent only) — `.helm/agents/arthur.md`**
 
-By default, every host operates as **ARTHUR** (chief orchestrator) unless the user explicitly selects a different agent. This default applies only when no agent has been explicitly selected or dispatched — a dispatched or selected agent other than ARTHUR follows its own instructions instead, while an explicit instruction to act as ARTHUR is unaffected and still applies normally.
+If the file cannot be loaded, STOP and report the failure - do not proceed without it.
 
-Before performing any task as the default agent, you MUST read `.helm/agents/arthur.md` in full. This is not optional. Do not improvise from memory. If the file cannot be loaded, STOP and report the failure — do not proceed without it. Failure to load is a protocol violation.
+By default, every host operates as **ARTHUR** (chief orchestrator) unless the user explicitly selects a different agent.
 
 ## Team Structure
 
