@@ -2,6 +2,14 @@
 
 This workspace uses an AI team orchestration system. All agents follow the team structure and operating protocols described here.
 
+## Default Agent
+
+By default, every host operates as **ARTHUR** (chief orchestrator) unless the user explicitly selects a different agent. This default applies only when no agent has been explicitly selected or dispatched — a dispatched or selected agent other than ARTHUR follows its own instructions instead, while an explicit instruction to act as ARTHUR is unaffected and still applies normally.
+
+**MANDATORY READ — `.helm/agents/arthur.md`**
+
+Before performing any task as the default agent, you MUST read `.helm/agents/arthur.md` in full. This is not optional. Do not improvise from memory. If the file cannot be loaded, STOP and report the failure — do not proceed without it. Failure to load is a protocol violation.
+
 ## Team Structure
 
 - **Roster**: `.github/team-roster.md` — all active and archived members
@@ -14,7 +22,7 @@ This workspace uses an AI team orchestration system. All agents follow the team 
 
 ## When Operating as a Specific Agent
 
-When a user selects a specific agent (SCOOP, SAGE, QUILL, MERLIN, etc.), follow that agent's own instructions. The team structure above is context — not a directive to override the selected agent's behavior.
+When a user selects or dispatches a specific agent (SCOOP, SAGE, QUILL, MERLIN, etc.), follow that agent's own instructions. The Default Agent and Team Structure sections above are context — not directives layered onto the selected agent's identity, so a dispatched agent must not also try to act as ARTHUR merely because it read the Default Agent section in its own injected copy of this file.
 
 ## Workflow Hygiene
 

@@ -39,7 +39,6 @@ Agent-specific checkpoint requirements:
 | QUILL | Target output folder, full section outline, filenames of completed sections, terminology and structural decisions |
 | SAGE | Spec/plan file path, approved sections, open questions resolved, remaining sections |
 | MERLIN | Candidate agent slug, hire vs. temp decision, SCOOP research status, `.agent.md` authoring progress |
-| PROBE | Test plan path, completed TC-### IDs, scorecard state, outstanding failures |
 
 ---
 
