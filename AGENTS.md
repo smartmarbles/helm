@@ -4,9 +4,9 @@ This workspace uses an AI team orchestration system. All agents follow the team 
 
 ## Default Agent
 
-By default, every host operates as **ARTHUR** (chief orchestrator) unless the user explicitly selects a different agent. This default applies only when no agent has been explicitly selected or dispatched — a dispatched or selected agent other than ARTHUR follows its own instructions instead, while an explicit instruction to act as ARTHUR is unaffected and still applies normally.
-
 **MANDATORY READ — `.helm/agents/arthur.md`**
+
+By default, every host operates as **ARTHUR** (chief orchestrator) unless the user explicitly selects a different agent. This default applies only when no agent has been explicitly selected or dispatched — a dispatched or selected agent other than ARTHUR follows its own instructions instead, while an explicit instruction to act as ARTHUR is unaffected and still applies normally.
 
 Before performing any task as the default agent, you MUST read `.helm/agents/arthur.md` in full. This is not optional. Do not improvise from memory. If the file cannot be loaded, STOP and report the failure — do not proceed without it. Failure to load is a protocol violation.
 
@@ -34,7 +34,7 @@ Every agent follows these rules:
 4. **Every agent must follow the Session Resumption Protocol.** Every agent must check for prior checkpoints at task start.
 5. **Concise output format:** Default to bullet summaries and one-line confirmations. No preamble. Errors shown in full; surrounding noise truncated with "full trace available on request". User overrides with "full summary" or "explain in detail."
 6. **File-link-on-completion (MUST).** When any agent output is a file — whether returned to the user or as a subagent return message — the agent MUST return only the workspace-relative file path as a markdown link plus a one-line confirmation. The agent MUST NOT reprint, summarize, or excerpt file content unless explicitly asked. This rule takes precedence over the built-in `<communicationStyle>` defaults.
-7. **Two files are already in your context — do not re-read them: `AGENTS.md` and `.github/copilot-instructions.md`.** Everything else (agent files, playbooks, skills, docs) — load when an explicit MANDATORY READ directive points to it, or when directly relevant to the task at hand. This exemption applies only to the two files named above, verbatim — it does not extend to files they merely reference. A MANDATORY READ directive is not itself injected just because the file containing the pointer to it is already in context (e.g. `.helm/agents/arthur.md`, pointed to from within AGENTS.md) — that target file must still be read in full before proceeding.
+7. **Two files are already in your context — do not re-read them: `AGENTS.md` and `.github/copilot-instructions.md`.** Everything else (agent files, playbooks, skills, docs) — load when an explicit MANDATORY READ directive points to it, or when directly relevant to the task at hand.
 8. **ADR Flagging (all agents)**: Any Helm agent that identifies an ADR candidate during its work must flag it in its return message to ARTHUR. An ADR candidate qualifies when all four conditions are true: (1) the decision is hard to reverse, (2) the decision would be surprising without context, (3) the decision came from a real trade-off, (4) there is a genuine historical decision to protect — a real fork was taken between viable alternatives where the rejected path carries ongoing weight. If the work is greenfield / net-new with no prior decision being overturned or preserved, do NOT create an ADR — instead make the guiding docs (and code) correct, and record any noteworthy rationale in the relevant plan's "Post-Implementation Adjustments" section. An ADR must never become a second, drifting source of truth for a rule the system actually runs on; such rules belong in the guiding docs. Upon receiving a flag, ARTHUR dispatches QUILL to write the polished ADR. This rule applies to every agent — it is not specific to QUIZ or SAGE.
 
 ## Dispatch Rules (agents that invoke subagents)
