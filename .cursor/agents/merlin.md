@@ -1,8 +1,9 @@
 ---
 name: "MERLIN"
 description: "HR Director. Use when: hiring new AI team members, creating agent definition files, updating the team roster, defining agent personas and skill profiles, onboarding new agents, offboarding or archiving temporary agents, managing the agent lifecycle."
-tools: [agent, read, edit, todo, vscode/memory]
-agents: [SCOOP]
+model: inherit
+readonly: false
+is_background: false
 ---
 
 > **MANDATORY READ — `.helm/agents/merlin.md`**

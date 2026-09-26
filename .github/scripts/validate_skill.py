@@ -1,41 +1,45 @@
 #!/usr/bin/env python3
 """Validate an agentskills.io skill directory for compliance.
 
+Frontmatter parsing and structural conformance (required fields, forbidden
+fields, name format, name/directory match, description length ceiling) are
+delegated to the vendored `skills-ref` conformance oracle
+(`.github/scripts/vendor/skills-ref/`) rather than hand-rolled here.
+
 Checks:
-    1. SKILL.md exists
-    2. Frontmatter has required fields (name, description)
-    3. Frontmatter has no forbidden fields
-    4. name matches parent directory name
-    5. description length is 10-1024 chars and contains "use" trigger language
-    6. scripts/ has at least one .py file (only when scripts/ is present)
-    7. Every .py script has an `if __name__` block (only when scripts/ is present)
-    8. evals/evals.json exists (error if missing)
-    9. SKILL.md body is under 500 lines (warning)
-    10. "NOT for:" clause present in description or body (warning if absent)
-    11. SKILL.md body does not reference skill-relative files that do not exist (warning)
+    1. SKILL.md exists and is non-empty
+    2. Frontmatter/name/description conformance (via skills-ref `validate`)
+    3. Description has a minimum length and contains "use" trigger language
+    4. scripts/ has at least one .py file (only when scripts/ is present)
+    5. Every .py script has an `if __name__` block (only when scripts/ is present)
+    6. evals/evals.json exists (error if missing)
+    7. SKILL.md body is under 500 lines (warning)
+    8. "NOT for:" clause present in description or body (warning if absent)
+    9. SKILL.md body does not reference skill-relative files that do not exist (warning)
+
+Requires the vendored skills-ref CLI's runtime dependencies to be installed:
+    pip install "click>=8.0" "strictyaml>=1.7.3"
 
 Usage:
     # Validate a single skill
-    python .github/scripts/validate_skill.py .github/skills/token-counting
+    python .github/scripts/validate_skill.py .claude/skills/token-counting
 
     # Validate all skills in a directory
-    python .github/scripts/validate_skill.py .github/skills/ --all
+    python .github/scripts/validate_skill.py .claude/skills/ --all
 
     # JSON output
-    python .github/scripts/validate_skill.py .github/skills/token-counting --json
+    python .github/scripts/validate_skill.py .claude/skills/token-counting --json
 """
 
 import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 
-# --- agentskills.io + VS Code Copilot-native spec-allowed frontmatter fields ---
-ALLOWED_FIELDS = {
-    "name", "description", "license", "compatibility", "metadata",
-    "allowed-tools", "argument-hint", "user-invocable", "disable-model-invocation",
-}
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SKILLS_REF_SRC = os.path.join(SCRIPT_DIR, "vendor", "skills-ref", "src")
 
 # --- Directories to skip (not project skills) ---
 SKIP_DIRS = set()
@@ -43,9 +47,8 @@ SKIP_DIRS = set()
 # --- Library files exempt from CLI entry-point rules (E-MISSING-MAIN, W-MISSING-SHEBANG) ---
 LIBRARY_FILE_NAMES = {"__init__.py", "utils.py", "helpers.py"}
 
-# --- Minimum description length for quality ---
+# --- Minimum description length for quality (skills-ref only enforces a maximum) ---
 MIN_DESC_LEN = 30
-MAX_DESC_LEN = 1024
 MAX_BODY_LINES = 500
 
 
@@ -58,49 +61,88 @@ def _read_file(path: str) -> str:
         return ""
 
 
-def _parse_frontmatter(content: str):
-    """Parse YAML frontmatter from markdown content.
+def _extract_body(content: str) -> str:
+    """Return the markdown body following the YAML frontmatter block.
 
-    Returns (frontmatter_dict, body_text, error_msg).
+    This only locates the closing `---` delimiter; it does not parse YAML
+    keys (that parsing is delegated to skills-ref).
     """
     if not content.startswith("---"):
-        return None, content, "E-FRONTMATTER: SKILL.md does not start with YAML frontmatter (---)"
-
+        return content
     end = content.find("---", 3)
     if end == -1:
-        return None, content, "E-FRONTMATTER: SKILL.md has opening --- but no closing ---"
+        return content
+    return content[end + 3:].strip()
 
-    fm_text = content[3:end].strip()
-    body = content[end + 3:].strip()
 
-    # Simple YAML parsing - handles flat key: value and multi-line description
-    fm = {}
-    current_key = None
-    current_value_lines = []
+def _skills_ref_env() -> dict:
+    """Build a subprocess environment with the vendored skills-ref package importable."""
+    env = os.environ.copy()
+    existing = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = os.pathsep.join([SKILLS_REF_SRC, existing]) if existing else SKILLS_REF_SRC
+    return env
 
-    for line in fm_text.split("\n"):
-        # Check for a new key
-        match = re.match(r"^([a-zA-Z_-]+)\s*:\s*(.*)", line)
-        if match and not line.startswith("  ") and not line.startswith("\t"):
-            # Save previous key
-            if current_key is not None:
-                fm[current_key] = "\n".join(current_value_lines).strip()
-            current_key = match.group(1)
-            current_value_lines = [match.group(2).strip()]
-        elif current_key is not None:
-            # Continuation line (multi-line value like description: >)
-            current_value_lines.append(line.strip())
 
-    # Save last key
-    if current_key is not None:
-        fm[current_key] = "\n".join(current_value_lines).strip()
+def _run_skills_ref(args: list) -> subprocess.CompletedProcess:
+    """Run the vendored skills-ref CLI as a subprocess with an argument list (no shell)."""
+    cmd = [sys.executable, "-m", "skills_ref.cli"] + args
+    try:
+        return subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=_skills_ref_env(),
+            check=False,
+        )
+    except OSError as exc:
+        raise RuntimeError(f"failed to launch vendored skills-ref CLI: {exc}") from exc
 
-    # Clean up ">" or "|" block scalar indicators
-    for k, v in fm.items():
-        if v.startswith(">") or v.startswith("|"):
-            fm[k] = v[1:].strip()
 
-    return fm, body, None
+def _check_skills_ref_available() -> None:
+    """Fail fast with a clear message if skills-ref's runtime dependencies are missing."""
+    try:
+        result = _run_skills_ref(["--help"])
+    except RuntimeError as exc:
+        print(f"FATAL: {exc}", file=sys.stderr)
+        sys.exit(2)
+
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip() or "unknown error"
+        print(
+            f"FATAL: vendored skills-ref CLI failed to run ({detail}).\n"
+            'Install its runtime dependencies: pip install "click>=8.0" "strictyaml>=1.7.3"',
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+
+def _skills_ref_validate(skill_dir: str) -> list:
+    """Run skills-ref's `validate` command and return Helm-formatted error strings."""
+    result = _run_skills_ref(["validate", skill_dir])
+    if result.returncode == 0:
+        return []
+
+    errors = []
+    for line in result.stderr.splitlines():
+        line = line.strip()
+        if line.startswith("- "):
+            errors.append(f"E-SKILLS-REF: {line[2:].strip()}")
+    if not errors:
+        detail = result.stderr.strip() or result.stdout.strip() or "validation failed with no detail"
+        errors.append(f"E-SKILLS-REF: {detail}")
+    return errors
+
+
+def _skills_ref_read_properties(skill_dir: str):
+    """Run skills-ref's `read-properties` command and return the parsed dict, or None on failure."""
+    result = _run_skills_ref(["read-properties", skill_dir])
+    if result.returncode != 0:
+        return None
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return None
 
 
 def validate_skill(skill_dir: str) -> dict:
@@ -140,55 +182,24 @@ def validate_skill(skill_dir: str) -> dict:
         errors.append("E-SKILL-MD: SKILL.md is empty")
         return {"skill": skill_name, "valid": False, "errors": errors, "warnings": warnings}
 
-    # 2. Parse frontmatter
-    fm, body, fm_err = _parse_frontmatter(content)
-    if fm_err:
-        errors.append(fm_err)
-        return {"skill": skill_name, "valid": False, "errors": errors, "warnings": warnings}
+    body = _extract_body(content)
 
-    # 3. Required fields
-    if "name" not in fm:
-        errors.append("E-REQUIRED-FIELD: Frontmatter missing required field: name")
-    if "description" not in fm:
-        errors.append("E-REQUIRED-FIELD: Frontmatter missing required field: description")
+    # 2. Frontmatter/name/description structural conformance — delegated to skills-ref.
+    errors.extend(_skills_ref_validate(skill_dir))
+    props = _skills_ref_read_properties(skill_dir)
+    desc = props.get("description", "") if props else ""
 
-    # 4. Forbidden fields
-    forbidden = set(fm.keys()) - ALLOWED_FIELDS
-    # Allow nested keys under metadata (our parser flattens, so just check top-level)
-    for field in sorted(forbidden):
-        if field == "version":
-            errors.append(f"E-FORBIDDEN-FIELD: forbidden field '{field}' (move under metadata:)")
-        elif field in ("model", "tools"):
-            errors.append(f"E-FORBIDDEN-FIELD: forbidden field '{field}' (agent-frontmatter field, not a skill field)")
-        else:
-            errors.append(f"E-FORBIDDEN-FIELD: forbidden field '{field}'")
-
-    # 5. Name matches directory
-    if "name" in fm and fm["name"] != skill_name:
-        errors.append(f"E-NAME-MISMATCH: name field '{fm['name']}' does not match directory name '{skill_name}'")
-
-    # 6. Name format (lowercase kebab-case, no consecutive hyphens)
-    if "name" in fm:
-        name_val = fm["name"]
-        if not re.match(r"^[a-z0-9]+(-[a-z0-9]+)*$", name_val):
-            errors.append(f"E-NAME-FORMAT: name '{name_val}' is not valid kebab-case (lowercase alphanumeric + single hyphens)")
-        if len(name_val) > 64:
-            errors.append(f"E-NAME-FORMAT: name is {len(name_val)} chars (max 64)")
-
-    # 7. Description quality
-    if "description" in fm:
-        desc = fm["description"]
+    # 3. Description quality (min length + trigger language) — Helm house rules;
+    #    skills-ref only enforces a maximum length, not these.
+    if props is not None:
         if len(desc) < MIN_DESC_LEN:
             errors.append(f"E-DESCRIPTION: description is only {len(desc)} chars (min {MIN_DESC_LEN})")
-        if len(desc) > MAX_DESC_LEN:
-            errors.append(f"E-DESCRIPTION: description is {len(desc)} chars (max {MAX_DESC_LEN})")
-        # Check for trigger language
         trigger_words = ["use this", "use when", "always use", "use for", "whenever"]
         has_trigger = any(tw in desc.lower() for tw in trigger_words)
         if not has_trigger:
             warnings.append("W-TRIGGER-LANGUAGE: description lacks trigger language ('Use this skill when...') — may reduce discoverability")
 
-    # 8. Scripts directory (conditional — only validate if scripts/ exists)
+    # 4. Scripts directory (conditional — only validate if scripts/ exists)
     scripts_dir = os.path.join(skill_dir, "scripts")
     py_scripts = []
     if os.path.isdir(scripts_dir):
@@ -197,9 +208,9 @@ def validate_skill(skill_dir: str) -> dict:
             if f.endswith(".py") and not f.startswith("__")
         ]
         if not py_scripts:
-            errors.append("FR-093: scripts/ directory exists but contains no .py files")
+            errors.append("E-EMPTY-SCRIPTS-DIR: scripts/ directory exists but contains no .py files")
 
-    # 9. __main__ blocks + shebang in CLI scripts (library files exempt — Change A)
+    # 5. __main__ blocks + shebang in CLI scripts (library files exempt — Change A)
     for script_name in py_scripts:
         script_path = os.path.join(scripts_dir, script_name)
         script_content = _read_file(script_path)
@@ -213,35 +224,35 @@ def validate_skill(skill_dir: str) -> dict:
         if first_line != "#!/usr/bin/env python3":
             warnings.append(f"W-MISSING-SHEBANG: scripts/{script_name} missing `#!/usr/bin/env python3` shebang line")
 
-    # 10. evals/evals.json (FR-093: absence is now an error) — skipped for third-party
+    # 6. evals/evals.json (absence is an error) — skipped for third-party
     if not is_third_party:
         evals_path = os.path.join(skill_dir, "evals", "evals.json")
         if not os.path.isfile(evals_path):
-            errors.append("FR-093: evals/evals.json not found — skill has no test cases")
+            errors.append("E-MISSING-EVALS: evals/evals.json not found — skill has no test cases")
         else:
             try:
                 evals_data = json.loads(_read_file(evals_path))
                 evals_list = evals_data.get("evals", [])
                 if len(evals_list) < 1:
-                    errors.append("FR-093: evals/evals.json has no test cases")
+                    errors.append("E-EMPTY-EVALS: evals/evals.json has no test cases")
                 elif len(evals_list) < 3:
-                    warnings.append(f"FR-034: evals/evals.json has only {len(evals_list)} test cases (recommend 3+)")
+                    warnings.append(f"W-FEW-EVALS: evals/evals.json has only {len(evals_list)} test cases (recommend 3+)")
             except (json.JSONDecodeError, AttributeError):
                 errors.append("E-EVALS-JSON: evals/evals.json is not valid JSON")
 
-    # 11. SKILL.md body length
+    # 7. SKILL.md body length
     body_lines = len(body.split("\n")) if body else 0
     if body_lines > MAX_BODY_LINES:
         warnings.append(f"W-BODY-LENGTH: SKILL.md body is {body_lines} lines (recommended max {MAX_BODY_LINES})")
 
-    # 12. "NOT for:" clause presence (FR-094) — skipped for third-party
+    # 8. "NOT for:" clause presence, checked against skills-ref's parsed description
+    #    (not a line-start regex) plus the raw body — skipped for third-party
     if not is_third_party:
-        desc_text = fm.get("description", "") if fm else ""
-        has_not_for = "not for:" in desc_text.lower() or "not for:" in body.lower()
+        has_not_for = "not for:" in desc.lower() or "not for:" in body.lower()
         if not has_not_for:
             warnings.append("W-MISSING-NOT-FOR: SKILL.md has no \"NOT for:\" clause in description or body")
 
-    # 13. Progressive-disclosure heuristic (FR-094): warn on unresolved skill-relative file refs — skipped for third-party
+    # 9. Progressive-disclosure heuristic: warn on unresolved skill-relative file refs — skipped for third-party
     if not is_third_party:
         # Strip fenced code blocks to reduce false positives; leave inline code spans intact
         stripped_body = re.sub(r"```[^\n]*\n.*?```", "", body, flags=re.DOTALL)
@@ -290,6 +301,8 @@ def main():
     parser.add_argument("--all", action="store_true", help="Validate all skills in the directory")
     parser.add_argument("--json", action="store_true", dest="json_output", help="Output as JSON")
     args = parser.parse_args()
+
+    _check_skills_ref_available()
 
     if args.all:
         skill_dirs = find_skills(args.path)

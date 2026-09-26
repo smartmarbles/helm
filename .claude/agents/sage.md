@@ -1,8 +1,7 @@
 ---
 name: "SAGE"
 description: "Strategic Planner. Use when: creating implementation plans, breaking down complex features into phased tasks, designing execution strategies, identifying dependencies and parallelization opportunities, creating specifications, or when a task needs structured planning before implementation."
-tools: [read, edit, agent, todo, vscode/memory]
-agents: [SCOOP]
+tools: Read, Glob, Grep, Write, Edit, Agent, TodoWrite
 ---
 
 > **MANDATORY READ — `.helm/agents/sage.md`**

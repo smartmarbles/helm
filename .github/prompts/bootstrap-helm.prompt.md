@@ -1,10 +1,10 @@
 ---
-description: Bootstrap the Helm multi-agent orchestration system into the current workspace by downloading all required files from GitHub.
+description: Bootstrap the Helm multi-agent orchestration system into the current workspace by downloading all required files from GitHub, for use across VS Code Copilot, Claude Code, Devin Desktop, and Cursor.
 ---
 
 # Bootstrap Helm Multi-Agent System
 
-You are bootstrapping the **Helm** multi-agent orchestration system into the current VS Code workspace. You must execute all steps below **in order** using terminal commands. Do NOT use file-creation tools — all files must be created via terminal commands (`curl`, `Invoke-WebRequest`, `mkdir`, etc.).
+You are bootstrapping the **Helm** multi-agent orchestration system into the current workspace. This bootstrap prompt itself runs inside a VS Code Copilot chat session (that is simply where `.prompt.md` files are discovered), but the files it installs are what let the resulting project be worked on from **any** of Helm's four supported hosts — VS Code Copilot, Claude Code, Devin Desktop, and Cursor — not VS Code alone. You must execute all steps below **in order** using terminal commands. Do NOT use file-creation tools — all files must be created via terminal commands (`curl`, `Invoke-WebRequest`, `mkdir`, etc.).
 
 ---
 
@@ -20,13 +20,38 @@ These files may already exist with user content. They are wrapped in `<!-- HELM 
 | Local path | Remote path |
 |---|---|
 | `AGENTS.md` | `AGENTS.md` |
+| `CLAUDE.md` | `CLAUDE.md` |
 | `.github/copilot-instructions.md` | `.github/copilot-instructions.md` |
+
+`AGENTS.md` is the shared, host-neutral rules file read directly by Claude Code, Devin Desktop, and Cursor. `CLAUDE.md` is a thin Claude Code entry point that imports `AGENTS.md`. `.github/copilot-instructions.md` is VS Code Copilot's own entry point. All three carry the same merge procedure because a consuming project may already have its own content in any of them.
 
 ### Regular files
 These files are downloaded directly (overwrite if they exist).
 
+Helm's agents, playbooks, and probes are authored once in a host-neutral home, `.helm/` (see "Renaming `.helm/`" below), and discovered per host through a thin wrapper file that points back at the authored source:
+
 ```
-.github/team-roster.md
+.helm/agents/arthur.md
+.helm/agents/forge.md
+.helm/agents/merlin.md
+.helm/agents/quill.md
+.helm/agents/quiz.md
+.helm/agents/sage.md
+.helm/agents/scoop.md
+.helm/playbooks/archive-agent/archive-agent.md
+.helm/playbooks/conduct-research/conduct-research.md
+.helm/playbooks/create-plan/create-plan.md
+.helm/playbooks/create-spec/create-spec.md
+.helm/playbooks/hire-agent/hire-agent.md
+.helm/playbooks/quizler/quizler.md
+.helm/playbooks/skill-creator/skill-creator.md
+.helm/playbooks/write-technical-docs/write-technical-docs.md
+.helm/PROBE-INERTNESS.md
+```
+
+Every agent gets one wrapper file per host — 7 agents × 4 hosts:
+
+```
 .github/agents/arthur.agent.md
 .github/agents/forge.agent.md
 .github/agents/merlin.agent.md
@@ -34,26 +59,52 @@ These files are downloaded directly (overwrite if they exist).
 .github/agents/quiz.agent.md
 .github/agents/sage.agent.md
 .github/agents/scoop.agent.md
+.claude/agents/arthur.md
+.claude/agents/forge.md
+.claude/agents/merlin.md
+.claude/agents/quill.md
+.claude/agents/quiz.md
+.claude/agents/sage.md
+.claude/agents/scoop.md
+.devin/agents/arthur.md
+.devin/agents/forge.md
+.devin/agents/merlin.md
+.devin/agents/quill.md
+.devin/agents/quiz.md
+.devin/agents/sage.md
+.devin/agents/scoop.md
+.cursor/agents/arthur.md
+.cursor/agents/forge.md
+.cursor/agents/merlin.md
+.cursor/agents/quill.md
+.cursor/agents/quiz.md
+.cursor/agents/sage.md
+.cursor/agents/scoop.md
+```
+
+Skills live in Claude Code's native skills location, which every in-scope host is expected to honor:
+
+```
+.claude/skills/skill.instructions.md
+.claude/skills/orchestrate-delegation/SKILL.md
+.claude/skills/orchestrate-delegation/evals/evals.json
+.claude/skills/orchestrate-delegation/references/worked-examples.md
+```
+
+Remaining supporting files — team roster, docs, hooks, templates, scripts (including the drift-check tool), and archival placeholders:
+
+```
+.github/team-roster.md
 .github/agents/temps/.gitkeep
+.github/docs/helm-design-principles.md
 .github/docs/memory-fallback.md
 .github/docs/session-protocol.md
 .github/hooks/hooks.json
 .github/hooks/scripts/hook.py
-.github/playbooks/archive-agent/archive-agent.md
-.github/playbooks/conduct-research/conduct-research.md
-.github/playbooks/create-plan/create-plan.md
-.github/playbooks/create-spec/create-spec.md
-.github/playbooks/hire-agent/hire-agent.md
-.github/playbooks/quizler/quizler.md
-.github/playbooks/skill-creator/skill-creator.md
-.github/playbooks/write-technical-docs/write-technical-docs.md
+.github/scripts/check_wrapper_drift.py
 .github/scripts/copilot_token_analyzer.py
 .github/scripts/token_proxy.py
 .github/scripts/validate_skill.py
-.github/skills/skill.instructions.md
-.github/skills/orchestrate-delegation/SKILL.md
-.github/skills/orchestrate-delegation/evals/evals.json
-.github/skills/orchestrate-delegation/references/worked-examples.md
 .github/templates/adr-template.md
 .github/templates/definition-entry-template.md
 .github/templates/plan-template.md
@@ -63,7 +114,27 @@ artifacts/.gitkeep
 artifacts/docs/.gitkeep
 ```
 
-The hook script (`hook.py`) is a single cross-platform Python 3 file used unchanged on Windows, macOS, and Linux — `hooks.json` selects the right launcher (`python` vs `python3`) per OS, not a different script.
+The hook script (`hook.py`) is a single cross-platform Python 3 file used unchanged on Windows, macOS, and Linux — `hooks.json` selects the right launcher (`python` vs `python3`) per OS, not a different script. `check_wrapper_drift.py` is described in Step 6 and in "Renaming `.helm/`" below rather than repeated here.
+
+### Vendored package
+
+One additional dependency is not a plain file download — it is pinned to a specific upstream commit and vendored via `git`, not `curl`. See Step 5.
+
+```
+.github/scripts/vendor/skills-ref/  (pinned upstream commit, see Step 5)
+```
+
+---
+
+## Renaming `.helm/`
+
+`.helm/` is Helm's default name for the host-neutral directory holding the authored source of every agent, playbook, and probe. No host reads `.helm/` directly — every host discovers Helm's team only through the per-host wrapper files listed above, each of which points back at a file under `.helm/`.
+
+If the target project already uses a top-level `.helm/` directory for something else, the installer may rename it to any other name. A rename is only complete when **every** pointer agrees:
+
+1. Rename the directory itself first, before writing or editing any wrapper file.
+2. Update every wrapper file's pointer (all 28 agent wrappers, plus any playbook or probe reference inside `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`) to the new name. Partial renames — some pointers on the old name, some on the new one — are not a supported end state.
+3. Run `.github/scripts/check_wrapper_drift.py`. It is required to fail with a non-zero exit if it finds even one pointer still naming the old directory. A clean run of this script — not a manual search — is the only accepted signal that a rename is finished.
 
 ---
 
@@ -131,6 +202,11 @@ Given a `LOCAL_PATH` and a `REMOTE_URL`:
 - **Local path:** `.github/copilot-instructions.md`
 - **Remote URL:** `https://raw.githubusercontent.com/smartmarbles/helm/main/.github/copilot-instructions.md`
 
+### File 3: `CLAUDE.md`
+
+- **Local path:** `CLAUDE.md`
+- **Remote URL:** `https://raw.githubusercontent.com/smartmarbles/helm/main/CLAUDE.md`
+
 ### bash (macOS / Linux)
 
 Run the following function, then call it for both files:
@@ -182,6 +258,7 @@ merge_helm_file() {
 
 merge_helm_file "AGENTS.md" "https://raw.githubusercontent.com/smartmarbles/helm/main/AGENTS.md"
 merge_helm_file ".github/copilot-instructions.md" "https://raw.githubusercontent.com/smartmarbles/helm/main/.github/copilot-instructions.md"
+merge_helm_file "CLAUDE.md" "https://raw.githubusercontent.com/smartmarbles/helm/main/CLAUDE.md"
 ```
 
 ### PowerShell (Windows)
@@ -232,6 +309,7 @@ function Merge-HelmFile {
 
 Merge-HelmFile -LocalPath "AGENTS.md" -RemoteUrl "https://raw.githubusercontent.com/smartmarbles/helm/main/AGENTS.md"
 Merge-HelmFile -LocalPath ".github/copilot-instructions.md" -RemoteUrl "https://raw.githubusercontent.com/smartmarbles/helm/main/.github/copilot-instructions.md"
+Merge-HelmFile -LocalPath "CLAUDE.md" -RemoteUrl "https://raw.githubusercontent.com/smartmarbles/helm/main/CLAUDE.md"
 ```
 
 ---
@@ -266,9 +344,53 @@ Write-Host "Downloaded $($files.Count) files."
 
 ---
 
+## Step 5: Vendor the `skills-ref` package
+
+Unlike every other regular file, `.github/scripts/vendor/skills-ref/` is not fetched with a plain `curl`/`Invoke-WebRequest` — it is a pinned subdirectory of an external monorepo, cloned via `git` at a fixed commit so `validate_skill.py` always runs against a known-good, reviewed version.
+
+- **Upstream repository:** `https://github.com/agentskills/agentskills`
+- **Subdirectory:** `skills-ref/`
+- **Pinned commit:** `69ef37e9424c0a7ea9dd2293b559e43ec8176379`
+
+If `.github/scripts/vendor/skills-ref/VENDOR_INFO.md` already exists and names this same pinned commit, skip this step — the vendored copy is already current.
+
+### bash (macOS / Linux)
+
+```bash
+TMP_DIR=$(mktemp -d)
+git clone --no-checkout --filter=blob:none https://github.com/agentskills/agentskills.git "$TMP_DIR"
+git -C "$TMP_DIR" sparse-checkout init --cone
+git -C "$TMP_DIR" sparse-checkout set skills-ref
+git -C "$TMP_DIR" checkout 69ef37e9424c0a7ea9dd2293b559e43ec8176379
+rm -rf .github/scripts/vendor/skills-ref
+mkdir -p .github/scripts/vendor
+cp -r "$TMP_DIR/skills-ref" .github/scripts/vendor/skills-ref
+find .github/scripts/vendor/skills-ref -name "__pycache__" -type d -exec rm -rf {} +
+rm -rf "$TMP_DIR"
+echo "Vendored skills-ref at 69ef37e9424c0a7ea9dd2293b559e43ec8176379."
+```
+
+### PowerShell (Windows)
+
+```powershell
+$tmpDir = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName())
+git clone --no-checkout --filter=blob:none https://github.com/agentskills/agentskills.git $tmpDir
+git -C $tmpDir sparse-checkout init --cone
+git -C $tmpDir sparse-checkout set skills-ref
+git -C $tmpDir checkout 69ef37e9424c0a7ea9dd2293b559e43ec8176379
+Remove-Item -Recurse -Force ".github/scripts/vendor/skills-ref" -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force -Path ".github/scripts/vendor" | Out-Null
+Copy-Item -Recurse -Path (Join-Path $tmpDir "skills-ref") -Destination ".github/scripts/vendor/skills-ref"
+Get-ChildItem -Path ".github/scripts/vendor/skills-ref" -Recurse -Directory -Filter "__pycache__" | Remove-Item -Recurse -Force
+Remove-Item -Recurse -Force $tmpDir
+Write-Host "Vendored skills-ref at 69ef37e9424c0a7ea9dd2293b559e43ec8176379."
+```
+
+---
+
 ## Step 6: Validate installation
 
-Verify that every file and directory from the **File Manifest** exists on disk. This covers both categories (merge-safe and regular, including `hook.py`). Directories are derived from file paths (same as Step 2).
+Verify that every file and directory from the **File Manifest** exists on disk. This covers all three categories (merge-safe, regular — including `hook.py` — and the vendored `skills-ref` package, checked by confirming `VENDOR_INFO.md` names the pinned commit). Directories are derived from file paths (same as Step 2).
 
 Collect any missing items and report pass/fail.
 
@@ -340,7 +462,9 @@ After all steps complete, print a summary including:
 
 - Total directories created
 - Total files downloaded
+- The vendored `skills-ref` commit hash confirmed
 - The merge action taken for `AGENTS.md` (CREATED / UPDATED / APPENDED)
 - The merge action taken for `.github/copilot-instructions.md` (CREATED / UPDATED / APPENDED)
+- The merge action taken for `CLAUDE.md` (CREATED / UPDATED / APPENDED)
 - Validation result from Step 6 (PASSED / FAILED with count of missing items)
 - A confirmation line: **"Helm bootstrap complete."**

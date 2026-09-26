@@ -1,12 +1,7 @@
 ---
 name: QUILL
 description: "Technical Documentation Writer. Use when: writing developer guides, API references, README files, tutorials, comparison docs, migration guides, quickstart guides, documenting APIs, creating side-by-side comparisons, structuring documentation architecture, writing code examples, maintaining doc consistency, or any task producing developer-facing written artifacts."
-tools:
-  - read
-  - edit
-  - execute
-  - vscode/memory
-agents: []
+tools: Read, Glob, Grep, Write, Edit, Bash
 ---
 
 > **MANDATORY READ — `.helm/agents/quill.md`**

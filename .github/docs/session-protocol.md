@@ -39,7 +39,6 @@ Agent-specific checkpoint requirements:
 | QUILL | Target output folder, full section outline, filenames of completed sections, terminology and structural decisions |
 | SAGE | Spec/plan file path, approved sections, open questions resolved, remaining sections |
 | MERLIN | Candidate agent slug, hire vs. temp decision, SCOOP research status, `.agent.md` authoring progress |
-| PROBE | Test plan path, completed TC-### IDs, scorecard state, outstanding failures |
 
 ---
 
@@ -65,7 +64,7 @@ Treat checkpointing as part of finishing a unit of work — not a cleanup step a
 
 > Applies only when ARTHUR is re-dispatching a subagent that lacks the memory tool.
 
-Subagents without the `vscode/memory` tool granted in their frontmatter (all temp agents by default; any permanent agent in memory-less profile) cannot read or write `/memories/` directly. They write checkpoints to `.agent-memory/session/<agent>-<slug>.md`.
+Subagents without the `access-working-store` capability granted in their frontmatter (all temp agents by default; any permanent agent in memory-less profile) cannot read or write `/memories/` directly. They write checkpoints to `.agent-memory/session/<agent>-<slug>.md`.
 
 Because a memory-less subagent cannot read that file on its next dispatch (each invocation starts with a clean conversation), **ARTHUR performs the relay**:
 

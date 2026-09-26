@@ -2,6 +2,14 @@
 
 This workspace uses an AI team orchestration system. All agents follow the team structure and operating protocols described here.
 
+## Default Agent
+
+**MANDATORY READ (default agent only) — `.helm/agents/arthur.md`**
+
+If the file cannot be loaded, STOP and report the failure - do not proceed without it.
+
+By default, every host operates as **ARTHUR** (chief orchestrator) unless the user explicitly selects a different agent.
+
 ## Team Structure
 
 - **Roster**: `.github/team-roster.md` — all active and archived members
@@ -14,13 +22,13 @@ This workspace uses an AI team orchestration system. All agents follow the team 
 
 ## When Operating as a Specific Agent
 
-When a user selects a specific agent (SCOOP, SAGE, QUILL, MERLIN, etc.), follow that agent's own instructions. The team structure above is context — not a directive to override the selected agent's behavior.
+When a user selects or dispatches a specific agent (SCOOP, SAGE, QUILL, MERLIN, etc.), follow that agent's own instructions. The Default Agent and Team Structure sections above are context — not directives layered onto the selected agent's identity, so a dispatched agent must not also try to act as ARTHUR merely because it read the Default Agent section in its own injected copy of this file.
 
 ## Workflow Hygiene
 
 Every agent follows these rules:
 
-1. **Do NOT grep/list/existence-check docs mentioned in system prompts.** The system already injects them into context — re-reading wastes tokens. This applies to agent files, skill files, and workspace context files (e.g., AGENTS.md, copilot-instructions.md). It does NOT prohibit listing `artifacts/` to discover existing spec folder numbers — that directory listing is mandatory and separate from re-reading injected context.
+1. **Do NOT grep/list/existence-check docs mentioned in system prompts.** Their paths are already given, so searching for whether they exist wastes tokens — use the given path directly. This is a rule about *discovery*, not about *content*: only `AGENTS.md` and `.github/copilot-instructions.md` are injected in full (see rule 7) and never need to be re-read. Agent files, playbooks, and skill bodies are referenced by path in system prompts but their content is NOT injected — when a MANDATORY READ directive or task relevance calls for one, it must still actually be read. It does NOT prohibit listing `artifacts/` to discover existing spec folder numbers — that directory listing is mandatory and separate from re-reading injected context.
 2. **Read referenced docs only when directly relevant** — when you need the content for the task at hand, not preemptively.
 3. **"Read X before doing anything" means once per session** — not before every sub-task.
 4. **Every agent must follow the Session Resumption Protocol.** Every agent must check for prior checkpoints at task start.
@@ -71,25 +79,27 @@ Standalone documentation lives in `artifacts/docs/`.
 
 ## Memory Scope
 
-Memory scopes follow built-in `<memoryInstructions>`. **DEFAULT to `/memories/repo/`** for project knowledge; `/memories/` only for genuinely cross-project content.
+Two kinds of memory matter here. The **durable store** is repo-tracked and version-controlled — project docs (`artifacts/docs/`), spec-scoped records (`artifacts/spec###-*/`), and, rarely, an ADR. Anything that changes how an agent behaves — an operating rule, an agent identity, or playbook content — must live here, not only in a private working store, so every teammate and every host can see it and no divergence goes uncaught.
+
+The **working store** is each host's own memory or scratch mechanism for in-progress task state, not for behavior-changing content. Where a host provides one, it typically separates state that persists across all work on this host (user-scoped), state scoped to the current task or conversation (session-scoped), and state scoped to the current repository (repo-scoped) — use whichever scope matches how long the information needs to live. On hosts with the built-in memory tool, this working store is realized as `/memories/` (user), `/memories/session/` (session), and `/memories/repo/` (repo); **DEFAULT to the repo scope** for project knowledge, reserving the user scope for genuinely cross-project content. Other hosts realize the working store differently, or not at all — see the Memory-less Operation section below for the recovery path.
 
 ## Session Resumption Protocol
 
 BEFORE STARTING ANY TASK — complete all steps that apply to your role:
 
-1. Check `/memories/session/<your-agent>-*.md` for a prior checkpoint. If found, resume from it.
-2. Check `/memories/repo/` for project conventions relevant to your task.
+1. Check your working store's session scope for a prior checkpoint (e.g. `/memories/session/<your-agent>-*.md` on hosts with the built-in memory tool). If found, resume from it.
+2. Check your working store's repo scope for project conventions relevant to your task.
 3. ARTHUR only: Check `artifacts/` for active spec work. Ask user: continue or start fresh.
 4. ARTHUR only: Check the team roster for completed temps. Engage MERLIN to archive.
 
-WHILE WORKING: After each major unit of completed work, write a checkpoint to `/memories/session/<agent>-<slug>.md`. Record: what is complete, what remains, key decisions made.
+WHILE WORKING: After each major unit of completed work, write a checkpoint to your working store's session scope (e.g. `/memories/session/<agent>-<slug>.md`). Record: what is complete, what remains, key decisions made.
 
-AFTER COMPLETING: Delete your session checkpoint file. Move any worth-keeping notes to `/memories/repo/` first.
+AFTER COMPLETING: Delete your session checkpoint. Move any worth-keeping notes to the durable store, or your working store's repo scope, first.
 
 Read `.github/docs/session-protocol.md` for full checkpoint detail, per-agent requirements, and orchestrator relay.
 
 ## Memory-less Operation
 
-If the memory tool probe fails at startup (`view /memories/session/`), switch to `.agent-memory/` as the root for all reads and writes, and prepend `[no-memory]` to your first reply this session.
+Absence of a working store is a normal condition, not an error. If your host has no working-store mechanism, or a probe of it fails at startup (e.g. `view /memories/session/` on hosts with the built-in memory tool), fall back to `.agent-memory/` as the root for all reads and writes, prepend `[no-memory]` to your first reply this session, and reconstruct any needed context from the durable store instead.
 
 Read `.github/docs/memory-fallback.md` for full detail.

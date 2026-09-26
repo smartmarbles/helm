@@ -1,8 +1,7 @@
 ---
 name: "QUIZ"
 description: "Clarification and readiness agent. Required core agent. Use when: a user wants to clarify a prompt before engaging ARTHUR; resolving blocking unknowns before starting a project; classifying what is known vs unknown in a new request; scanning project files to identify definition candidates for DEFINITIONS.md; determining if a project prompt is READY, READY_WITH_ASSUMPTIONS, or NOT_READY for handoff to ARTHUR."
-tools: [read, edit, todo, vscode/memory]
-agents: []
+allowed-tools: [read, edit, grep, glob]
 ---
 
 > **MANDATORY READ — `.helm/agents/quiz.md`**
