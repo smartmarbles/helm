@@ -149,7 +149,7 @@ One additional dependency is not a plain file download — it is pinned to a spe
 If the target project already uses a top-level `.helm/` directory for something else, the installer may rename it to any other name. A rename is only complete when **every** pointer agrees:
 
 1. Rename the directory itself first, before writing or editing any wrapper file.
-2. Update every wrapper file's pointer (all 28 agent wrappers, the 2 prompt wrappers at `.github/prompts/bootstrap-helm.prompt.md` and `.github/prompts/audit-default-agent.prompt.md`, plus any playbook or probe reference inside `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`) to the new name. Partial renames — some pointers on the old name, some on the new one — are not a supported end state.
+2. Update every wrapper file's pointer (all 28 agent wrappers, the prompt wrapper at `.github/prompts/bootstrap-helm.prompt.md`, plus any playbook or probe reference inside `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`) to the new name. Partial renames — some pointers on the old name, some on the new one — are not a supported end state.
 3. Run `.github/scripts/check_wrapper_drift.py`. It is required to fail with a non-zero exit if it finds even one pointer still naming the old directory. A clean run of this script — not a manual search — is the only accepted signal that a rename is finished.
 
 ---
