@@ -1,0 +1,26 @@
+#!/bin/sh
+# Git pre-push hook: blocks the push if the bootstrap manifest has drifted
+# from the manifest-governed directories. Mirrors the CI check in
+# .github/workflows/manifest-drift.yml so contributors get the same signal
+# locally, before it reaches GitHub.
+#
+# Opt-in required (not installed by default): see CONTRIBUTING.md.
+
+if command -v python >/dev/null 2>&1; then
+    PYTHON=python
+elif command -v python3 >/dev/null 2>&1; then
+    PYTHON=python3
+else
+    echo "pre-push: neither 'python' nor 'python3' found on PATH; skipping manifest-drift check" >&2
+    exit 0
+fi
+
+"$PYTHON" .github/scripts/check_manifest_drift.py
+status=$?
+
+if [ "$status" -ne 0 ]; then
+    echo "pre-push: manifest-drift check failed (exit $status); push blocked" >&2
+    exit "$status"
+fi
+
+exit 0

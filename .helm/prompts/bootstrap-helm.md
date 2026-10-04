@@ -14,6 +14,8 @@ You are bootstrapping the **Helm** multi-agent orchestration system into the cur
 
 This is the **single source of truth** for all files managed by this bootstrap. Every subsequent step references this manifest — no file paths are defined elsewhere. When adding or removing files from Helm, update ONLY this manifest.
 
+> **Note:** `.github/scripts/check_manifest_drift.py` is a maintainer-only tool (it is not part of this bootstrap's own install manifest) that diffs the paths listed in this section against the repo's actual tracked files under Helm's governed directories, failing if any tracked file isn't listed here. Run it after adding files to confirm the manifest stays complete — the same role `check_wrapper_drift.py` plays for rename drift (see "Renaming `.helm/`" below).
+
 **Base URL:** `https://raw.githubusercontent.com/smartmarbles/helm/main/`
 
 ### Merge-safe files
@@ -42,12 +44,23 @@ Helm's agents, playbooks, and probes are authored once in a host-neutral home, `
 .helm/agents/scoop.md
 .helm/playbooks/archive-agent/archive-agent.md
 .helm/playbooks/conduct-research/conduct-research.md
+.helm/playbooks/conduct-research/evals/evals.json
+.helm/playbooks/conduct-research/references/quick-reference.md
+.helm/playbooks/conduct-research/references/worked-examples.md
 .helm/playbooks/create-plan/create-plan.md
 .helm/playbooks/create-spec/create-spec.md
 .helm/playbooks/hire-agent/hire-agent.md
 .helm/playbooks/quizler/quizler.md
 .helm/playbooks/skill-creator/skill-creator.md
 .helm/playbooks/write-technical-docs/write-technical-docs.md
+.helm/playbooks/write-technical-docs/evals/evals.json
+.helm/playbooks/write-technical-docs/references/boundaries.md
+.helm/playbooks/write-technical-docs/references/doc-type-table.md
+.helm/playbooks/write-technical-docs/references/output-standards.md
+.helm/playbooks/write-technical-docs/references/quick-reference.md
+.helm/playbooks/write-technical-docs/references/structural-conventions.md
+.helm/playbooks/write-technical-docs/references/worked-examples.md
+.helm/playbooks/write-technical-docs/references/writing-standards.md
 .helm/PROBE-INERTNESS.md
 ```
 
