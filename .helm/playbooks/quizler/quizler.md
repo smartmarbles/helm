@@ -359,7 +359,7 @@ Look for:
 
 **Do not surface as candidates:**
 
-- Helm vocabulary (`agent`, `playbook`, `skill`, `path`, `dispatch`, `spec`, `handoff`, etc.)
+- Helm vocabulary (agent, playbook, skill, path, dispatch, spec, handoff, etc.)
 - Terms already present in `artifacts/docs/DEFINITIONS.md`
 - General programming, framework, or language terms covered by external documentation
 - Terms already defined in Helm's own operating files (agent and playbook authored sources, `AGENTS.md`, etc.)

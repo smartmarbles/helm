@@ -43,12 +43,12 @@ Strict sequential protocol. Do not reorder. Do not merge steps.
     - **Keep in SKILL.md:** procedural steps the agent must execute (the workflow), constraints, decision tables, and output format rules
     - **Move to `references/`:** worked examples, lookup tables, scoring templates, appendix material — reference with a link and one-line description in the skill body
     The skill body is the *executor*; `references/` files are the *lookup library*. The agent follows the skill and reads references only when needed.
-15. **Run validator.** Run `python .github/scripts/validate_skill.py <skill-dir>` using `run-command`. Fix all errors. Report any warnings. A skill is not complete until the validator passes with zero errors.
-16. **Minimum-viable eval.** Ensure `evals/evals.json` exists with at least 1 test case (3+ recommended). Deliver the eval alongside the agent file.
+15. **Run validator.** Run `python .github/scripts/validate_skill.py <skill-dir>` using `run-command`. Resolve all errors and warnings for a standard skill; validation passes only with zero of each. Third-party skills (with a root `LICENSE` or `LICENSE.txt`) and skills in `SKIP_DIRS` retain their informational-warning-only pass behavior.
+16. **Minimum-viable eval.** Include `evals/evals.json` with at least 3 test cases alongside the skill. Missing or empty evals are validator errors, and fewer than 3 cases triggers a warning; standard skills pass only with zero errors and zero warnings.
 
 ### Validation Contract
 
-> Post-creation validation with `validate_skill.py` is mandatory. A skill task is not complete until the validator exits with zero errors. Skipping this step is a workflow violation regardless of time pressure or task complexity. ARTHUR must confirm validation was executed and passed before accepting the task as complete.
+> Post-creation validation with `validate_skill.py` is mandatory. A standard skill task is not complete until the validator exits with zero errors and zero warnings. Third-party skills (with a root `LICENSE` or `LICENSE.txt`) and skills in `SKIP_DIRS` retain their informational-warning-only pass behavior. Skipping this step is a workflow violation regardless of time pressure or task complexity. ARTHUR must confirm validation was executed and passed before accepting the task as complete.
 
 ### Rule: SCOOP research is not optional
 
@@ -113,7 +113,7 @@ Every hired agent (permanent or temporary) is represented by **one authored sour
 
 No `tools` or subagent-restriction field belongs in the authored source's frontmatter — a capability grant is a per-host wrapper concern (part (b) below), never hand-maintained here.
 
-> **Skill-first check:** Before authoring each body section, ask: *"Does this describe a repeatable process?"* If yes, it belongs in a companion skill or playbook, not the agent file. Body content describes who the agent is and what it does; procedural how-to lives in a `SKILL.md` under `.github/skills/` or a playbook under `.helm/playbooks/`.
+> **Skill-first check:** Before authoring each body section, ask: *"Does this describe a repeatable process?"* If yes, it belongs in a companion skill or playbook, not the agent file. Body content describes who the agent is and what it does; procedural how-to lives in a `SKILL.md` under `.claude/skills/` or a playbook under `.helm/playbooks/`.
 
 > **Line limit:** Role-specific body content must stay ≤ 100 lines (frontmatter excluded). If the body would exceed this, move procedural or lookup content to a companion skill, playbook, or `references/` file and add a one-line link in the agent file.
 

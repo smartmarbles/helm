@@ -31,7 +31,7 @@ MERLIN creates skills and playbooks — not only as part of hiring, but whenever
 
 | Type | When to use | Location |
 |------|-------------|----------|
-| **Skill** | Reusable across multiple agents — loaded on semantic trigger | `.github/skills/<name>/SKILL.md` (≤500 lines) |
+| **Skill** | Reusable across multiple agents — loaded on semantic trigger | `.claude/skills/<name>/SKILL.md` (≤500 lines) |
 | **Playbook** | Procedure owned and used by exactly one agent — loaded explicitly via mandatory-read | `.helm/playbooks/<name>/<name>.md` (~400-line soft cap; split to `references/` if larger) |
 
 Do not add `evals/` files to playbook folders. Behavioral test cases belong in the test plan (the test runner's territory).

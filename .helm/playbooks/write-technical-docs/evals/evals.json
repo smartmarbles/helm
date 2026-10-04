@@ -1,0 +1,43 @@
+{
+  "evals": [
+    {
+      "id": "write-readme-for-new-package",
+      "prompt": "Write a README.md for a new TypeScript package `@widget/client` v2.1.0 that provides an API client for the Widget service. The package exposes a `WidgetClient` class constructed with `{ apiKey: string }`, and methods `accounts.me()`, `widgets.list()`, and `widgets.create({ name })`. Install is `npm install @widget/client`. Node 20+ required. Target audience: both evaluators deciding whether to adopt, and implementers getting started today.",
+      "expected_output": "QUILL produces a README that opens with a one-line project summary, a 'Why use it / When to use it' block serving evaluators, a Prerequisites line (Node 20+, TypeScript 5.4+), an Install command, a runnable Quickstart code sample with full imports and version pinning in a line-1 comment, expected output shown after the sample, a Links-to-deeper-docs section, and a License/Contributing link line. Audience is stated explicitly in the opening. Headings are question- or task-oriented. No marketing voice. The Quickstart sample is minimal, typed, and demonstrates one end-to-end flow (construct client → call one method → log result). Every code sample is fenced with `typescript` and shows the full `import` line. The doc does NOT invent capabilities beyond the three methods listed in the prompt.",
+      "files": [],
+      "expectations": [
+        "README opens with a one-line summary, followed by a 'Why / When to use' section for evaluators and a stated audience for both evaluators and implementers",
+        "Prerequisites, Install, and Quickstart sections are present; Quickstart contains a runnable TypeScript code sample with a line-1 version-pin comment (e.g., `// typescript 5.4, @widget/client 2.1.0`), full `import` line, and expected output shown after the sample",
+        "Only the three documented methods (`accounts.me()`, `widgets.list()`, `widgets.create({ name })`) appear in samples; no methods are fabricated",
+        "Headings are question- or task-oriented ('Getting started', 'How do I …'); no marketing voice ('blazing fast', 'incredibly easy', 'powerful') appears",
+        "Deeper-docs links section and a License/Contributing link line are present; the doc does not attempt to serve troubleshooters in the main flow (troubleshooting either absent or scoped to a dedicated section/link)"
+      ]
+    },
+    {
+      "id": "author-api-reference-from-schema",
+      "prompt": "Author an API reference section for the `WidgetClient.widgets.create` method given this schema: signature `create(input: { name: string; color?: 'red'|'blue'|'green' }): Promise<Widget>`; returns the created `Widget` object; throws `ValidationError` if `name` is empty or longer than 64 chars, `RateLimitError` on 429 responses, `NetworkError` on connectivity failures. Side effect: POSTs to `/v2/widgets`. Use the same per-entry template you would apply to all methods in the reference. Library version @widget/client 2.1.0.",
+      "expected_output": "QUILL produces a reference entry with a consistent per-entry template: signature block (fenced TypeScript with full signature), Parameters table (name, type, required/optional, description), Returns (type + description), Side effects (POST /v2/widgets), Errors/Exceptions table (ValidationError, RateLimitError, NetworkError with trigger conditions), a minimal runnable example with full imports and a line-1 version-pin comment, and a 'See also' links section. Every identifier in prose is in backticks. Optional parameters are explicitly marked. The `color` parameter's allowed values are enumerated. The example demonstrates one concept (creating a widget) with no extraneous setup. No marketing voice. The entry does NOT document behaviour not described in the schema (e.g., does not invent a 'batch create' mode, does not claim idempotency).",
+      "files": [],
+      "expectations": [
+        "Entry follows a consistent per-entry template with Signature, Parameters, Returns, Side effects, Errors/Exceptions, Example, and See also sections in that order",
+        "Parameters section enumerates `name` (string, required) and `color` (optional, with allowed values `'red' | 'blue' | 'green'` explicit); every identifier in prose is in backticks",
+        "Errors/Exceptions section lists all three errors (`ValidationError`, `RateLimitError`, `NetworkError`) with their trigger conditions; side-effect line names `POST /v2/widgets`",
+        "Example is a minimal runnable TypeScript snippet with a line-1 version-pin comment (`// typescript 5.4, @widget/client 2.1.0`) and a full `import` line, demonstrating one concept (creating a widget) with no extraneous setup",
+        "The entry does not fabricate behaviour beyond the schema (no invented batch mode, idempotency claim, retry semantics, or additional parameters); no marketing voice appears"
+      ]
+    },
+    {
+      "id": "write-migration-guide-v1-to-v2",
+      "prompt": "Write a migration guide taking developers from `@widget/client` v1.x to v2.1.0. Breaking changes: (1) `WidgetClient` constructor now takes `{ apiKey: string }` instead of a positional string; (2) `widgets.getAll()` renamed to `widgets.list()`; (3) errors now inherit from a new `WidgetError` base class — the previous plain `Error` throws are gone; (4) minimum Node version is now 20 (was 16). Target audience: implementers with working v1 code who need to upgrade without breaking production.",
+      "expected_output": "QUILL produces a migration guide opening with a version-pin header (from v1.x to v2.1.0) and an audience statement (implementers with working v1 code). A breaking-change summary table lists all four changes with columns for 'Change', 'v1 behaviour', 'v2 behaviour', and 'Migration effort'. A concept mapping section shows v1 → v2 equivalents with side-by-side code panels (v1 on one side, v2 on the other) for the constructor change and the `getAll → list` rename. A numbered step-by-step transition path is provided (update Node → update package → update constructor → update method names → update error handling). A gotchas section flags the error-handling change (previous `catch (e: Error)` blocks need updating to `catch (e: WidgetError)` or risk silent behavioural differences). A rollback note explains how to revert (pin back to last v1.x, downgrade Node). No marketing voice. The guide does NOT invent breaking changes not listed in the prompt.",
+      "files": [],
+      "expectations": [
+        "Guide opens with explicit version pinning (from v1.x to v2.1.0) and a stated audience (implementers upgrading working v1 code); a breaking-change summary table lists all four changes with v1 vs v2 columns",
+        "A concept mapping section provides side-by-side code panels (v1 | v2) for the constructor change and the `getAll()` → `list()` rename; both panels are fenced TypeScript with full imports and version-pin line-1 comments",
+        "A numbered step-by-step transition path is provided covering all four breaking changes (Node version, package version, constructor shape, method rename, error-handling update), in an order a reader can follow without re-ordering",
+        "A gotchas/warnings section uses a `> **Warning:** ...` callout flagging the error-handling change (catching `Error` vs `WidgetError`) with concrete before/after code; a rollback note describes reverting via version pinning and Node downgrade",
+        "Only the four listed breaking changes appear; no additional changes are fabricated; no marketing voice ('seamless migration', 'effortless upgrade') appears"
+      ]
+    }
+  ]
+}

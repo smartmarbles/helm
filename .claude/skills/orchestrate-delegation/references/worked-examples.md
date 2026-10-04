@@ -2,6 +2,16 @@
 
 Six DO/DON'T pairs illustrating the most common protocol violations and correct behaviours, plus short-name generation examples.
 
+## Table of Contents
+
+- [Example 1 — Multiple research topics](#example-1--multiple-research-topics)
+- [Example 2 — Narration without dispatch](#example-2--narration-without-dispatch)
+- [Example 3 — Explicit path request](#example-3--explicit-path-request)
+- [Example 4 — Simple task, still delegate](#example-4--simple-task-still-delegate)
+- [Example 5 — Parallel vs sequential](#example-5--parallel-vs-sequential)
+- [Example 6 — Spec Checkpoint skip](#example-6--spec-checkpoint-skip)
+- [Short-name examples](#short-name-examples)
+
 ---
 
 ## Example 1 — Multiple research topics

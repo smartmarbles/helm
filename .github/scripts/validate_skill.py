@@ -13,9 +13,13 @@ Checks:
     4. scripts/ has at least one .py file (only when scripts/ is present)
     5. Every .py script has an `if __name__` block (only when scripts/ is present)
     6. evals/evals.json exists (error if missing)
-    7. SKILL.md body is under 500 lines (warning)
-    8. "NOT for:" clause present in description or body (warning if absent)
-    9. SKILL.md body does not reference skill-relative files that do not exist (warning)
+    7. SKILL.md body is at most 500 lines (error if exceeded)
+    8. "NOT for:" clause present in description or body (error if absent)
+    9. SKILL.md body does not reference skill-relative files that do not exist (error)
+    10. Reference Markdown files over 100 lines have a table of contents (error)
+
+Standard skills pass only with zero errors and zero warnings. Third-party skills
+and SKIP_DIRS retain their informational-warning exemptions.
 
 Requires the vendored skills-ref CLI's runtime dependencies to be installed:
     pip install "click>=8.0" "strictyaml>=1.7.3"
@@ -47,6 +51,9 @@ SKIP_DIRS = set()
 # --- Library files exempt from CLI entry-point rules (E-MISSING-MAIN, W-MISSING-SHEBANG) ---
 LIBRARY_FILE_NAMES = {"__init__.py", "utils.py", "helpers.py"}
 
+# skills-ref follows the spec and accepts allowed-tools; Helm policy (FR-055/056)
+# prohibits allowed-tools/permissions in skills and relies on tool restriction only
+# in Devin agent profiles. Agent-wrapper frontmatter has a separate host-specific schema.
 # --- Minimum description length for quality (skills-ref only enforces a maximum) ---
 MIN_DESC_LEN = 30
 MAX_BODY_LINES = 500
@@ -59,6 +66,22 @@ def _read_file(path: str) -> str:
             return f.read()
     except (OSError, IOError):
         return ""
+
+
+def _has_reference_toc(content: str) -> bool:
+    """Return whether a reference file has a detectable TOC near its top."""
+    top_lines = [line for line in content.splitlines() if line.strip()][:20]
+    heading_re = re.compile(r"^\s{0,3}#{1,6}\s+(.+?)\s*#*\s*$")
+    anchor_link_re = re.compile(r"\[[^\]]*\]\(#[^)]+\)")
+    anchor_links = 0
+    for line in top_lines:
+        heading_match = heading_re.match(line)
+        if heading_match:
+            heading = heading_match.group(1).strip().rstrip("#").strip().lower()
+            if "table of contents" in heading or heading == "contents":
+                return True
+        anchor_links += len(anchor_link_re.findall(line))
+    return anchor_links >= 3
 
 
 def _extract_body(content: str) -> str:
@@ -243,14 +266,14 @@ def validate_skill(skill_dir: str) -> dict:
     # 7. SKILL.md body length
     body_lines = len(body.split("\n")) if body else 0
     if body_lines > MAX_BODY_LINES:
-        warnings.append(f"W-BODY-LENGTH: SKILL.md body is {body_lines} lines (recommended max {MAX_BODY_LINES})")
+        errors.append(f"E-BODY-LENGTH: SKILL.md body is {body_lines} lines (max {MAX_BODY_LINES})")
 
     # 8. "NOT for:" clause presence, checked against skills-ref's parsed description
     #    (not a line-start regex) plus the raw body — skipped for third-party
     if not is_third_party:
         has_not_for = "not for:" in desc.lower() or "not for:" in body.lower()
         if not has_not_for:
-            warnings.append("W-MISSING-NOT-FOR: SKILL.md has no \"NOT for:\" clause in description or body")
+            errors.append("E-MISSING-NOT-FOR: SKILL.md has no \"NOT for:\" clause in description or body")
 
     # 9. Progressive-disclosure heuristic: warn on unresolved skill-relative file refs — skipped for third-party
     if not is_third_party:
@@ -273,11 +296,28 @@ def validate_skill(skill_dir: str) -> dict:
         for ref in sorted(seen_refs):
             file_ref = ref.split("#")[0]  # strip fragment before path check
             if not os.path.exists(os.path.join(skill_dir, file_ref)):
-                warnings.append(f"W-MISSING-FILE: body references '{ref}' but it does not exist in the skill directory")
+                errors.append(f"E-MISSING-FILE: body references '{ref}' but it does not exist in the skill directory")
+
+    # 10. Long reference files need a detectable table of contents — skipped for third-party
+    if not is_third_party:
+        references_dir = os.path.join(skill_dir, "references")
+        if os.path.isdir(references_dir):
+            for filename in sorted(os.listdir(references_dir)):
+                if not filename.endswith(".md"):
+                    continue
+                reference_path = os.path.join(references_dir, filename)
+                if not os.path.isfile(reference_path):
+                    continue
+                reference_content = _read_file(reference_path)
+                reference_lines = len(reference_content.splitlines())
+                if reference_lines > 100 and not _has_reference_toc(reference_content):
+                    errors.append(
+                        f"E-MISSING-TOC: references/{filename} is {reference_lines} lines but has no detectable table of contents"
+                    )
 
     return {
         "skill": skill_name,
-        "valid": len(errors) == 0,
+        "valid": len(errors) == 0 and (is_third_party or len(warnings) == 0),
         "errors": errors,
         "warnings": warnings,
     }

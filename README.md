@@ -81,8 +81,8 @@ When no existing team member fits a task, ARTHUR identifies the gap and engages 
 
 Agents load procedural knowledge in one of two ways:
 
-- **Skills** — reusable instruction sets under `.github/skills/`, loaded by VS Code Copilot via semantic trigger matching on the skill's `description:` field. Reliable on Claude models; triggering is less reliable on OSS models (Qwen3-27B, Gemma 4 31B).
-- **Playbooks** — single-agent procedural files under `.github/playbooks/`, loaded explicitly via a mandatory-read block in the owning agent's `.agent.md` file. Reliable on all models.
+- **Skills** — reusable instruction sets under `.claude/skills/`.
+- **Playbooks** — single-agent procedural files under `.helm/playbooks/`, loaded explicitly via a mandatory-read block in the owning agent's `.agent.md` file. Reliable on all models.
 
 **Why playbooks instead of more skills?** Skills are always present in the model's context window once created — they add tokens on every invocation whether or not the agent actually needs them for that turn. Playbooks are loaded only when the agent is performing the specific task the playbook covers. For procedures that run infrequently (hiring an agent, archiving a temp, running a test plan), keeping that content out of the always-on context saves significant tokens per conversation. Skills are the right choice when a procedure is genuinely reusable across multiple agents and needs to fire automatically; playbooks are the right choice when a procedure belongs to one agent and is invoked on demand.
 

@@ -13,7 +13,7 @@ Before creating anything, decide which artifact is appropriate:
 | **Use when** | Procedure is reusable across multiple agents | Procedure belongs to exactly one agent |
 | **Loaded by** | VS Code Copilot semantic trigger on `description:` field | Explicit mandatory-read block in agent's `.agent.md` |
 | **OSS model reliability** | Unreliable (Qwen3-27B, Gemma 4 31B may not trigger) | Reliable — fires unconditionally |
-| **Path** | `.github/skills/<name>/SKILL.md` | `.helm/playbooks/<name>/<name>.md` |
+| **Path** | `.claude/skills/<name>/SKILL.md` | `.helm/playbooks/<name>/<name>.md` |
 
 If the procedure is single-agent only, create a playbook instead and skip this playbook. If genuinely reusable across agents, continue here.
 
@@ -39,7 +39,14 @@ Start by understanding the user's intent. The current conversation might already
 1. What should this skill enable the model to do?
 2. When should this skill trigger? (what user phrases or contexts)
 3. What is the expected output format?
-4. Does the skill need test cases? Skills with objectively verifiable outputs (file transforms, data extraction, code generation, fixed workflow steps) benefit from them. Skills with subjective outputs (writing style, tone) usually do not. Suggest an appropriate default but let the user decide.
+4. Which representative prompts and expected behaviors should the skill's evals cover? Every skill needs an `evals/evals.json` file with behavioral test cases. Gather cases for the skill's key workflows, including subjective outputs where expectations can be described; plan for at least 3 cases because fewer trigger a validator warning and a standard skill passes only with zero warnings.
+
+5. Before substantial authoring, capture a no-skill baseline:
+    - Write 2-3 realistic prompts that expose tasks the model handles poorly or inconsistently without this skill.
+    - Note the failure signal or desired behavior for each scenario.
+    - Run each prompt without the skill and record how the model actually behaves.
+    - Keep prompts and task context stable so later runs can be compared fairly.
+    - Reuse these scenarios as core Manual Testing prompts and measure revisions against the recorded baseline.
 
 ### Interview and Research
 
@@ -52,9 +59,10 @@ Check available MCPs — if useful for research, use them. Come prepared with co
 Based on the user interview, fill in these components:
 
 - **name**: Kebab-case skill identifier
-- **description**: When to trigger and what it does. This is the primary triggering mechanism — include both what the skill does AND specific contexts for when to use it. All "when to use" info goes here, not in the body. Make the description substantive and specific; vague descriptions fail to trigger. See Description Optimization below.
-- **tools**: List of capability verbs the skill needs (e.g., `[read-file, edit-file, invoke-subagent]`)
-- **NOT for:** clause — always include a brief list of things this skill should NOT be used for. Required by `validate_skill.py` — omitting it will produce a warning.
+- **description**: Describe the skill's function in third person and the specific contexts that should trigger it. This is the primary triggering mechanism; include both what the skill does and when it should be invoked. Keep it substantive and specific. See Description Optimization below.
+- **NOT for:** clause — always include a brief list of things this skill should NOT be used for. Required by `validate_skill.py`; omitting it is a hard error.
+
+Use the Agent Skills Spec schema for `SKILL.md` frontmatter. The validator rejects unsupported top-level keys such as `tools`. Although the specification permits `allowed-tools`, Helm policy prohibits both `allowed-tools` and `permissions` in every `SKILL.md` (FR-055); tool restriction may be relied upon only in a Devin agent profile (FR-056). Agent-wrapper frontmatter follows separate, host-specific schemas and must not be copied into a skill.
 
 ### Skill Writing Guide
 
@@ -63,15 +71,27 @@ Based on the user interview, fill in these components:
 ```
 skill-name/
 ├── SKILL.md (required)
-│   ├── YAML frontmatter (name, description, tools required)
+│   ├── YAML frontmatter (name and description required; optional spec fields)
 │   └── Markdown instructions
+├── evals/ (required)
+│   └── evals.json — behavioral test cases
 └── Bundled Resources (optional)
     ├── scripts/    — Executable code for deterministic/repetitive tasks
     ├── references/ — Docs loaded into context as needed
     └── assets/     — Files used in output (templates, icons)
 ```
 
-Do not create an `evals/` directory. Behavioral test cases belong in the test plan (`artifacts/testing/test-plan.md`) — the test runner's territory.
+#### How to document bundled scripts and resources
+
+Point from the skill body to each bundled resource and explain when to use it. For every bundled script:
+
+- State explicitly whether the model should execute it or only read/inspect it as reference.
+- Name every parameter and magic constant it expects, including how to provide each value.
+- State any defaults and side effects the model needs to account for when invoking it.
+- Make failures visible and actionable; do not defer or silently hide errors.
+- For fragile or higher-risk operations, validate useful intermediate outputs before proceeding rather than chaining steps blindly.
+
+Include `evals/evals.json` with behavioral test cases for every skill. Missing or empty evals are validator errors; at least one case is required. Fewer than 3 cases triggers `W-FEW-EVALS`; because a standard skill passes validation only with zero errors and zero warnings, 3 or more cases are required for a clean pass. These per-skill behavioral evals are distinct from the broader QA test plan (`artifacts/testing/test-plan.md`); both can coexist and serve different purposes.
 
 #### Progressive Disclosure
 
@@ -83,7 +103,7 @@ Skills use a three-level loading system:
 Key patterns:
 - Keep SKILL.md under 500 lines. If approaching the limit, add a layer of hierarchy with clear pointers to reference files.
 - Reference bundled files clearly from SKILL.md with guidance on when to read them.
-- For large reference files (>300 lines), include a table of contents.
+- For large reference files (>100 lines), include a table of contents — models often only read a file's first ~100 lines, so an unflagged missing TOC beyond that point risks silently skipped content.
 
 #### Domain Organization
 
@@ -136,16 +156,24 @@ If you find yourself writing ALWAYS or NEVER in all caps, treat it as a signal t
 
 ## Manual Testing
 
-After writing the skill, test it before finalizing:
+After writing the skill, test it before finalizing. Start with the representative failure scenarios and no-skill baseline captured under Capture Intent:
 
-1. Formulate 2-3 realistic prompts — the kind a real user would actually type.
+1. Use the 2-3 baseline scenarios as realistic test prompts; add cases if needed to cover other key workflows.
 2. Share them with the user: "Here are a few test cases I'd like to try. Do these look right, or do you want to add more?"
-3. Run each prompt in VS Code Copilot with the skill available and evaluate the output qualitatively.
-4. If outputs are wrong or incomplete, revise the skill and re-run.
+3. Run each prompt with the skill available on every intended model tier, not only the model you happen to be using.
+    - Account for the OSS-model caveat above: semantic skill triggering can be unreliable.
+    - Verify that the skill activated on each tier instead of assuming a description change guarantees it.
+    - Record the model tier and whether activation occurred for each run.
+    - If activation failed, distinguish that from a failure to follow the skill's instructions.
+4. Observe real or similar tasks in use, and gather team feedback where available.
+    - Check whether the model found and followed the right instructions and resources without getting lost.
+    - Assess navigation and instruction-following separately from final-answer correctness.
+    - Note missed rules, navigation failures, and incomplete outputs, not only whether the final answer looks right.
+5. Compare results with the no-skill baseline, revise the minimum guidance needed to address observed failures, and re-run the same scenarios on each intended tier.
 
 Keep going until:
 - The user says they are happy
-- All test cases produce correct output
+- Test cases produce correct output and the model reliably finds and follows the relevant guidance
 - You are not making meaningful progress
 
 ---
@@ -155,17 +183,18 @@ Keep going until:
 After writing the skill, run `validate_skill.py` to catch structural problems:
 
 ```bash
-python .github/scripts/validate_skill.py .github/skills/<skill-name>/
+python .github/scripts/validate_skill.py .claude/skills/<skill-name>/
 ```
 
-Fix any errors (E-prefixed) before finalizing. Warnings (W-prefixed) are advisory — review and address where practical.
+Resolve all errors (E-prefixed) and warnings (W-prefixed) before considering a standard skill complete. Third-party skills (with a root `LICENSE` or `LICENSE.txt`) and skills in `SKIP_DIRS` are exempt from the zero-warning pass condition; their warnings remain informational.
 
 Common checks the script enforces:
 - `name` is kebab-case
-- `description` field is present and has trigger language
-- "NOT for:" clause is present in the description
-- SKILL.md body is under 500 lines
-- All file references from SKILL.md point to files that exist
+- `description` field is present and has trigger language (any warning must still be resolved for a standard skill to pass)
+- "NOT for:" clause is present in the description or body (hard error if missing)
+- SKILL.md body is no more than 500 lines (hard error if exceeded)
+- All file references from SKILL.md point to files that exist (hard error if unresolved)
+- Each `references/*.md` file over 100 lines has a detectable table of contents near the top (hard error if missing)
 
 ---
 

@@ -42,8 +42,8 @@ Helm is a markdown-defined multi-agent orchestration system that drops into VS C
 | Universal cross-agent rules (memory scopes, artifact conventions, session protocol, file-link format, output discipline, the orchestration core) | [AGENTS.md](../../AGENTS.md) |
 | Default-agent / Copilot-platform-specific behavior only | [.github/copilot-instructions.md](../copilot-instructions.md) |
 | Per-agent role, persona, tool surface | `.github/agents/<agent>.agent.md` |
-| Reusable procedures triggered by description match | `.github/skills/<skill>/SKILL.md` |
-| Heavy procedural detail invoked at one step | `.github/skills/<skill>/references/<topic>.md` |
+| Reusable procedures triggered by description match | `.claude/skills/<skill>/SKILL.md` |
+| Heavy procedural detail invoked at one step | `.claude/skills/<skill>/references/<topic>.md` |
 | Cross-cutting design rationale (this document) | `.github/docs/<topic>.md` |
 | Project-scoped artifacts (specs, plans, research) | `artifacts/spec###-name/` |
 

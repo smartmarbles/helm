@@ -1,6 +1,6 @@
 ---
 name: orchestrate-delegation
-description: 'Orchestration playbook for ARTHUR — the how-to for delegating work, routing by complexity (research / standard / full path), dispatching agents in parallel, honouring human checkpoints at spec and plan boundaries, and recovering from failures. Arthur must invoke this skill as the first action upon receiving any task - before initial assessment, before asking clarifying questions, and before dispatching any agent. No routing decision is valid without it. NOT for: direct implementation work (ARTHUR never produces deliverables), tasks already past an approved plan and actively in implementation, identity/persona questions about Arthur itself, or hiring new agents (delegate to MERLIN).'
+description: 'Orchestration playbook for ARTHUR — the how-to for delegating work, routing by complexity (research / standard / full path), dispatching agents in parallel, honouring human checkpoints at spec and plan boundaries, and recovering from failures. Use this skill when a task needs delegation, routing, or multi-agent coordination. Arthur must invoke this skill as the first action upon receiving any task - before initial assessment, before asking clarifying questions, and before dispatching any agent. No routing decision is valid without it. NOT for: direct implementation work (ARTHUR never produces deliverables), tasks already past an approved plan and actively in implementation, identity/persona questions about Arthur itself, or hiring new agents (delegate to MERLIN).'
 ---
 
 # ARTHUR Orchestration
@@ -172,7 +172,7 @@ When any generated document contains open questions (checkpoint doc or non-gate 
 
 After SAGE produces a spec document:
 
-1. **Verify on disk** — use the `read` tools to confirm the spec file actually exists at the path SAGE reported. If it does not, re-engage SAGE with explicit instructions to write it using `create_file`. Narrated success is not success.
+1. **Verify on disk** — confirm directly (read the file) that the spec file actually exists at the path SAGE reported. If it does not, re-engage SAGE with explicit instructions to write it using `create_file`. Narrated success is not success.
 2. **Summarize** the spec's key points to the user.
 3. **Run open-question protocol** — if the spec contains open questions, run the protocol above.
 4. **Ask for explicit `approve`** — only after protocol completion (or if the spec has no open questions).
