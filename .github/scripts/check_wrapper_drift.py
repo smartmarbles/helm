@@ -5,15 +5,20 @@ Background: each Helm agent has exactly one authored source (`.helm/agents/<name
 the file a human edits) and one thin wrapper per host discovery path
 (`.github/agents/<name>.agent.md`, `.claude/agents/<name>.md`, `.devin/agents/<name>.md`,
 `.cursor/agents/<name>.md`). The capability-vocabulary-to-host-identifier mapping lives in
-exactly one place: the binding reference table in the repo's SOR-A document
-(`sor-a-multi-host-binding.md`). This script parses that table directly at runtime rather
-than carrying its own copy of the same identifiers, since a second hardcoded list would
-itself be the kind of drift-prone duplication this script exists to prevent.
+exactly one place: the binding reference table in Helm's shipped multi-host binding
+reference document, `.helm/docs/multi-host-binding-reference.md`. This document is authored
+once under `.helm/` and shipped to every consumer project via the bootstrap manifest; this
+script locates it by basename search (rather than a fixed path) so the lookup keeps working
+even if a consumer project renames its `.helm/`-equivalent directory. This script parses
+that table directly at runtime rather than carrying its own copy of the same identifiers,
+since a second hardcoded list would itself be the kind of drift-prone duplication this
+script exists to prevent.
 
 Checks:
-    (a) Binding-reference leakage: every concrete host tool identifier in the SOR-A binding
-        reference table must not appear (as an inline-code span) anywhere else in the repo,
-        except inside a wrapper's own frontmatter block or inside the SOR-A file itself.
+    (a) Binding-reference leakage: every concrete host tool identifier in Helm's shipped
+        multi-host binding reference document, `.helm/docs/multi-host-binding-reference.md`,
+        must not appear (as an inline-code span) anywhere else in the repo, except inside a
+        wrapper's own frontmatter block or inside the binding reference file itself.
     (b) Generated-wrapper-body drift: a wrapper whose body does not match the standard
         instruction-pointer template is treated as having taken the generated-body fallback;
         its body must match its authored source's body exactly.
@@ -51,7 +56,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # .github/scripts -> .github -> repo root
 
 DEFAULT_HELM_DIR_NAME = ".helm"
-SOR_A_FILENAME = "sor-a-multi-host-binding.md"
+BINDING_REFERENCE_FILENAME = "multi-host-binding-reference.md"
 SCAN_TEXT_EXTENSIONS = {".md", ".mdx", ".txt"}
 SKIP_DIR_NAMES = {".git", "node_modules", "__pycache__", ".venv", "venv", ".pytest_cache", ".agent-memory"}
 IGNORED_TABLE_MARKERS = {"unverified", "unavailable"}
@@ -115,16 +120,25 @@ def iter_text_files(root: str, skip_dirs: set[str] = SKIP_DIR_NAMES, extensions:
                 yield os.path.join(dirpath, name)
 
 
-def find_sor_a_path(root: str, override: str | None = None):
+def find_binding_reference_path(root: str, override: str | None = None):
+    """Locate the binding reference document by basename search across the repo root.
+
+    The common case: it ships at `.helm/docs/multi-host-binding-reference.md` via the
+    bootstrap manifest. A basename search (rather than a hardcoded path) is used
+    deliberately: `.helm/` is a documented, supported renameable directory (see
+    --old-helm-name/--current-helm-name), and a basename search keeps this lookup working
+    even if a consumer project renames it, where a hardcoded path would not.
+    """
     if override:
         return override if os.path.isabs(override) else os.path.join(root, override)
     for path in iter_text_files(root):
-        if os.path.basename(path) == SOR_A_FILENAME:
+        if os.path.basename(path) == BINDING_REFERENCE_FILENAME:
             return path
     return None
 
 
-def extract_table_identifiers(sor_a_text: str) -> set[str]:
+
+def extract_table_identifiers(binding_reference_text: str) -> set[str]:
     """Parse the '| Verb | ... |' binding reference table; return the set of host identifiers.
 
     The Verb column (first cell of each row) is skipped — those are capability-vocabulary
@@ -138,7 +152,7 @@ def extract_table_identifiers(sor_a_text: str) -> set[str]:
     """
     identifiers: set[str] = set()
     in_table = False
-    for line in sor_a_text.splitlines():
+    for line in binding_reference_text.splitlines():
         stripped = line.strip()
         if stripped.startswith("| Verb |"):
             in_table = True
@@ -201,8 +215,8 @@ def canonical_pointer_body(agent_name: str, helm_dir_name: str) -> str:
     )
 
 
-def check_binding_reference_leakage(root: str, identifiers: set[str], sor_a_path: str, scan_artifacts: bool) -> list[dict[str, Any]]:
-    """(a) Fail on any table identifier found outside wrapper frontmatter or SOR-A itself.
+def check_binding_reference_leakage(root: str, identifiers: set[str], binding_reference_path: str, scan_artifacts: bool) -> list[dict[str, Any]]:
+    """(a) Fail on any table identifier found outside wrapper frontmatter or the binding reference itself.
 
     Approximation: only inline-code-span occurrences (`` `Token` ``) are matched, not bare
     words. Several table identifiers (`Read`, `Write`, `Edit`, `Agent`, ...) are common
@@ -227,9 +241,9 @@ def check_binding_reference_leakage(root: str, identifiers: set[str], sor_a_path
     skip_dirs = set(SKIP_DIR_NAMES)
     if not scan_artifacts:
         skip_dirs.add("artifacts")
-    sor_a_norm = os.path.normpath(sor_a_path)
+    binding_reference_norm = os.path.normpath(binding_reference_path)
     for path in iter_text_files(root, skip_dirs=skip_dirs):
-        if os.path.normpath(path) == sor_a_norm:
+        if os.path.normpath(path) == binding_reference_norm:
             continue
         rel = os.path.relpath(path, root).replace(os.sep, "/")
         content = _read(path)
@@ -356,17 +370,17 @@ def check_stale_identity_references(root: str, old_helm_name: str | None) -> tup
     return findings, True
 
 
-def run_checks(root: str, sor_a_override: str | None, old_helm_name: str | None, current_helm_name: str, scan_artifacts: bool) -> dict[str, Any]:
-    sor_a_path = find_sor_a_path(root, sor_a_override)
-    if not sor_a_path:
-        return {"fatal": f"SOR-A binding reference file not found (expected a file named '{SOR_A_FILENAME}' under {root})"}
+def run_checks(root: str, binding_reference_override: str | None, old_helm_name: str | None, current_helm_name: str, scan_artifacts: bool) -> dict[str, Any]:
+    binding_reference_path = find_binding_reference_path(root, binding_reference_override)
+    if not binding_reference_path:
+        return {"fatal": f"binding reference file not found (expected a file named '{BINDING_REFERENCE_FILENAME}' under {root}, commonly shipped at .helm/docs/{BINDING_REFERENCE_FILENAME})"}
 
-    identifiers = extract_table_identifiers(_read(sor_a_path))
+    identifiers = extract_table_identifiers(_read(binding_reference_path))
     if not identifiers:
-        rel_sor_a = os.path.relpath(sor_a_path, root).replace(os.sep, "/")
-        return {"fatal": f"no capability-vocabulary identifiers parsed from the binding reference table in {rel_sor_a}"}
+        rel_binding_reference = os.path.relpath(binding_reference_path, root).replace(os.sep, "/")
+        return {"fatal": f"no capability-vocabulary identifiers parsed from the binding reference table in {rel_binding_reference}"}
 
-    leakage = check_binding_reference_leakage(root, identifiers, sor_a_path, scan_artifacts)
+    leakage = check_binding_reference_leakage(root, identifiers, binding_reference_path, scan_artifacts)
     body_findings, generated_count = check_generated_body_drift(root, current_helm_name)
     nd_findings = check_name_description_drift(root, current_helm_name)
     stale_findings, stale_configured = check_stale_identity_references(root, old_helm_name)
@@ -396,7 +410,7 @@ def run_checks(root: str, sor_a_override: str | None, old_helm_name: str | None,
         },
     }
     return {
-        "sor_a_path": os.path.relpath(sor_a_path, root).replace(os.sep, "/"),
+        "binding_reference_path": os.path.relpath(binding_reference_path, root).replace(os.sep, "/"),
         "identifiers_checked": sorted(identifiers),
         "checks": checks,
         "passed": all(c["passed"] for c in checks.values()),
@@ -410,7 +424,7 @@ def print_human_summary(report: dict[str, Any]):
         ("c_name_description_drift", "(c) name/description duplication drift"),
         ("d_stale_identity_references", "(d) Stale identity references"),
     ]
-    print(f"SOR-A binding reference: {report['sor_a_path']}", file=sys.stderr)
+    print(f"Multi-host binding reference: {report['binding_reference_path']}", file=sys.stderr)
     print(f"Identifiers checked: {len(report['identifiers_checked'])}", file=sys.stderr)
 
     total_findings = 0
@@ -438,7 +452,7 @@ def main():
         description="Detect drift between Helm's host-neutral authored sources (.helm/) and per-host agent wrappers."
     )
     parser.add_argument("path", nargs="?", default=REPO_ROOT, help="Repo root to scan (default: this script's own repo)")
-    parser.add_argument("--sor-a-path", dest="sor_a_path", default=None, help="Explicit path to the SOR-A binding reference file (default: search the repo for its filename)")
+    parser.add_argument("--binding-reference-path", dest="binding_reference_path", default=None, help="Explicit path to the binding reference file (default: search the repo for its filename)")
     parser.add_argument("--current-helm-name", dest="current_helm_name", default=DEFAULT_HELM_DIR_NAME, help="Current name of the host-neutral authored-source directory (default: .helm)")
     parser.add_argument("--old-helm-name", dest="old_helm_name", default=None, help="Prior/renamed name of the authored-source directory to flag as stale (default: none; check (d) is skipped)")
     parser.add_argument("--scan-artifacts", action="store_true", help="Include artifacts/ in the binding-reference leakage sweep (default: excluded; see check (a) docstring)")
@@ -446,7 +460,7 @@ def main():
     args = parser.parse_args()
 
     root = os.path.abspath(args.path)
-    report = run_checks(root, args.sor_a_path, args.old_helm_name, args.current_helm_name, args.scan_artifacts)
+    report = run_checks(root, args.binding_reference_path, args.old_helm_name, args.current_helm_name, args.scan_artifacts)
 
     if "fatal" in report:
         if args.json_output:

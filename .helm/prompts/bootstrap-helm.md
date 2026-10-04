@@ -61,6 +61,7 @@ Helm's agents, playbooks, and probes are authored once in a host-neutral home, `
 .helm/playbooks/write-technical-docs/references/structural-conventions.md
 .helm/playbooks/write-technical-docs/references/worked-examples.md
 .helm/playbooks/write-technical-docs/references/writing-standards.md
+.helm/docs/multi-host-binding-reference.md
 .helm/PROBE-INERTNESS.md
 ```
 
