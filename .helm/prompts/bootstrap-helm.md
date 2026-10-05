@@ -2,11 +2,11 @@
 description: Bootstrap the Helm multi-agent orchestration system into the current workspace by downloading all required files from GitHub, for use across VS Code Copilot, Claude Code, Devin Desktop, and Cursor.
 ---
 
-> This is the authored source for the `bootstrap-helm` prompt — the file a human edits. The per-host wrapper file points here and carries no independent behavioural content of its own.
+> This file is the canonical, sole copy of the `bootstrap-helm` prompt — there is no separate wrapper file pointing to it. It is not auto-discovered by any host's prompt-file picker (VS Code's `#` prompt-file auto-discovery is deliberately not used for it). A new user invokes it by fetching this file directly and attaching or referencing it in a Copilot chat session (e.g. via `#file:` or "Add Context").
 
 # Bootstrap Helm Multi-Agent System
 
-You are bootstrapping the **Helm** multi-agent orchestration system into the current workspace. This bootstrap prompt itself runs inside a VS Code Copilot chat session (that is simply where `.prompt.md` files are discovered), but the files it installs are what let the resulting project be worked on from **any** of Helm's four supported hosts — VS Code Copilot, Claude Code, Devin Desktop, and Cursor — not VS Code alone. You must execute all steps below **in order** using terminal commands. Do NOT use file-creation tools — all files must be created via terminal commands (`curl`, `Invoke-WebRequest`, `mkdir`, etc.).
+You are bootstrapping the **Helm** multi-agent orchestration system into the current workspace. This bootstrap prompt itself runs inside a VS Code Copilot chat session (reached by fetching this file directly and attaching or referencing it — e.g. via `#file:` or "Add Context" — not through VS Code's prompt-file auto-discovery, which this file does not use), but the files it installs are what let the resulting project be worked on from **any** of Helm's four supported hosts — VS Code Copilot, Claude Code, Devin Desktop, and Cursor — not VS Code alone. You must execute all steps below **in order** using terminal commands. Do NOT use file-creation tools — all files must be created via terminal commands (`curl`, `Invoke-WebRequest`, `mkdir`, etc.).
 
 ---
 
@@ -149,7 +149,7 @@ One additional dependency is not a plain file download — it is pinned to a spe
 If the target project already uses a top-level `.helm/` directory for something else, the installer may rename it to any other name. A rename is only complete when **every** pointer agrees:
 
 1. Rename the directory itself first, before writing or editing any wrapper file.
-2. Update every wrapper file's pointer (all 28 agent wrappers, the prompt wrapper at `.github/prompts/bootstrap-helm.prompt.md`, plus any playbook or probe reference inside `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`) to the new name. Partial renames — some pointers on the old name, some on the new one — are not a supported end state.
+2. Update every wrapper file's pointer (all 28 agent wrappers, plus any playbook or probe reference inside `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`) to the new name. Partial renames — some pointers on the old name, some on the new one — are not a supported end state.
 3. Run `.github/scripts/check_wrapper_drift.py`. It is required to fail with a non-zero exit if it finds even one pointer still naming the old directory. A clean run of this script — not a manual search — is the only accepted signal that a rename is finished.
 
 ---

@@ -46,7 +46,17 @@ Helm has no build step, no dependencies, and no separate runtime — it runs nat
    | `chat.subagents.allowInvocationsFromSubagents` | `true` | Enables nested agent calls (e.g., MERLIN → SCOOP). Without this, subagents silently cannot invoke other subagents and fall back to doing the work themselves. |
 
    Without this setting, multi-agent routing silently fails. Set it before your first conversation.
-2. **Run the bootstrap prompt** — In the Copilot chat input, type `#` and select **bootstrap-helm** (`.github/prompts/bootstrap-helm.prompt.md`). Running it downloads all of Helm's files from GitHub into your workspace — agent definitions, playbooks, skills, templates, scripts, and the OS-specific hook — and merge-safely installs `AGENTS.md` and `.github/copilot-instructions.md`: existing copies are backed up and wrapped in `<!-- HELM BEGIN -->` / `<!-- HELM END -->` markers so your local content survives future updates. The prompt finishes by verifying every file and printing a summary.
+2. **Run the bootstrap prompt** — First, fetch the bootstrap prompt file into your new project (a one-time manual step, since nothing is bootstrapped yet):
+
+   ```powershell
+   New-Item -ItemType Directory -Force -Path .helm/prompts | Out-Null; Invoke-WebRequest -Uri https://raw.githubusercontent.com/smartmarbles/helm/main/.helm/prompts/bootstrap-helm.md -OutFile .helm/prompts/bootstrap-helm.md
+   ```
+
+   ```bash
+   curl --create-dirs -o .helm/prompts/bootstrap-helm.md https://raw.githubusercontent.com/smartmarbles/helm/main/.helm/prompts/bootstrap-helm.md
+   ```
+
+   Then, in Copilot Chat, attach that local file as context — e.g. type `#file:.helm/prompts/bootstrap-helm.md`, or use VS Code's "Add Context" > file picker — and ask Copilot to follow its instructions. Running it downloads all of Helm's files from GitHub into your workspace — agent definitions, playbooks, skills, templates, scripts, and the OS-specific hook — and merge-safely installs `AGENTS.md` and `.github/copilot-instructions.md`: existing copies are backed up and wrapped in `<!-- HELM BEGIN -->` / `<!-- HELM END -->` markers so your local content survives future updates. The prompt finishes by verifying every file and printing a summary.
 3. **Start a conversation to test ARTHUR** — Open a Copilot chat, address ARTHUR (the default) or select him in the agent picker, and send a simple test prompt such as "Arthur, who's on the team?" He should respond in his orchestrator persona and route the request rather than answering as a generic assistant — that confirms the install is working. See [How It Works](#how-it-works) for what happens next.
 
 ## How It Works
@@ -199,7 +209,7 @@ This is a recommendation, not a requirement. The safety floor in `copilot-instru
 
 **About the safety floor:** `copilot-instructions.md` contains a forbidden-tools list, delegation mandate, identity assertion for ARTHUR, and a MUST-read pointer to `arthur.agent.md`. This floor exists to protect users who don't select ARTHUR directly in the agent picker — it ensures the default agent still behaves approximately as ARTHUR even when the full agent file hasn't loaded. Do not remove it.
 
-For the periodic procedure to keep the safety floor aligned with VS Code's evolving default-agent prompt, run [`.github/prompts/audit-default-agent.prompt.md`](.github/prompts/audit-default-agent.prompt.md).
+For the periodic procedure to keep the safety floor aligned with VS Code's evolving default-agent prompt, run [`.helm/prompts/audit-default-agent.prompt.md`](.helm/prompts/audit-default-agent.prompt.md).
 
 > **Note:** No build steps, no dependencies, no installation. The agent definitions are the product.
 

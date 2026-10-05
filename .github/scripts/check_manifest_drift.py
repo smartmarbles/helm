@@ -73,16 +73,16 @@ DEFAULT_GOVERNED_ROOTS = [
 # exclude rather than add to the manifest).
 SELF_PATH = ".github/scripts/check_manifest_drift.py"
 
-# `.helm/prompts/bootstrap-helm.md` and `.helm/prompts/audit-default-agent.md` are
-# maintainer-only authored-source files under the governed `.helm/` root. They are
-# intentionally never listed in the bootstrap manifest, exactly mirroring how
-# `.github/prompts/*.prompt.md` is excluded (by simply not being in the governed-root
-# list above). Grouped with SELF_PATH as the same class of "lives under a governed
-# root but is never shipped to consumers" exclusion.
+# `.helm/prompts/bootstrap-helm.md` and `.helm/prompts/audit-default-agent.prompt.md`
+# are maintainer-only authored-source files under the governed `.helm/` root. They
+# are intentionally never listed in the bootstrap manifest. (`.github/prompts/` no
+# longer exists in this repo at all, so these two `.helm/prompts/` entries are now
+# the only prompt-related exclusions needed.) Grouped with SELF_PATH as the same
+# class of "lives under a governed root but is never shipped to consumers" exclusion.
 MAINTAINER_ONLY_EXCLUSIONS = {
     SELF_PATH,
     ".helm/prompts/bootstrap-helm.md",
-    ".helm/prompts/audit-default-agent.md",
+    ".helm/prompts/audit-default-agent.prompt.md",
 }
 
 VENDOR_PREFIX = ".github/scripts/vendor/skills-ref/"

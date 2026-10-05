@@ -27,9 +27,7 @@ Checks:
     (d) Stale identity references: if the authored-source directory was ever renamed, no
         reference to its prior name may remain. Configurable via --old-helm-name /
         --current-helm-name so this is testable without an actual historical rename. This
-        is a repo-wide scan, not limited to WRAPPER_HOME; it also explicitly covers the
-        prompt wrapper file (PROMPT_WRAPPER_FILES), which has no WRAPPER_HOME entry of
-        its own.
+        is a repo-wide scan, not limited to WRAPPER_HOME.
 
 Usage:
     # Scan the repo this script lives in
@@ -69,15 +67,6 @@ WRAPPER_HOME = {
     "devin": {"dir": ".devin/agents", "suffix": ".md"},
     "cursor": {"dir": ".cursor/agents", "suffix": ".md"},
 }
-
-# Prompt wrapper file (relative to repo root). This has no WRAPPER_HOME entry of
-# its own — VS Code is the only host that discovers `.prompt.md` files, so there is
-# no 4-host binding table row for check (a) and no `name` frontmatter field for check
-# (c) to diff. Check (d)'s stale-rename scan is the only one of the three that
-# generalizes to it, so it is listed here as an extra scan target for check (d) alone.
-PROMPT_WRAPPER_FILES = [
-    ".github/prompts/bootstrap-helm.prompt.md",
-]
 
 FRONTMATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n?", re.DOTALL)
 BACKTICK_RE = re.compile(r"`([^`\n]+)`")
@@ -339,14 +328,11 @@ def check_stale_identity_references(root: str, old_helm_name: str | None) -> tup
     rename to test. When no old name is configured, this check is skipped (not failed).
 
     The repo-wide text-file walk already covers every wrapper home, agent or prompt alike,
-    since it is not scoped to WRAPPER_HOME. PROMPT_WRAPPER_FILES is scanned explicitly on
-    top of that walk anyway (de-duplicated against it) so the prompt wrapper remains
-    a guaranteed scan target for this check even if the walk's scope is narrowed later.
+    since it is not scoped to WRAPPER_HOME.
     """
     findings: list[dict[str, Any]] = []
     if not old_helm_name:
         return findings, False
-    scanned = set()
 
     def _scan(path: str, rel: str):
         content = _read(path)
@@ -359,13 +345,7 @@ def check_stale_identity_references(root: str, old_helm_name: str | None) -> tup
                 })
 
     for path in iter_text_files(root):
-        scanned.add(os.path.normpath(path))
         _scan(path, os.path.relpath(path, root).replace(os.sep, "/"))
-    for rel in PROMPT_WRAPPER_FILES:
-        path = os.path.normpath(os.path.join(root, rel))
-        if path in scanned or not os.path.isfile(path):
-            continue
-        _scan(path, rel)
     return findings, True
 
 
