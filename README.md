@@ -16,7 +16,7 @@ Each agent has a defined identity, expertise, constraints, and communication sty
 
 Helm is not a library or runtime. It's a set of conventions and agent definitions that run natively within each supported host's own agent infrastructure — VS Code Copilot, Claude Code, Devin Desktop, and Cursor — with no separate runtime of its own.
 
-> **Theme:** The default team uses an Arthurian theme — ARTHUR, MERLIN, SCOOP, SAGE, QUILL. These are just names. You can rename any agent to fit your team's personality by editing their `.agent.md` file and the roster.
+> **Theme:** The default team uses an Arthurian theme — ARTHUR, MERLIN, SCOOP, SAGE, QUILL, QUIZ. These are just names. You can rename any agent to fit your team's personality by editing its authored file in `.helm/agents/`, its per-host wrapper files, and the roster.
 
 ## The Core Team
 
@@ -31,13 +31,15 @@ Helm is not a library or runtime. It's a set of conventions and agent definition
 
 **ARTHUR** never produces deliverables directly — he routes every task to the right agent and tracks progress. **MERLIN** creates new agents by researching role requirements and designing purpose-built personas. **SCOOP** deep-dives into any topic, with every report including a "What Most People Miss" section. **SAGE** builds phased implementation plans with dependency analysis and risk identification. **QUILL** writes developer-facing documentation, running "The Confused Developer Test" on every section. **QUIZ** is an on-demand clarification agent — it classifies prompt unknowns, resolves discoverables from existing project files, and returns a readiness handoff (READY, READY_WITH_ASSUMPTIONS, or NOT_READY) before work begins.
 
-> **Note:** The core team is deliberately infrastructure — orchestration, research, planning, hiring, and documentation. There are no implementation agents in the default roster. When a plan calls for a skillset not covered, ARTHUR engages MERLIN to hire the right specialist (e.g., a TypeScript engineer, a database migration expert, a social publisher) on the fly. This keeps the core team lean and ensures implementation agents are purpose-built for the actual work, not generic.
+> **Note:** The core team is deliberately infrastructure — orchestration, research, planning, hiring, clarification, and documentation. There are no implementation agents in the permanent team. When a plan calls for a skillset not covered, ARTHUR engages MERLIN to hire the right specialist (e.g., a TypeScript engineer, a database migration expert, a social publisher) on the fly. This keeps the core team lean and ensures implementation agents are purpose-built for the actual work, not generic.
+>
+> The repository currently also ships **FORGE**, a Python Implementation Specialist hired as a *temporary* agent (see the [team roster](.github/team-roster.md)). It is not part of the core team; it is an example of an on-demand hire and is listed under Temporary Agents.
 
 ## Installation
 
-Helm has no build step, no dependencies, and no separate runtime — it runs natively inside each supported host's own agent infrastructure. VS Code Copilot currently has the most complete installation path; see [Portability](#portability) below for Claude Code, Devin Desktop, and Cursor. Setup for VS Code Copilot is three steps:
+Helm has no build step and no separate runtime — it runs natively inside each supported host's own agent infrastructure. The bootstrap prompt runs inside a VS Code Copilot chat, but it installs the wrapper files for all four hosts (see [Portability](#portability)), so the resulting project can be opened in Claude Code, Devin Desktop, or Cursor as well. Setup is three steps:
 
-1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active.
+1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active, and `git` on your PATH (the bootstrap uses it to vendor the pinned `skills-ref` validator package). Python 3 is needed only for the hook script and maintainer scripts.
 
    **Required VS Code setting** (set in your User or Workspace settings JSON):
 
@@ -56,7 +58,7 @@ Helm has no build step, no dependencies, and no separate runtime — it runs nat
    curl --create-dirs -o .helm/prompts/bootstrap-helm.md https://raw.githubusercontent.com/smartmarbles/helm/main/.helm/prompts/bootstrap-helm.md
    ```
 
-   Then, in Copilot Chat, attach that local file as context — e.g. type `#file:.helm/prompts/bootstrap-helm.md`, or use VS Code's "Add Context" > file picker — and ask Copilot to follow its instructions. Running it downloads all of Helm's files from GitHub into your workspace — agent definitions, playbooks, skills, templates, scripts, and the OS-specific hook — and merge-safely installs `AGENTS.md` and `.github/copilot-instructions.md`: existing copies are backed up and wrapped in `<!-- HELM BEGIN -->` / `<!-- HELM END -->` markers so your local content survives future updates. The prompt finishes by verifying every file and printing a summary.
+   Then, in Copilot Chat, attach that local file as context — e.g. type `#file:.helm/prompts/bootstrap-helm.md`, or use VS Code's "Add Context" > file picker — and ask Copilot to follow its instructions. Running it downloads all of Helm's files from GitHub into your workspace — agent definitions, per-host wrapper files, playbooks, skills, templates, scripts, and the hook script — vendors the pinned `skills-ref` package, and merge-safely installs `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`: existing copies are backed up (as `.bak` files) and wrapped in `<!-- HELM BEGIN -->` / `<!-- HELM END -->` markers so your local content survives future updates. The prompt finishes by verifying every file and printing a summary.
 3. **Start a conversation to test ARTHUR** — Open a Copilot chat, address ARTHUR (the default) or select him in the agent picker, and send a simple test prompt such as "Arthur, who's on the team?" He should respond in his orchestrator persona and route the request rather than answering as a generic assistant — that confirms the install is working. See [How It Works](#how-it-works) for what happens next.
 
 ## How It Works
@@ -81,20 +83,20 @@ For new features, migrations, or rewrites. Triggered by "create a spec", "plan t
 
 SCOOP researches → SAGE writes a spec → **user approves** → SAGE writes a phased plan → **user approves** → ARTHUR hires implementation agents via MERLIN as needed → ARTHUR executes phases, dispatching agents in parallel where possible → completion report.
 
-The Full Path includes mandatory human approval gates. ARTHUR cannot proceed past spec or plan creation without explicit user confirmation.
+The Standard and Full Paths include mandatory human approval gates: the Standard Path has a Plan gate, and the Full Path has both a Spec gate and a Plan gate. ARTHUR cannot proceed past spec or plan creation without an explicit `approve` from the user.
 
 ## Dynamic Agent Creation
 
-When no existing team member fits a task, ARTHUR identifies the gap and engages MERLIN. MERLIN delegates to SCOOP to research the role requirements, then designs a new agent — complete with persona, skills, constraints, and communication style. The agent is written as a `.agent.md` file and can be permanent (added to the roster) or temporary (archived after task completion).
+When no existing team member fits a task, ARTHUR identifies the gap and engages MERLIN. MERLIN delegates to SCOOP to research the role requirements, then designs a new agent — complete with persona, skills, constraints, and communication style. The agent is written as an authored source file (`.helm/agents/<name>.md`) plus one thin wrapper per host, and can be permanent (added to the roster) or temporary (archived after task completion).
 
 ## Skills and Playbooks
 
 Agents load procedural knowledge in one of two ways:
 
 - **Skills** — reusable instruction sets under `.claude/skills/`.
-- **Playbooks** — single-agent procedural files under `.helm/playbooks/`, loaded explicitly via a mandatory-read block in the owning agent's `.agent.md` file. Reliable on all models.
+- **Playbooks** — single-agent procedural files under `.helm/playbooks/`, loaded explicitly via a mandatory-read block in the owning agent's authored file under `.helm/agents/`. Reliable on all models.
 
-**Why playbooks instead of more skills?** Skills are always present in the model's context window once created — they add tokens on every invocation whether or not the agent actually needs them for that turn. Playbooks are loaded only when the agent is performing the specific task the playbook covers. For procedures that run infrequently (hiring an agent, archiving a temp, running a test plan), keeping that content out of the always-on context saves significant tokens per conversation. Skills are the right choice when a procedure is genuinely reusable across multiple agents and needs to fire automatically; playbooks are the right choice when a procedure belongs to one agent and is invoked on demand.
+**Why playbooks instead of more skills?** Skills are always present in the model's context window once created — they add tokens on every invocation whether or not the agent actually needs them for that turn. Playbooks are loaded only when the agent is performing the specific task the playbook covers. For procedures that run infrequently (hiring an agent, archiving a temp, writing a spec), keeping that content out of the always-on context saves significant tokens per conversation. Skills are the right choice when a procedure is genuinely reusable across multiple agents and needs to fire automatically; playbooks are the right choice when a procedure belongs to one agent and is invoked on demand.
 
 The current skill (always-on routing anchor):
 
@@ -154,21 +156,11 @@ get_errors
 ## Project Structure
 
 ```
-AGENTS.md                  # Always-on shared context for all agents
-.github/
-  copilot-instructions.md  # Bootstrap — loads ARTHUR's identity
-  team-roster.md           # Active and archived team members
-  agents/                  # Agent definition files
-    arthur.agent.md
-    merlin.agent.md
-    sage.agent.md
-    scoop.agent.md
-    quill.agent.md
-    quiz.agent.md
-    temps/                 # Archived temporary agents
-  skills/                  # Skills (semantic trigger; one SKILL.md per folder)
-    orchestrate-delegation/
-  playbooks/               # Playbooks (explicit load; one <name>.md per folder)
+AGENTS.md                  # Always-on shared rules for all hosts (read natively by Devin and Cursor)
+CLAUDE.md                  # Claude Code entry point — imports AGENTS.md
+.helm/                     # Host-neutral authored source (not auto-loaded by any host)
+  agents/                  # One authored file per agent (arthur.md, merlin.md, ... forge.md)
+  playbooks/               # Playbooks (explicit load; one folder per playbook)
     conduct-research/
     create-spec/
     create-plan/
@@ -176,16 +168,31 @@ AGENTS.md                  # Always-on shared context for all agents
     hire-agent/
     archive-agent/
     skill-creator/
-    design-test-rubric/
-    run-test-plan/
     quizler/
-  templates/               # Plan and spec templates
-  scripts/                 # Utility scripts
-artifacts/                 # Spec folders created per-effort (spec001-*, spec002-*, etc.)
+  docs/                    # Host binding reference (multi-host-binding-reference.md)
+  prompts/                 # bootstrap-helm.md, audit-default-agent.prompt.md
+.github/                   # VS Code Copilot wrappers plus shared infrastructure
+  copilot-instructions.md  # Bootstrap — loads ARTHUR's identity (safety floor)
+  team-roster.md           # Active and archived team members
+  agents/                  # VS Code wrapper files (<name>.agent.md), one per agent
+    temps/                 # Archived temporary agents
+  docs/                    # Design principles, session protocol, memory fallback
+  hooks/                   # hooks.json and the cross-platform hook script
+  templates/               # Spec, plan, ADR, definition-entry, and QUIZ handoff templates
+  scripts/                 # Utility and validation scripts (validate_skill.py, check_wrapper_drift.py, ...)
+  workflows/               # CI (manifest-drift check)
+.claude/
+  agents/                  # Claude Code wrapper files
+  skills/                  # Skills (semantic trigger; one SKILL.md per folder)
+    orchestrate-delegation/
+.devin/agents/             # Devin Desktop wrapper files
+.cursor/agents/            # Cursor wrapper files
+.githooks/                 # Optional pre-push hook (see CONTRIBUTING.md)
+artifacts/                 # Spec folders created per-effort (spec###-short-name/)
   docs/                    # Standalone documentation (not tied to a spec)
 ```
 
-> **Note:** Active temporary agents (hired for specific tasks) also appear in `.github/agents/` while they are in use. Check the [team roster](.github/team-roster.md) for the current list.
+> **Note:** Active temporary agents (hired for specific tasks) keep their wrapper files in each host's active agent directory (for VS Code, `.github/agents/`) while they are in use. Check the [team roster](.github/team-roster.md) for the current list.
 
 ## Getting Started
 
@@ -198,10 +205,10 @@ Helm is installed — here's how to start using it:
 **Why select ARTHUR directly?** For best results — especially if you use open-source or smaller orchestrators — **select ARTHUR in the VS Code Copilot chat agent picker** rather than using the default agent.
 
 **Why this matters:**
-- When ARTHUR is selected directly, his full `arthur.agent.md` persona is loaded immediately and reliably, even on smaller models.
-- When the default agent is used instead, a bootstrap chain fires (`copilot-instructions.md` → read `arthur.agent.md`). This works on capable models, but the chain can be skipped or improperly executed on weaker open-source orchestrators, causing ARTHUR to improvise from partial context rather than load his full instructions.
+- When ARTHUR is selected directly, his full persona (the `arthur.agent.md` wrapper, which points to `.helm/agents/arthur.md`) is loaded immediately and reliably, even on smaller models.
+- When the default agent is used instead, a bootstrap chain fires (`copilot-instructions.md` → read `arthur.agent.md` → read `.helm/agents/arthur.md`). This works on capable models, but the chain can be skipped or improperly executed on weaker open-source orchestrators, causing ARTHUR to improvise from partial context rather than load his full instructions.
 - Selecting ARTHUR directly removes the persona-conflict risk between the default agent's identity and ARTHUR's instructions.
-- Alternatively, addressing ARTHUR by name at the start of your prompt (e.g., "Arthur, let's do X") also triggers the mechanism to load `arthur.agent.md` — this works reliably even on OSS models without changing the agent picker at all.
+- Alternatively, addressing ARTHUR by name at the start of your prompt (e.g., "Arthur, let's do X") also triggers the mechanism to load his persona — this works reliably even on OSS models without changing the agent picker at all.
 
 This is a recommendation, not a requirement. The safety floor in `copilot-instructions.md` (forbidden tools list, delegation mandate, MUST-read pointer) keeps the system functional for users who do not follow this recommendation.
 
@@ -211,7 +218,7 @@ This is a recommendation, not a requirement. The safety floor in `copilot-instru
 
 For the periodic procedure to keep the safety floor aligned with VS Code's evolving default-agent prompt, run [`.helm/prompts/audit-default-agent.prompt.md`](.helm/prompts/audit-default-agent.prompt.md).
 
-> **Note:** No build steps, no dependencies, no installation. The agent definitions are the product.
+> **Note:** No build step and no separate runtime — the agent definitions are the product. Python 3 is used only by the hook script and the maintainer scripts in `.github/scripts/`.
 
 ## Model Compatibility
 
@@ -228,7 +235,7 @@ Helm supports four hosts as first-class targets, each with its own native agent-
 | Devin Desktop | `.devin/agents/*.md` |
 | Cursor | `.cursor/agents/*.md` |
 
-The orchestration patterns — research before planning, planning before execution, human checkpoints, dynamic hiring — are implemented per host using each platform's own subagent-dispatch capability, not a single shared runtime.
+The orchestration patterns — research before planning, planning before execution, human checkpoints, dynamic hiring — are implemented per host using each platform's own subagent-dispatch capability, not a single shared runtime. Tool restrictions are likewise enforced per host in each wrapper's frontmatter: Claude Code and VS Code Copilot use a `tools:` list (VS Code also uses `agents:`), Devin Desktop uses `allowed-tools`, and Cursor uses only a coarse `readonly` flag (`true` for ARTHUR and SCOOP, `false` for the other agents) rather than per-tool grants. Devin Desktop and Cursor read the root `AGENTS.md` natively; Claude Code imports it through `CLAUDE.md`. See [`.helm/docs/multi-host-binding-reference.md`](.helm/docs/multi-host-binding-reference.md) for the full host-by-host binding.
 
 **Verification status:** VS Code Copilot, Claude Code, and Devin Desktop were directly tested this pass and confirmed passing for `.helm/` inertness and wrapper-loading behavior. Cursor could not be tested directly in this pass; per an explicit user decision, it ships with the same wrapper treatment as the other three hosts and is treated as passing by assumption, pending a follow-up manual check on Cursor itself.
 
