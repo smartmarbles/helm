@@ -134,10 +134,11 @@ The hook script (`hook.py`) is a single cross-platform Python 3 file used unchan
 
 ### Vendored package
 
-One additional dependency is not a plain file download — it is pinned to a specific upstream commit and vendored via `git`, not `curl`. See Step 5.
+One additional dependency is not a plain file download — it is pinned to a specific upstream commit and vendored via `git`, not `curl`. See Step 5. Step 5 also generates a local provenance file for that dependency.
 
 ```
 .github/scripts/vendor/skills-ref/  (pinned upstream commit, see Step 5)
+.github/scripts/vendor/skills-ref/VENDOR_INFO.md  (generated locally during Step 5, not cloned from upstream; records the pinned commit, pinned/vendored dates, and license for the vendored copy)
 ```
 
 ---
@@ -162,6 +163,37 @@ Determine the current operating system and store it for use throughout:
 - **macOS / Linux** → use bash commands
 
 Run a quick detection command (e.g., `uname` on bash, or check `$env:OS` on PowerShell) and remember the result as `OS_NAME`. All subsequent steps provide commands for both OSes — use only the set matching `OS_NAME`.
+
+### Prerequisite: confirm Python is on PATH
+
+`.github/hooks/hooks.json` invokes every hook as a bare `python3 .github/hooks/scripts/hook.py` (bash/macOS/Linux) or `python .github/hooks/scripts/hook.py` (Windows) — there is no venv activation anywhere in that invocation. Helm's hooks therefore require an ambient, PATH-resolvable Python 3 interpreter; a project-local virtual environment would not be found by that bare invocation. This check is only confirming a machine-wide interpreter is reachable — it is not asking you to choose between a venv and a machine install.
+
+If no interpreter is found, **abort the bootstrap now**. Do not continue to Step 2 or any later step. Report the failure to the user and tell them to install Python 3 and ensure it is on `PATH`, then re-run this bootstrap.
+
+### bash (macOS / Linux)
+
+```bash
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: python3 was not found on PATH."
+  echo ".github/hooks/hooks.json invokes hooks as a bare 'python3' with no venv activation, so a PATH-resolvable Python 3 interpreter is required."
+  echo "Install Python 3 and ensure it is on PATH, then re-run this bootstrap."
+  exit 1
+fi
+echo "Found $(command -v python3) ($(python3 --version))."
+```
+
+### PowerShell (Windows)
+
+```powershell
+$pythonCmd = Get-Command python -ErrorAction SilentlyContinue
+if (-not $pythonCmd) {
+  Write-Host "ERROR: python was not found on PATH."
+  Write-Host ".github/hooks/hooks.json invokes hooks as a bare 'python' with no venv activation, so a PATH-resolvable Python interpreter is required."
+  Write-Host "Install Python 3 and ensure it is on PATH, then re-run this bootstrap."
+  exit 1
+}
+Write-Host "Found $($pythonCmd.Source) ($(python --version))."
+```
 
 ---
 
@@ -374,16 +406,39 @@ If `.github/scripts/vendor/skills-ref/VENDOR_INFO.md` already exists and names t
 
 ```bash
 TMP_DIR=$(mktemp -d)
-git clone --no-checkout --filter=blob:none https://github.com/agentskills/agentskills.git "$TMP_DIR"
-git -C "$TMP_DIR" sparse-checkout init --cone
-git -C "$TMP_DIR" sparse-checkout set skills-ref
-git -C "$TMP_DIR" checkout 69ef37e9424c0a7ea9dd2293b559e43ec8176379
-rm -rf .github/scripts/vendor/skills-ref
-mkdir -p .github/scripts/vendor
-cp -r "$TMP_DIR/skills-ref" .github/scripts/vendor/skills-ref
+git clone --no-checkout --filter=blob:none https://github.com/agentskills/agentskills.git "$TMP_DIR" || { echo "ERROR: git clone of agentskills/agentskills failed."; exit 1; }
+git -C "$TMP_DIR" sparse-checkout init --cone || { echo "ERROR: git sparse-checkout init failed."; exit 1; }
+git -C "$TMP_DIR" sparse-checkout set skills-ref || { echo "ERROR: git sparse-checkout set skills-ref failed."; exit 1; }
+git -C "$TMP_DIR" checkout 69ef37e9424c0a7ea9dd2293b559e43ec8176379 || { echo "ERROR: git checkout of pinned commit 69ef37e9424c0a7ea9dd2293b559e43ec8176379 failed."; exit 1; }
+rm -rf .github/scripts/vendor/skills-ref || { echo "ERROR: removing existing .github/scripts/vendor/skills-ref failed."; exit 1; }
+mkdir -p .github/scripts/vendor || { echo "ERROR: creating .github/scripts/vendor directory failed."; exit 1; }
+cp -r "$TMP_DIR/skills-ref" .github/scripts/vendor/skills-ref || { echo "ERROR: copying skills-ref into .github/scripts/vendor failed."; exit 1; }
 find .github/scripts/vendor/skills-ref -name "__pycache__" -type d -exec rm -rf {} +
+COMMIT_DATE=$(git -C "$TMP_DIR" show -s --format=%cd --date=short 69ef37e9424c0a7ea9dd2293b559e43ec8176379)
+VENDORED_ON=$(date +%Y-%m-%d)
+cat > .github/scripts/vendor/skills-ref/VENDOR_INFO.md <<EOF
+# Vendored: skills-ref
+
+- Source: https://github.com/agentskills/agentskills (monorepo subdirectory \`skills-ref/\`)
+- Pinned commit: \`69ef37e9424c0a7ea9dd2293b559e43ec8176379\`
+- Pinned date: $COMMIT_DATE (commit date)
+- Vendored on: $VENDORED_ON
+- License: Apache-2.0 (see \`LICENSE\` in this directory)
+- No PyPI distribution exists for this package; it is vendored per its own README's disclaimer that it is a demonstration library, not production tooling.
+- Runtime dependencies (not vendored, installed separately): \`click>=8.0\`, \`strictyaml>=1.7.3\`.
+- Not modified from upstream. Do not hand-edit files under \`src/skills_ref/\`; re-vendor from a newer pinned commit instead.
+EOF
+if [ $? -ne 0 ]; then
+  echo "ERROR: writing .github/scripts/vendor/skills-ref/VENDOR_INFO.md failed."
+  exit 1
+fi
 rm -rf "$TMP_DIR"
-echo "Vendored skills-ref at 69ef37e9424c0a7ea9dd2293b559e43ec8176379."
+if [ -f .github/scripts/vendor/skills-ref/VENDOR_INFO.md ] && grep -q "69ef37e9424c0a7ea9dd2293b559e43ec8176379" .github/scripts/vendor/skills-ref/VENDOR_INFO.md; then
+  echo "Vendored skills-ref at 69ef37e9424c0a7ea9dd2293b559e43ec8176379."
+else
+  echo "ERROR: .github/scripts/vendor/skills-ref/VENDOR_INFO.md was not created or does not name the pinned commit — vendoring did not complete successfully."
+  exit 1
+fi
 ```
 
 ### PowerShell (Windows)
@@ -391,15 +446,103 @@ echo "Vendored skills-ref at 69ef37e9424c0a7ea9dd2293b559e43ec8176379."
 ```powershell
 $tmpDir = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName())
 git clone --no-checkout --filter=blob:none https://github.com/agentskills/agentskills.git $tmpDir
+if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: git clone of agentskills/agentskills failed."; exit 1 }
 git -C $tmpDir sparse-checkout init --cone
+if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: git sparse-checkout init failed."; exit 1 }
 git -C $tmpDir sparse-checkout set skills-ref
+if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: git sparse-checkout set skills-ref failed."; exit 1 }
 git -C $tmpDir checkout 69ef37e9424c0a7ea9dd2293b559e43ec8176379
-Remove-Item -Recurse -Force ".github/scripts/vendor/skills-ref" -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Force -Path ".github/scripts/vendor" | Out-Null
-Copy-Item -Recurse -Path (Join-Path $tmpDir "skills-ref") -Destination ".github/scripts/vendor/skills-ref"
+if ($LASTEXITCODE -ne 0) { Write-Host "ERROR: git checkout of pinned commit 69ef37e9424c0a7ea9dd2293b559e43ec8176379 failed."; exit 1 }
+try {
+  if (Test-Path -Path ".github/scripts/vendor/skills-ref") {
+    Remove-Item -Recurse -Force ".github/scripts/vendor/skills-ref" -ErrorAction Stop
+  }
+  New-Item -ItemType Directory -Force -Path ".github/scripts/vendor" -ErrorAction Stop | Out-Null
+} catch {
+  Write-Host "ERROR: removing existing .github/scripts/vendor/skills-ref or creating .github/scripts/vendor failed: $_"
+  exit 1
+}
+try {
+  Copy-Item -Recurse -Path (Join-Path $tmpDir "skills-ref") -Destination ".github/scripts/vendor/skills-ref" -ErrorAction Stop
+} catch {
+  Write-Host "ERROR: copying skills-ref into .github/scripts/vendor failed: $_"
+  exit 1
+}
 Get-ChildItem -Path ".github/scripts/vendor/skills-ref" -Recurse -Directory -Filter "__pycache__" | Remove-Item -Recurse -Force
+$commitDate = (git -C $tmpDir show -s --format=%cd --date=short 69ef37e9424c0a7ea9dd2293b559e43ec8176379)
+$vendoredOn = Get-Date -Format "yyyy-MM-dd"
+$vendorInfo = @"
+# Vendored: skills-ref
+
+- Source: https://github.com/agentskills/agentskills (monorepo subdirectory ``skills-ref/``)
+- Pinned commit: ``69ef37e9424c0a7ea9dd2293b559e43ec8176379``
+- Pinned date: $commitDate (commit date)
+- Vendored on: $vendoredOn
+- License: Apache-2.0 (see ``LICENSE`` in this directory)
+- No PyPI distribution exists for this package; it is vendored per its own README's disclaimer that it is a demonstration library, not production tooling.
+- Runtime dependencies (not vendored, installed separately): ``click>=8.0``, ``strictyaml>=1.7.3``.
+- Not modified from upstream. Do not hand-edit files under ``src/skills_ref/``; re-vendor from a newer pinned commit instead.
+"@
+try {
+  Set-Content -Path ".github/scripts/vendor/skills-ref/VENDOR_INFO.md" -Value $vendorInfo -ErrorAction Stop
+} catch {
+  Write-Host "ERROR: writing .github/scripts/vendor/skills-ref/VENDOR_INFO.md failed: $_"
+  exit 1
+}
 Remove-Item -Recurse -Force $tmpDir
-Write-Host "Vendored skills-ref at 69ef37e9424c0a7ea9dd2293b559e43ec8176379."
+$vendorInfoPath = ".github/scripts/vendor/skills-ref/VENDOR_INFO.md"
+$vendorInfoValid = $false
+if (Test-Path -Path $vendorInfoPath -PathType Leaf) {
+  if (Select-String -Path $vendorInfoPath -Pattern "69ef37e9424c0a7ea9dd2293b559e43ec8176379" -Quiet) {
+    $vendorInfoValid = $true
+  }
+}
+if ($vendorInfoValid) {
+  Write-Host "Vendored skills-ref at 69ef37e9424c0a7ea9dd2293b559e43ec8176379."
+} else {
+  Write-Host "ERROR: .github/scripts/vendor/skills-ref/VENDOR_INFO.md was not created or does not name the pinned commit — vendoring did not complete successfully."
+  exit 1
+}
+```
+
+---
+
+## Step 5a: Optional — install `click` and `strictyaml` for manual `validate_skill.py` runs
+
+`.github/scripts/validate_skill.py` is normally invoked through Helm's own tooling, but if a user runs it manually, the vendored `skills-ref` CLI it delegates to requires `click>=8.0` and `strictyaml>=1.7.3` at runtime — these are not vendored and must be installed separately. Use the Python interpreter confirmed in Step 1's prerequisite check.
+
+This check is **non-blocking**: if the `pip install` fails, print a warning and continue with the rest of bootstrap rather than aborting.
+
+### bash (macOS / Linux)
+
+```bash
+if ! python3 -c "import click, strictyaml" >/dev/null 2>&1; then
+  echo "click/strictyaml not found — installing (non-blocking)..."
+  if pip install "click>=8.0" "strictyaml>=1.7.3"; then
+    echo "Installed click and strictyaml."
+  else
+    echo "WARNING: failed to install click/strictyaml. Run 'pip install \"click>=8.0\" \"strictyaml>=1.7.3\"' manually before using validate_skill.py directly. Continuing bootstrap."
+  fi
+else
+  echo "click and strictyaml already present."
+fi
+```
+
+### PowerShell (Windows)
+
+```powershell
+python -c "import click, strictyaml" 2>$null
+if ($LASTEXITCODE -ne 0) {
+  Write-Host "click/strictyaml not found — installing (non-blocking)..."
+  pip install "click>=8.0" "strictyaml>=1.7.3"
+  if ($LASTEXITCODE -eq 0) {
+    Write-Host "Installed click and strictyaml."
+  } else {
+    Write-Host "WARNING: failed to install click/strictyaml. Run 'pip install ""click>=8.0"" ""strictyaml>=1.7.3""' manually before using validate_skill.py directly. Continuing bootstrap."
+  }
+} else {
+  Write-Host "click and strictyaml already present."
+}
 ```
 
 ---
@@ -426,6 +569,12 @@ done
 for f in <space-separated list of all expected files>; do
   [ -f "$f" ] || missing+=("FILE $f")
 done
+
+# Validate the vendored skills-ref package's VENDOR_INFO.md names the pinned commit
+VENDOR_INFO=".github/scripts/vendor/skills-ref/VENDOR_INFO.md"
+if [ ! -f "$VENDOR_INFO" ] || ! grep -q "69ef37e9424c0a7ea9dd2293b559e43ec8176379" "$VENDOR_INFO"; then
+  missing+=("FILE $VENDOR_INFO (missing or does not name pinned commit 69ef37e9424c0a7ea9dd2293b559e43ec8176379)")
+fi
 
 if [ ${#missing[@]} -gt 0 ]; then
   echo "Validation FAILED — ${#missing[@]} item(s) missing:"
@@ -460,6 +609,18 @@ foreach ($f in $expectedFiles) {
   }
 }
 
+# Validate the vendored skills-ref package's VENDOR_INFO.md names the pinned commit
+$vendorInfoPath = ".github/scripts/vendor/skills-ref/VENDOR_INFO.md"
+$vendorInfoValid = $false
+if (Test-Path -Path $vendorInfoPath -PathType Leaf) {
+  if (Select-String -Path $vendorInfoPath -Pattern "69ef37e9424c0a7ea9dd2293b559e43ec8176379" -Quiet) {
+    $vendorInfoValid = $true
+  }
+}
+if (-not $vendorInfoValid) {
+  $missing += "FILE $vendorInfoPath (missing or does not name pinned commit 69ef37e9424c0a7ea9dd2293b559e43ec8176379)"
+}
+
 if ($missing.Count -gt 0) {
   Write-Host "Validation FAILED — $($missing.Count) item(s) missing:"
   foreach ($item in $missing) {
@@ -478,7 +639,9 @@ After all steps complete, print a summary including:
 
 - Total directories created
 - Total files downloaded
+- The Python interpreter resolved in Step 1's prerequisite check (command and version, e.g. `python3 — Python 3.11.4`)
 - The vendored `skills-ref` commit hash confirmed
+- The click/strictyaml check outcome from Step 5a (ALREADY PRESENT / INSTALLED / FAILED — non-blocking)
 - The merge action taken for `AGENTS.md` (CREATED / UPDATED / APPENDED)
 - The merge action taken for `.github/copilot-instructions.md` (CREATED / UPDATED / APPENDED)
 - The merge action taken for `CLAUDE.md` (CREATED / UPDATED / APPENDED)
