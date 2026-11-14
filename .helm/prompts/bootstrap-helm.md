@@ -419,14 +419,14 @@ VENDORED_ON=$(date +%Y-%m-%d)
 cat > .github/scripts/vendor/skills-ref/VENDOR_INFO.md <<EOF
 # Vendored: skills-ref
 
-- Source: https://github.com/agentskills/agentskills (monorepo subdirectory \`skills-ref/\`)
-- Pinned commit: \`69ef37e9424c0a7ea9dd2293b559e43ec8176379\`
+- Source: https://github.com/agentskills/agentskills (monorepo subdirectory skills-ref/)
+- Pinned commit: 69ef37e9424c0a7ea9dd2293b559e43ec8176379
 - Pinned date: $COMMIT_DATE (commit date)
 - Vendored on: $VENDORED_ON
-- License: Apache-2.0 (see \`LICENSE\` in this directory)
+- License: Apache-2.0 (see LICENSE in this directory)
 - No PyPI distribution exists for this package; it is vendored per its own README's disclaimer that it is a demonstration library, not production tooling.
-- Runtime dependencies (not vendored, installed separately): \`click>=8.0\`, \`strictyaml>=1.7.3\`.
-- Not modified from upstream. Do not hand-edit files under \`src/skills_ref/\`; re-vendor from a newer pinned commit instead.
+- Runtime dependencies (not vendored, installed separately): click>=8.0, strictyaml>=1.7.3.
+- Not modified from upstream. Do not hand-edit files under src/skills_ref/; re-vendor from a newer pinned commit instead.
 EOF
 if [ $? -ne 0 ]; then
   echo "ERROR: writing .github/scripts/vendor/skills-ref/VENDOR_INFO.md failed."
@@ -474,14 +474,14 @@ $vendoredOn = Get-Date -Format "yyyy-MM-dd"
 $vendorInfo = @"
 # Vendored: skills-ref
 
-- Source: https://github.com/agentskills/agentskills (monorepo subdirectory ``skills-ref/``)
-- Pinned commit: ``69ef37e9424c0a7ea9dd2293b559e43ec8176379``
+- Source: https://github.com/agentskills/agentskills (monorepo subdirectory skills-ref/)
+- Pinned commit: 69ef37e9424c0a7ea9dd2293b559e43ec8176379
 - Pinned date: $commitDate (commit date)
 - Vendored on: $vendoredOn
-- License: Apache-2.0 (see ``LICENSE`` in this directory)
+- License: Apache-2.0 (see LICENSE in this directory)
 - No PyPI distribution exists for this package; it is vendored per its own README's disclaimer that it is a demonstration library, not production tooling.
-- Runtime dependencies (not vendored, installed separately): ``click>=8.0``, ``strictyaml>=1.7.3``.
-- Not modified from upstream. Do not hand-edit files under ``src/skills_ref/``; re-vendor from a newer pinned commit instead.
+- Runtime dependencies (not vendored, installed separately): click>=8.0, strictyaml>=1.7.3.
+- Not modified from upstream. Do not hand-edit files under src/skills_ref/; re-vendor from a newer pinned commit instead.
 "@
 try {
   Set-Content -Path ".github/scripts/vendor/skills-ref/VENDOR_INFO.md" -Value $vendorInfo -ErrorAction Stop
