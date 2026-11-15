@@ -16,7 +16,7 @@ Each agent has a defined identity, expertise, constraints, and communication sty
 
 Helm is not a library or runtime. It's a set of conventions and agent definitions that run natively within each supported host's own agent infrastructure — VS Code Copilot, Claude Code, Devin Desktop, and Cursor — with no separate runtime of its own.
 
-> **Theme:** The default team uses an Arthurian theme — ARTHUR, MERLIN, SCOOP, SAGE, QUILL, QUIZ. These are just names. You can rename any agent to fit your team's personality by editing its authored file in `.helm/agents/`, its per-host wrapper files, and the roster.
+> **Theme:** ARTHUR and MERLIN anchor a light Arthurian motif. The rest of the default team — SCOOP, SAGE, QUILL, QUIZ, and FORGE — are named for what they do rather than for the legend. These are just names. You can rename any agent to fit your team's personality by editing its authored file in `.helm/agents/`, its per-host wrapper files, and the roster.
 
 ## The Core Team
 
@@ -28,18 +28,17 @@ Helm is not a library or runtime. It's a set of conventions and agent definition
 | **SAGE** | Strategic Planner | *"A good plan makes implementation feel inevitable."* |
 | **QUILL** | Technical Documentation Writer | *"Clear docs are the shortest distance between a developer and a working feature."* |
 | **QUIZ** | Clarification & Readiness Agent | *"Ask less. Classify first. Converge fast."* |
+| **FORGE** | Python Implementation Specialist | *"Code that runs beats plans that don't."* |
 
-**ARTHUR** never produces deliverables directly — he routes every task to the right agent and tracks progress. **MERLIN** creates new agents by researching role requirements and designing purpose-built personas. **SCOOP** deep-dives into any topic, with every report including a "What Most People Miss" section. **SAGE** builds phased implementation plans with dependency analysis and risk identification. **QUILL** writes developer-facing documentation, running "The Confused Developer Test" on every section. **QUIZ** is an on-demand clarification agent — it classifies prompt unknowns, resolves discoverables from existing project files, and returns a readiness handoff (READY, READY_WITH_ASSUMPTIONS, or NOT_READY) before work begins.
+**ARTHUR** never produces deliverables directly — he routes every task to the right agent and tracks progress. **MERLIN** creates new agents by researching role requirements and designing purpose-built personas. **SCOOP** deep-dives into any topic, with every report including a "What Most People Miss" section. **SAGE** builds phased implementation plans with dependency analysis and risk identification. **QUILL** writes developer-facing documentation, running "The Confused Developer Test" on every section. **QUIZ** is an on-demand clarification agent — it classifies prompt unknowns, resolves discoverables from existing project files, and returns a readiness handoff (READY, READY_WITH_ASSUMPTIONS, or NOT_READY) before work begins. **FORGE** is the team's Python implementation specialist, turning approved specs and plans into working Python scripts, utilities, and tools.
 
-> **Note:** The core team is deliberately infrastructure — orchestration, research, planning, hiring, clarification, and documentation. There are no implementation agents in the permanent team. When a plan calls for a skillset not covered, ARTHUR engages MERLIN to hire the right specialist (e.g., a TypeScript engineer, a database migration expert, a social publisher) on the fly. This keeps the core team lean and ensures implementation agents are purpose-built for the actual work, not generic.
->
-> The repository currently also ships **FORGE**, a Python Implementation Specialist hired as a *temporary* agent (see the [team roster](.github/team-roster.md)). It is not part of the core team; it is an example of an on-demand hire and is listed under Temporary Agents.
+> **Note:** The core team is deliberately lean infrastructure — orchestration, research, planning, hiring, clarification, documentation, and **FORGE** for implementation. Python scripting and tooling — including throwaway, one-off scripts — comes up often enough across projects that a standing Python implementer earns a permanent seat rather than being hired and archived every time. When a plan calls for a skillset none of the seven core agents cover (e.g., a TypeScript engineer, a database migration expert), ARTHUR engages MERLIN to hire the right specialist on the fly via generative hiring. Those on-demand hires are temporary by default — listed under Temporary Agents in the [team roster](.github/team-roster.md) — unless that same recurring-need reasoning later justifies promoting one to permanent, the way it did for FORGE.
 
 ## Installation
 
 Helm has no build step and no separate runtime — it runs natively inside each supported host's own agent infrastructure. The bootstrap prompt runs inside a VS Code Copilot chat, but it installs the wrapper files for all four hosts (see [Portability](#portability)), so the resulting project can be opened in Claude Code, Devin Desktop, or Cursor as well. Setup is three steps:
 
-1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active, and `git` on your PATH (the bootstrap uses it to vendor the pinned `skills-ref` validator package). Python 3 is needed only for the hook script and maintainer scripts.
+1. **Requirements** — VS Code with GitHub Copilot (Chat) installed and active, and `git` on your PATH (the bootstrap uses it to vendor the pinned `skills-ref` validator package). The bootstrap actively verifies that a Python 3 interpreter is on `PATH` as a hard prerequisite — it aborts with a clear message if one isn't found, because `.github/hooks/hooks.json` invokes hooks via a bare `python3`/`python` call with no virtual environment. If you intend to run `validate_skill.py` manually, the bootstrap also offers to install `click` and `strictyaml`; this step is optional and non-blocking.
 
    **Required VS Code setting** (set in your User or Workspace settings JSON):
 
@@ -58,7 +57,7 @@ Helm has no build step and no separate runtime — it runs natively inside each 
    curl --create-dirs -o .helm/prompts/bootstrap-helm.md https://raw.githubusercontent.com/smartmarbles/helm/main/.helm/prompts/bootstrap-helm.md
    ```
 
-   Then, in Copilot Chat, attach that local file as context — e.g. type `#file:.helm/prompts/bootstrap-helm.md`, or use VS Code's "Add Context" > file picker — and ask Copilot to follow its instructions. Running it downloads all of Helm's files from GitHub into your workspace — agent definitions, per-host wrapper files, playbooks, skills, templates, scripts, and the hook script — vendors the pinned `skills-ref` package, and merge-safely installs `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`: existing copies are backed up (as `.bak` files) and wrapped in `<!-- HELM BEGIN -->` / `<!-- HELM END -->` markers so your local content survives future updates. The prompt finishes by verifying every file and printing a summary.
+   Then, in Chat, attach that local file as context — e.g. type `#file:.helm/prompts/bootstrap-helm.md`, or use VS Code's "Add Context" > file picker — and ask AI to follow its instructions. Running it downloads all of Helm's files from GitHub into your workspace — agent definitions, per-host wrapper files, playbooks, skills, templates, scripts, and the hook script — vendors the pinned `skills-ref` package, and merge-safely installs `AGENTS.md`, `CLAUDE.md`, and `.github/copilot-instructions.md`: existing copies are backed up (as `.bak` files) and wrapped in `<!-- HELM BEGIN -->` / `<!-- HELM END -->` markers so your local content survives future updates. The prompt finishes by verifying every file and printing a summary. The bootstrap is also safe to re-run later to pick up Helm updates: it reconciles `.github/team-roster.md` instead of overwriting it — preserving any agents you've hired locally and asking before removing anything Helm's upstream roster has dropped — and it automatically respects a previously-renamed `.helm/` directory rather than recreating a fresh one.
 3. **Start a conversation to test ARTHUR** — Open a Copilot chat, address ARTHUR (the default) or select him in the agent picker, and send a simple test prompt such as "Arthur, who's on the team?" He should respond in his orchestrator persona and route the request rather than answering as a generic assistant — that confirms the install is working. See [How It Works](#how-it-works) for what happens next.
 
 ## How It Works
@@ -128,6 +127,7 @@ Every skill must pass `validate_skill.py` (`.github/scripts/`) with zero errors.
 - **Session and repo memory** — agents build continuity across conversations through persistent memory files
 - **Structured artifacts** — every effort produces artifacts in numbered spec folders (`artifacts/spec###-short-name/`)
 - **Research-first protocol** — delegation rules enforce research before planning, and planning before execution
+- **Update-safe re-runs** — re-running the bootstrap on an existing install reconciles the team roster and respects a renamed `.helm/` directory instead of overwriting local customizations
 
 ## Developer Workflow
 

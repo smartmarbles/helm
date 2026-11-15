@@ -98,7 +98,7 @@ A re-archival trigger is a blockquote that names the exact condition which, when
 Good triggers are concrete and observable:
 
 - "Re-archive SPLICE before spec002 completion, once the final Python development task lands."
-- "Re-archive FORGE after the migration script's final run in production."
+- "Re-archive LOOM after the migration script's final run in production."
 - "Re-archive HELIX when the last P9b task is verified by the test runner."
 
 Bad triggers are vague or open-ended:

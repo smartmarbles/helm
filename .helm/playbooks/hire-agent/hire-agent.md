@@ -171,13 +171,15 @@ Every agent gets a memorable one-liner that captures their essence. The tagline 
 
 The roster lives at `.github/team-roster.md`. Update it in the same turn you create the agent's files — never ship a hire without a roster row.
 
+Every newly-appended row — permanent or temporary — must be tagged `Local hire` in the `Source` column. Never tag a newly-appended row `Helm core`; that value is reserved for rows shipped by Helm's own upstream roster.
+
 ### Permanent hire
 
-Append a row to the **Permanent Team** table with columns: `Agent | Role | Use When | Hired | Tagline`. Use today's date (YYYY-MM-DD) for Hired. Wrap the tagline in single asterisks for italics.
+Append a row to the **Permanent Team** table with columns: `Agent | Role | Use When | Hired | Tagline | Source`. Use today's date (YYYY-MM-DD) for Hired. Wrap the tagline in single asterisks for italics. Set `Source` to `Local hire`.
 
 ### Temporary hire
 
-Append a row to the **Temporary Agents** table using the same format as the **Permanent Team** table: `Agent | Role | Use When | Hired | Tagline`. Use today's date for Hired. Place the tagline directly in the `Tagline` column — do not add a callout below the table.
+Append a row to the **Temporary Agents** table using the same format as the **Permanent Team** table: `Agent | Role | Use When | Hired | Tagline | Source`. Use today's date for Hired. Place the tagline directly in the `Tagline` column — do not add a callout below the table. Set `Source` to `Local hire`.
 
 ### Retained temp
 
@@ -201,7 +203,7 @@ Add a **Re-archival trigger** callout under the Temporary Agents table stating t
 > 3. Reads SCOOP's findings (cascade mastery, specificity hygiene, design-token systems, responsive layout, accessibility, modern features like container queries and `@layer`, anti-patterns like `!important` overuse).
 > 4. Drafts the authored source at `.helm/agents/prism.md` with a `## Research Foundation` section summarizing SCOOP's findings, then authors the four per-host wrappers (`.github/agents/prism.agent.md`, `.claude/agents/prism.md`, `.devin/agents/prism.md`, `.cursor/agents/prism.md`), each pointing at the authored source with role-scoped, host-native frontmatter.
 > 5. Permanent placement — CSS is a recurring need.
-> 6. Appends a row to the **Permanent Team** table with tagline *"The cascade is a feature, not a bug."* and hired date 2026-04-18.
+> 6. Appends a row to the **Permanent Team** table with tagline *"The cascade is a feature, not a bug."*, hired date 2026-04-18, and `Source` = `Local hire`.
 > 7. Announces: name, role, tagline, when to engage.
 
 **DON'T:**
@@ -224,7 +226,7 @@ Add a **Re-archival trigger** callout under the Temporary Agents table stating t
 > 3. Reads SCOOP's findings (minimal-diff discipline, stdlib-first preference, test-adjacent editing, anti-patterns like over-refactoring during bug fixes).
 > 4. Drafts the authored source at `.helm/agents/splice.md` with a `## Research Foundation` section, then authors the four per-host wrappers (`.github/agents/splice.agent.md`, `.claude/agents/splice.md`, `.devin/agents/splice.md`, `.cursor/agents/splice.md`), each pointing at the authored source.
 > 5. Temporary placement — one-shot task; the wrapper set lives at each host's active discovery path while active.
-> 6. Appends a row to the **Temporary Agents** table using the permanent format: `Use When` = "spec002 P9a-T3 surgical Python edits", Hired = 2026-04-18, Tagline = *"The diff is the deliverable."* — identical structure to a permanent row.
+> 6. Appends a row to the **Temporary Agents** table using the permanent format: `Use When` = "spec002 P9a-T3 surgical Python edits", Hired = 2026-04-18, Tagline = *"The diff is the deliverable."*, `Source` = `Local hire` — identical structure to a permanent row.
 > 7. Later: ARTHUR reports SPLICE is needed across all Python work through Phase 9b. MERLIN updates the `Use When` column to reflect the extended scope and adds a **Re-archival trigger** callout: "Re-archive SPLICE before spec002 completion, once the final Python development task lands."
 
 **DON'T:**

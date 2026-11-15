@@ -8,6 +8,8 @@ description: Bootstrap the Helm multi-agent orchestration system into the curren
 
 You are bootstrapping the **Helm** multi-agent orchestration system into the current workspace. This bootstrap prompt itself runs inside a VS Code Copilot chat session (reached by fetching this file directly and attaching or referencing it — e.g. via `#file:` or "Add Context" — not through VS Code's prompt-file auto-discovery, which this file does not use), but the files it installs are what let the resulting project be worked on from **any** of Helm's four supported hosts — VS Code Copilot, Claude Code, Devin Desktop, and Cursor — not VS Code alone. You must execute all steps below **in order** using terminal commands. Do NOT use file-creation tools — all files must be created via terminal commands (`curl`, `Invoke-WebRequest`, `mkdir`, etc.).
 
+> **Update Mode:** This same document is followed identically whether this is a first install into a fresh workspace or a later update to a project that has already been bootstrapped before. Nearly every step is naturally idempotent on a repeat run — directory creation, the merge-safe file procedure, plain regular-file overwrites, and validation all behave the same whether or not the target already exists. Exactly two steps are the exceptions and behave differently on a repeat run: **Step 3a** reconciles `.github/team-roster.md` against local and upstream history instead of overwriting it, and **Step 5** already skips re-vendoring `skills-ref` entirely when `VENDOR_INFO.md` already names the current pinned commit. No other step requires special-casing for "is this an update?" **Step 1a** runs identically on every invocation too — it simply resolves to the default `.helm` when nothing has been renamed yet, which is the normal case on a fresh install — so it is not a third install-vs-update exception the way Step 3a and Step 5 are. It exists for an orthogonal reason: so a prior, opt-in rename of `.helm/` (see "Renaming `.helm/`" below) is respected by every later step, independent of whether this run is an install or an update.
+
 ---
 
 ## File Manifest
@@ -110,7 +112,6 @@ Skills live in Claude Code's native skills location, which every in-scope host i
 Remaining supporting files — team roster, docs, hooks, templates, scripts (including the drift-check tool), and archival placeholders:
 
 ```
-.github/team-roster.md
 .github/agents/temps/.gitkeep
 .github/docs/helm-design-principles.md
 .github/docs/memory-fallback.md
@@ -132,6 +133,16 @@ artifacts/docs/.gitkeep
 
 The hook script (`hook.py`) is a single cross-platform Python 3 file used unchanged on Windows, macOS, and Linux — `hooks.json` selects the right launcher (`python` vs `python3`) per OS, not a different script. `check_wrapper_drift.py` is described in Step 6 and in "Renaming `.helm/`" below rather than repeated here.
 
+### `.github/team-roster.md` (reconciled, not overwritten)
+
+```
+.github/team-roster.md
+```
+
+Unlike every other path in "Remaining supporting files" above, this file is **not** a plain overwrite. It accumulates real local state over a project's life — agents a consuming project has hired or archived — so a blind re-download on an update run would silently destroy that local history. It is handled by its own step, `## Step 3a: Reconcile team-roster.md`, which runs instead of (not in addition to) Step 4's generic download for this one path.
+
+Step 3a's reconciliation needs no third file. Every row in `.github/team-roster.md` carries a `Source` column tagged either `Helm core` (shipped by Helm's own upstream roster) or `Local hire` (added by this project). Reconciliation reads that column on the current local file and compares it against the freshly-downloaded upstream file — there is no separate snapshot file to fetch, check, or write.
+
 ### Vendored package
 
 One additional dependency is not a plain file download — it is pinned to a specific upstream commit and vendored via `git`, not `curl`. See Step 5. Step 5 also generates a local provenance file for that dependency.
@@ -146,6 +157,8 @@ One additional dependency is not a plain file download — it is pinned to a spe
 ## Renaming `.helm/`
 
 `.helm/` is Helm's default name for the host-neutral directory holding the authored source of every agent, playbook, and probe. No host reads `.helm/` directly — every host discovers Helm's team only through the per-host wrapper files listed above, each of which points back at a file under `.helm/`.
+
+`## Step 1a: Detect the host-neutral root directory`, below, automatically detects and respects an existing rename on every subsequent bootstrap run — it does not perform a new rename itself. The numbered procedure in this section remains the only way to actually perform one.
 
 If the target project already uses a top-level `.helm/` directory for something else, the installer may rename it to any other name. A rename is only complete when **every** pointer agrees:
 
@@ -197,9 +210,54 @@ Write-Host "Found $($pythonCmd.Source) ($(python --version))."
 
 ---
 
+## Step 1a: Detect the host-neutral root directory
+
+### Rationale
+
+`.helm/` can be renamed per the "Renaming `.helm/`" procedure described earlier in this document. If a project already did that, a later bootstrap run must write to the renamed location, not recreate a fresh `.helm/` alongside it. This step detects the current root once, up front, so every later step that writes under `.helm/` uses the right location.
+
+### Detection mechanism
+
+Check whether `.github/agents/arthur.agent.md` exists.
+
+- If it does **not** exist, this is a fresh install — the root is the default `.helm`.
+- If it **does** exist, read it and extract the path referenced on its `> **MANDATORY READ — ...**` line (the exact current format is: `` > **MANDATORY READ — `.helm/agents/arthur.md`** `` — a backtick-quoted path ending in `/agents/arthur.md`). Strip the trailing `/agents/arthur.md` suffix from the extracted path to get the root (e.g. `.helm`, or whatever it was renamed to).
+
+### bash (macOS / Linux)
+
+```bash
+HELM_ROOT=".helm"
+if [ -f ".github/agents/arthur.agent.md" ]; then
+  POINTER_LINE=$(grep "MANDATORY READ" ".github/agents/arthur.agent.md" | head -n1)
+  POINTER=$(echo "$POINTER_LINE" | grep -o '`[^`]*/agents/arthur\.md`' | tr -d '`')
+  if [ -n "$POINTER" ]; then
+    HELM_ROOT="${POINTER%/agents/arthur.md}"
+  fi
+fi
+echo "Using host-neutral root: $HELM_ROOT"
+```
+
+### PowerShell (Windows)
+
+```powershell
+$helmRoot = ".helm"
+if (Test-Path ".github/agents/arthur.agent.md") {
+  $content = Get-Content -Raw ".github/agents/arthur.agent.md"
+  if ($content -match 'MANDATORY READ[^\r\n]*`([^`]*?/agents/arthur\.md)`') {
+    $pointer = $Matches[1]
+    $helmRoot = $pointer -replace '/agents/arthur\.md$', ''
+  }
+}
+Write-Host "Using host-neutral root: $helmRoot"
+```
+
+This step performs detection only — it never renames anything itself and never deletes or recreates any directory. It only determines which root name later steps should write to.
+
+---
+
 ## Step 2: Create directories
 
-Extract the parent directory of every file in the manifest (both categories) and create each unique directory. If a directory already exists, skip it silently.
+Extract the parent directory of every file in the manifest (both categories) and create each unique directory. If a directory already exists, skip it silently. Any manifest path with a `.helm/` prefix must use the `HELM_ROOT` / `$helmRoot` value resolved in Step 1a in place of the literal `.helm` segment when deriving its directory — every other prefix is used as-is from the manifest.
 
 **Derivation rule:** For each file path in the manifest, take its parent directory. Deduplicate the list. Create all directories.
 
@@ -362,9 +420,86 @@ Merge-HelmFile -LocalPath "CLAUDE.md" -RemoteUrl "https://raw.githubusercontent.
 
 ---
 
+## Step 3a: Reconcile team-roster.md
+
+### Rationale
+
+`.github/team-roster.md` is not like the other paths in the File Manifest's "Regular files" bucket. Every other regular file is pure Helm-authored content with no legitimate local edits to protect, so a plain overwrite on every run is correct. `team-roster.md` is different: a consuming project hires and archives agents into it over time, so overwriting it on an update would silently erase real local history. This step reconciles the file instead of downloading over it, using only the current local file and the freshly-downloaded upstream file — each row's `Source` column (`Helm core` or `Local hire`) is what makes that reconciliation possible without a third, local-only bookkeeping file.
+
+### Mechanical setup
+
+Fetch the current upstream copy, and check whether a local copy already exists, before doing any row-level comparison.
+
+#### bash (macOS / Linux)
+
+```bash
+BASE_URL="https://raw.githubusercontent.com/smartmarbles/helm/main"
+TMP_UPSTREAM=$(mktemp)
+curl -fsSL "$BASE_URL/.github/team-roster.md" -o "$TMP_UPSTREAM" || { echo "ERROR: failed to download .github/team-roster.md from upstream."; exit 1; }
+
+LOCAL_EXISTS=false
+[ -f ".github/team-roster.md" ] && LOCAL_EXISTS=true
+
+echo "Local team-roster.md exists: $LOCAL_EXISTS"
+```
+
+#### PowerShell (Windows)
+
+```powershell
+$baseUrl = "https://raw.githubusercontent.com/smartmarbles/helm/main"
+$tmpUpstream = [System.IO.Path]::GetTempFileName()
+Invoke-WebRequest -Uri "$baseUrl/.github/team-roster.md" -OutFile $tmpUpstream -UseBasicParsing
+
+$localExists = Test-Path ".github/team-roster.md"
+
+Write-Host "Local team-roster.md exists: $localExists"
+```
+
+### Case: local `team-roster.md` does not exist (fresh install)
+
+No reconciliation is needed — there is no local state to protect yet.
+
+1. Write the downloaded upstream content directly to `.github/team-roster.md`.
+2. Stop. Do not run the comparison logic below for this file on this run.
+
+### Case: local `team-roster.md` exists — reconcile
+
+Perform the comparison below **independently for each of the two known table sections**, `## Permanent Team` and `## Temporary Agents`, matching rows across the local file and the newly-downloaded upstream file by their first column (the Agent name). This comparison is row-level judgment, not mechanical text transformation — carry it out directly as the executing agent rather than trying to force it into a shell one-liner, the same way this repo already expects an agent (not a script) to carry out the Human Checkpoint / open-question protocol described in `AGENTS.md`.
+
+For each table section, classify every Agent name found across new-upstream ∪ current-local into exactly one of the following, then act accordingly:
+
+- **New upstream entries** — present in new-upstream, absent from local (by name) → add this row to the local table, using the new-upstream row's full content (including its `Source: Helm core` value).
+- **Candidates for removal** — a local row tagged `Source: Helm core` whose name is absent from the newly-downloaded upstream file → do **not** remove automatically. Collect every such name across both table sections into a single list.
+- **Local-only entries** — a local row tagged `Source: Local hire` → always keep, untouched. Never ask about these; they are the user's own hires and are never a candidate for removal here.
+- **Untagged legacy rows (migration case)** — a local row that has no `Source` column value at all (from before this feature existed):
+  - If its name is present in the newly-downloaded upstream file, treat it as `Helm core` for this run's classification (making it eligible for the removal-candidate check on a *future* run) and backfill `Source: Helm core` into the row on write-back.
+  - If its name is absent from upstream, treat it as `Local hire` and backfill `Source: Local hire` into the row on write-back.
+  - After this one-time backfill, every row in the local file carries an explicit tag going forward.
+- **Unchanged entries** — a name present in both local and new-upstream, and already explicitly tagged → keep the local row's content exactly as-is. Do not overwrite locally-edited fields (Role, Use When, Hired, Tagline) of a row just because the name also exists upstream — this step reconciles row *presence*, not per-field wording.
+
+Once every table section has been classified, if the "candidates for removal" list is non-empty, pause and ask the user a direct question naming every candidate, in this form (adapt the wording naturally, but preserve the meaning):
+
+> "Helm's upstream team roster no longer lists the following agent(s): `<names>`. They're still in your local roster. OK for me to remove them, or would you like to keep them?"
+
+Wait for an explicit answer before proceeding further.
+- If the user declines for a given name, leave that row in place, untouched.
+- If the user approves for a given name, remove that row from the local table.
+
+If the "candidates for removal" list is empty, skip the question and proceed directly.
+
+### Final write-back (both cases)
+
+Write the reconciled table content back to `.github/team-roster.md`. There is no second file to write — the `Source` column on each row is the only provenance record this mechanism needs.
+
+### Never guess
+
+Never delete a row from `.github/team-roster.md` without the explicit user confirmation described above. If upstream has restructured the table or headings in a way that does not map cleanly onto this procedure (e.g. a table section renamed, the `Source` column removed, rows no longer matching on name), do not improvise a mapping — pause and ask the user how to proceed.
+
+---
+
 ## Step 4: Download regular files
 
-Download every file listed under **Regular files** in the File Manifest. Use the base URL from the manifest. These are simple overwrites — no merge logic.
+Download every file listed under **Regular files** in the File Manifest. Use the base URL from the manifest for the remote path — that remote path is always the manifest's literal `.helm/...` text, regardless of any local rename. For the **local destination path**, any path with a `.helm/` prefix must use the `HELM_ROOT`/`$helmRoot` value resolved in Step 1a in place of the literal `.helm` segment — every other prefix is used as-is from the manifest. This substitution happens only when computing where to actually write the file; it never means editing the manifest text itself. These are simple overwrites — no merge logic.
 
 ### bash (macOS / Linux)
 
@@ -373,7 +508,11 @@ Build a `FILES` array from the **Regular files** list in the manifest, then run:
 ```bash
 BASE_URL="https://raw.githubusercontent.com/smartmarbles/helm/main"
 for f in "${FILES[@]}"; do
-  curl -fsSL "$BASE_URL/$f" -o "$f"
+  DEST="$f"
+  case "$f" in
+    .helm/*) DEST="$HELM_ROOT/${f#.helm/}" ;;
+  esac
+  curl -fsSL "$BASE_URL/$f" -o "$DEST"
 done
 echo "Downloaded ${#FILES[@]} files."
 ```
@@ -385,7 +524,11 @@ Build a `$files` array from the **Regular files** list in the manifest, then run
 ```powershell
 $baseUrl = "https://raw.githubusercontent.com/smartmarbles/helm/main"
 foreach ($f in $files) {
-  Invoke-WebRequest -Uri "$baseUrl/$f" -OutFile $f -UseBasicParsing
+  $dest = $f
+  if ($f -like ".helm/*") {
+    $dest = "$helmRoot/" + $f.Substring(".helm/".Length)
+  }
+  Invoke-WebRequest -Uri "$baseUrl/$f" -OutFile $dest -UseBasicParsing
 }
 Write-Host "Downloaded $($files.Count) files."
 ```
